@@ -34,12 +34,12 @@ class i2chandler {
 
     };
 
-    STATUS currentstatus = NOT_INIT;
+    STATUS currentstatus;
     ACCESS_SCHEMA currentschema;
 
 public:
     //constructor
-    void i2chandler();
+    i2chandler();
 
 };
 

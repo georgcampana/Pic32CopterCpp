@@ -10,7 +10,7 @@
 
 i2chandler SPIHandler();
 
-void i2chandler::i2chandler() {
+i2chandler::i2chandler() {
 
     //puppa
 
