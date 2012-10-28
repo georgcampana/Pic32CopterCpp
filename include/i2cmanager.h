@@ -11,7 +11,6 @@
 #include <p32xxxx.h>
 #include <plib.h>
 
-
 class I2c {
     enum STATUS {
 
@@ -43,15 +42,32 @@ class I2c {
         READ_MULTI_FROM_REG,
     };
 
+//    class TransferHandler {
+//    public:
+//        bool handleInterrupt();
+//    };
+//
+//    class ReadByteHandler : TransferHandler {
+//    public:
+//        bool handleInterrupt();
+//        ReadByteHandler();
+//    };
 
     STATUS currentstatus;
     ACCESS_SCHEMA currentschema;
     
     I2C_MODULE module;
 
+    UINT8 deviceaddr;
+    UINT8 regaddress;
+    UINT8* dataptr;
+    UINT16 datalen;
+
     void setupInterrupt();
 
-public:
+  public:
+    bool handleInterrupt();
+
     //constructor
     I2c(I2C_MODULE mod);
 

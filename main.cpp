@@ -48,7 +48,7 @@
 #define GetInstructionClock()       (SYS_CLOCK)
 
 
-
+I2c i2c_mod_1(I2C1);
 
 int main(void) {
     // configure for multi-vectored mode
@@ -56,7 +56,6 @@ int main(void) {
 
     // enable interrupts
     INTEnableInterrupts();
-
 
     mPORTDSetPinsDigitalOut(BIT_1);
 
