@@ -18,12 +18,14 @@ class I2c {
         BUS_IDLE ,
         START_SENT,
         S_ADDRESS_SENT,
-        S_ADDR_ACK_RECEIVED,
+        //S_ADDR_ACK_RECEIVED,
+        REG_ADDR_SENT,
         DATA_SENT,
-        DATA_ACK_RECEIVED,
+        //DATA_ACK_RECEIVED,
         RESTART_SENT,
         RS_ADDRESS_SENT,
-        RS_ADDR_ACK_RECEIVED,
+        DATA_RECEIVE_ENABLED,
+        //RS_ADDR_ACK_RECEIVED,
         DATA_RECEIVED,
         DATA_ACK_SENT,
 
@@ -40,6 +42,8 @@ class I2c {
 
         WRITE_MULTI_2_REG,
         READ_MULTI_FROM_REG,
+
+        REG_BASED_SCHEMA
     };
 
 //    class TransferHandler {
