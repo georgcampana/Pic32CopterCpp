@@ -93,7 +93,7 @@ bool I2c::handleInterrupt() {
             if(    currentschema == READ_SINGLE_FROM_REG ||
                    currentschema == READ_MULTI_FROM_REG ) {
 
-                if(I2CReceiverEnable(module,true) == I2C_RECEIVE_OVERFLOW)
+                if(I2CReceiverEnable(module,TRUE) == I2C_RECEIVE_OVERFLOW)
                 {
                     return false;
                 }
@@ -113,11 +113,11 @@ bool I2c::handleInterrupt() {
                 if(I2CReceivedDataIsAvailable(module) == TRUE) {
                     I2CAcknowledgeByte(module, (datalen<=1)? FALSE:TRUE );
                     if(datalen>0) {
-                        *dataptr == I2CGetByte();
+                        *dataptr == I2CGetByte(module);
                         datalen--;
                     }
                 }
-                else return false
+                else return false;
 
                 currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
             }
@@ -130,7 +130,7 @@ bool I2c::handleInterrupt() {
         {
             if( currentschema <= REG_BASED_SCHEMA ) {
 
-                I2CStop();
+                I2CStop(module);
 
                 currentstatus = BUS_IDLE ;
             }
