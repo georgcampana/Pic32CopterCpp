@@ -47,8 +47,14 @@
 #define GetPeripheralClock()        (SYS_CLOCK/2)
 #define GetInstructionClock()       (SYS_CLOCK)
 
+#define I2C_CLOCK_FREQ              10000
 
-I2c i2c_mod_1(I2C1);
+#define I2C_MPU6050_ADDR        0xD0 // 0x68 << 1
+
+#define MPU_6050_WHO_AM_I       0x75
+
+
+I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
 
 int main(void) {
     // configure for multi-vectored mode
@@ -58,14 +64,23 @@ int main(void) {
     INTEnableInterrupts();
 
     mPORTDSetPinsDigitalOut(BIT_1);
+    mPORTDClearBits(BIT_1);
+
+    UINT8 i2cdata=0xee;
+    i2c_mod_1.StartReadByteFromReg(I2C_MPU6050_ADDR, MPU_6050_WHO_AM_I, &i2cdata);
+
+    while(i2c_mod_1.isBusy());
+
+    DBPRINTF("Finished");
+
+
 
     while(1)
     {
         int c=1024*1024*10;
         while(c--);
-        mPORTDToggleBits(BIT_1);
+        //mPORTDToggleBits(BIT_1);
     }
 
     return 0;
-
 }

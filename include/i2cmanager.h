@@ -73,7 +73,7 @@ class I2c {
     bool handleInterrupt();
 
     //constructor
-    I2c(I2C_MODULE mod);
+    I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq);
 
     bool isBusy();
     bool StartReadByteFromReg(UINT8 devaddreess, UINT8 regaddress, UINT8* valuedest);
@@ -83,7 +83,7 @@ class I2c {
     bool StartWriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* values);
 };
 
-inline bool I2c::isBusy() {  return (currentstatus <= BUS_IDLE)? true:false; }
+inline bool I2c::isBusy() {  return (currentstatus > BUS_IDLE)? true:false; }
 
 #ifdef	__cplusplus
 extern "C" {
