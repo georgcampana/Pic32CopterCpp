@@ -37,11 +37,8 @@ class I2c {
     enum ACCESS_SCHEMA {
         NO_SCHEMA,
 
-        WRITE_SINGLE_2_REG,
-        READ_SINGLE_FROM_REG,
-
-        WRITE_MULTI_2_REG,
-        READ_MULTI_FROM_REG,
+        WRITE_REG,
+        READ_REG,
 
         REG_BASED_SCHEMA
     };

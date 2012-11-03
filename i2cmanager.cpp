@@ -16,8 +16,8 @@ extern "C" {
 void __ISR(_I2C_1_VECTOR, ipl5) I2cInterruptServiceRoutine(void)
 {
 //    INTClearFlag(INT_I2C1);
-    i2c1_ref->handleInterrupt();
     INTClearFlag(INT_I2C1M);
+    i2c1_ref->handleInterrupt();
 }
 
 #ifdef	__cplusplus
@@ -61,8 +61,7 @@ bool I2c::handleInterrupt() {
             // but first we check if the sent reg_address was ACKed
             if(I2CByteWasAcknowledged(module) == FALSE) return false;
 
-            if(    currentschema == READ_SINGLE_FROM_REG ||
-                   currentschema == READ_MULTI_FROM_REG ) {
+            if( currentschema == READ_REG ) {
 
                 if(I2CRepeatStart(module) == I2C_MASTER_BUS_COLLISION)
                 {
@@ -70,8 +69,17 @@ bool I2c::handleInterrupt() {
                 }
                 currentstatus = RESTART_SENT;
             }
-            else {
-                //TODO: reg write accesses
+            else { //Let's assume Write "schema" in this else
+                if(datalen>0) {
+                    //We start to write data
+                    if(I2CSendByte(module, *dataptr) == I2C_MASTER_BUS_COLLISION) {
+                        return false;
+                    }
+                    dataptr++;
+                    datalen--;
+                }
+
+                currentstatus = DATA_SENT;
             }
 
             break;
@@ -80,8 +88,7 @@ bool I2c::handleInterrupt() {
         case RESTART_SENT:
         {
             //OK ready to send again the slave address in read mode this time
-            if(    currentschema == READ_SINGLE_FROM_REG ||
-                   currentschema == READ_MULTI_FROM_REG ) {
+            if( currentschema == READ_REG ) {
                 UINT8 addr_rw = (deviceaddr |= 0x01); // r: bit0=1
 
                 if(I2CSendByte(module, addr_rw) == I2C_MASTER_BUS_COLLISION)
@@ -99,8 +106,7 @@ bool I2c::handleInterrupt() {
             // Let's see if got the ACK then it's time to read out data
             if(I2CByteWasAcknowledged(module) == FALSE) return false;
 
-            if(    currentschema == READ_SINGLE_FROM_REG ||
-                   currentschema == READ_MULTI_FROM_REG ) {
+            if( currentschema == READ_REG ) {
 
                 if(I2CReceiverEnable(module,TRUE) == I2C_RECEIVE_OVERFLOW)
                 {
@@ -117,11 +123,9 @@ bool I2c::handleInterrupt() {
         case DATA_RECEIVE_ENABLED:
         {
             // we read out one byte (or more) and send our ACK or NACK for the last
-            if(    currentschema == READ_SINGLE_FROM_REG ||
-                   currentschema == READ_MULTI_FROM_REG ) {
+            if( currentschema == READ_REG ) {
 
                 if(I2CReceivedDataIsAvailable(module) == TRUE) {
-                    I2CAcknowledgeByte(module, (datalen<=1)? FALSE:TRUE );
                     if(datalen>0) {
                         *dataptr = I2CGetByte(module);
                         datalen--;
@@ -129,6 +133,7 @@ bool I2c::handleInterrupt() {
                 }
                 else return false;
 
+                I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
                 currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
             }
 
@@ -152,6 +157,33 @@ bool I2c::handleInterrupt() {
             // Transaction completed Bus is idle now
             mPORTDToggleBits(BIT_1);
             currentstatus = BUS_IDLE ;
+            break;
+        }
+
+        case DATA_SENT:
+        {
+            // Let's see if got the ACK and we continue to readout data
+            if(I2CByteWasAcknowledged(module) == FALSE) return false;
+
+            if( currentschema == WRITE_REG ) {
+
+                if(datalen>0) {
+                    // Another byte to send
+                    if(I2CSendByte(module, *dataptr) == I2C_MASTER_BUS_COLLISION) {
+                        return false;
+                    }
+                    dataptr++;
+                    datalen--;
+                    // status is the same DATA_SENT ( we need to wait for the next ack)
+                }
+                else {
+                    // there was nothing to send: we stop here
+                    I2CStop(module);
+                    currentstatus = STOP_SENT ;
+                }
+
+            }
+
             break;
         }
 
@@ -203,23 +235,7 @@ I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
 
 
 bool I2c::StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
-    if(isBusy()) return false;
-
-    currentschema = READ_SINGLE_FROM_REG;
-    this->deviceaddr = devaddress;
-    this->regaddress = regaddress;
-    this->dataptr = valuedest;
-    this->datalen = 1;
-
-    currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
-    if(I2CStart(module) != I2C_SUCCESS) {
-        currentstatus = BUS_IDLE;
-        return false;
-    }
-
-
-
-    return true;
+    return StartReadFromReg(devaddress, regaddress, 1, valuedest);
 }
 
 bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value) {
@@ -228,8 +244,22 @@ bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value) {
 }
 
 bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
+    if(isBusy()) return false;
 
-    return false;
+    currentschema = READ_REG;
+    this->deviceaddr = devaddress;
+    this->regaddress = regaddress;
+    this->dataptr = valuesdest;
+    this->datalen = len;
+
+    currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
+    if(I2CStart(module) != I2C_SUCCESS) {
+        currentstatus = BUS_IDLE;
+        return false;
+    }
+
+
+    return true;
 }
 
 bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* values) {
