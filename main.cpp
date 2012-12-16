@@ -47,7 +47,7 @@
 #define GetPeripheralClock()        (SYS_CLOCK/2)
 #define GetInstructionClock()       (SYS_CLOCK)
 
-#define I2C_CLOCK_FREQ              10000
+#define I2C_CLOCK_FREQ              200000 // tested to work up to 400KHz
 
 #define I2C_MPU6050_ADDR        0xD0 // 0x68 << 1
 

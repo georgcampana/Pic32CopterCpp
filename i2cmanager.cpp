@@ -130,11 +130,10 @@ bool I2c::handleInterrupt() {
                         *dataptr = I2CGetByte(module);
                         datalen--;
                     }
+                    I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
+                    currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
                 }
                 else return false;
-
-                I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
-                currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
             }
 
             break;
