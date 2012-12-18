@@ -11,7 +11,7 @@
 #include <plib.h>
 
 #include "include/i2cmanager.h"
-#include "include/MPU-6050.h"
+#include "include/mpu-6050.h"
 
 // DEVCFG3
 // USERID = No Setting
@@ -47,7 +47,7 @@
 #define GetPeripheralClock()        (SYS_CLOCK/2)
 #define GetInstructionClock()       (SYS_CLOCK)
 
-#define I2C_CLOCK_FREQ              200000 // tested to work up to 400KHz
+#define I2C_CLOCK_FREQ              10000 // tested to work up to 400KHz
 
 #define I2C_MPU6050_ADDR        0xD0 // 0x68 << 1
 
@@ -55,7 +55,8 @@
 
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
-MPU_6050 gyrosensor(i2c_mod_1);
+MPU_6050 gyroscope();
+
 
 int main(void) {
     // configure for multi-vectored mode
@@ -64,23 +65,25 @@ int main(void) {
     // enable interrupts
     INTEnableInterrupts();
 
-    mPORTDSetPinsDigitalOut(BIT_1);
-    mPORTDClearBits(BIT_1);
-
     UINT8 i2cdata=0xee;
-    i2c_mod_1.StartReadByteFromReg(I2C_MPU6050_ADDR, MPU_6050_WHO_AM_I, &i2cdata);
+    bool error = i2c_mod_1.ReadByteFromReg(I2C_MPU6050_ADDR, MPU_6050_WHO_AM_I, &i2cdata);
 
-    while(i2c_mod_1.isBusy());
+    if (error) {
+        DBPRINTF("Buserror");
+    }
+    else {
+        mPORTDSetPinsDigitalOut(BIT_1);
+        mPORTDClearBits(BIT_1);
+        mPORTDToggleBits(BIT_1);
+    }
 
     DBPRINTF("Finished");
-
-
 
     while(1)
     {
         int c=1024*1024*10;
         while(c--);
-        //mPORTDToggleBits(BIT_1);
+//        mPORTDToggleBits(BIT_1);
     }
 
     return 0;
