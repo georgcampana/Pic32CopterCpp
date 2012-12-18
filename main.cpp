@@ -47,7 +47,7 @@
 #define GetPeripheralClock()        (SYS_CLOCK/2)
 #define GetInstructionClock()       (SYS_CLOCK)
 
-#define I2C_CLOCK_FREQ              10000 // tested to work up to 400KHz
+#define I2C_CLOCK_FREQ              50000 // tested to work up to 400KHz
 
 #define I2C_MPU6050_ADDR        0xD0 // 0x68 << 1
 
@@ -59,6 +59,9 @@ MPU_6050 gyroscope();
 
 
 int main(void) {
+
+    mPORTDSetPinsDigitalOut(BIT_1);
+    mPORTDClearBits(BIT_1);
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
 
@@ -72,18 +75,17 @@ int main(void) {
         DBPRINTF("Buserror");
     }
     else {
-        mPORTDSetPinsDigitalOut(BIT_1);
-        mPORTDClearBits(BIT_1);
-        mPORTDToggleBits(BIT_1);
+
+        if(i2cdata == 0x68)mPORTDToggleBits(BIT_1);
     }
 
     DBPRINTF("Finished");
 
     while(1)
     {
-        int c=1024*1024*10;
+        int c=256*1024*10;
         while(c--);
-//        mPORTDToggleBits(BIT_1);
+        //mPORTDToggleBits(BIT_1);
     }
 
     return 0;

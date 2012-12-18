@@ -113,7 +113,7 @@ void I2c::handleInterrupt() {
 
                 if( currentschema == READ_REG ) {
 
-                    if(I2CReceiverEnable(module,TRUE) == I2C_RECEIVE_OVERFLOW)
+                    if(I2CReceiverEnable(module,TRUE) != I2C_RECEIVE_OVERFLOW)
                     {
                         currentstatus = DATA_RECEIVE_ENABLED;
                     }
@@ -226,29 +226,6 @@ I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
 
     if(mod == I2C1) {
         i2c1_ref = this;
-
-        //this seems to be needed on i2c1 (silicon bug) see here
-        // http://www.microchip.com/forums/m478248.aspx  (bit9 =SDA, bit10=SCL)
-//        mPORTBSetPinsDigitalOut(BIT_9 | BIT_10);
-//        mPORTBOpenDrainOpen(BIT_9 | BIT_10);
-//        mPORTDClearBits(BIT_10);
-//        {
-//        int c=24*1024*10;
-//        while(c--);
-//
-//        }
-//        mPORTDSetBits(BIT_9);
-//        {
-//        int c=24*1024*10;
-//        while(c--);
-//
-//        }
-//        mPORTDClearBits(BIT_9);
-//        {
-//        int c=24*1024*10;
-//        while(c--);
-//
-//        }
     }
 
     // Set the I2C baudrate
