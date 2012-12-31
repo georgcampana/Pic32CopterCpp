@@ -23,18 +23,20 @@ MPU_6050::MPU_6050(I2c& busmanager, UINT8 busaddress ): i2cmanager(busmanager), 
 
 }
 
-void MPU_6050::Init() {
+bool MPU_6050::Init() {
+
+    bool i2cerror = false;
 
     //reset the device
-    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_DEVICE_RESET);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_DEVICE_RESET);
     // we should wait a while here (100 ms should be more than enough
     System::DelayMS(100);
 
     // Set Gyro Z as clock source and switch off sleep bit
-    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_ZGYRO);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_ZGYRO);
 
     // switch off standby of gyros and accel
-    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_2, 0x00);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_2, 0x00);
 
     // the code below could probably be disabled
     if(1){
@@ -75,7 +77,7 @@ void MPU_6050::Init() {
     gyro_z_offset >>= 1;
 
 
-
+    return i2cerror;
 }
 
 

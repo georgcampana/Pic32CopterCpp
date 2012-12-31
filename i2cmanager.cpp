@@ -33,7 +33,7 @@ void I2c::handleInterrupt() {
     switch(currentstatus) {
         case START_SENT:
         {   //Now we send the slave Device address + R/W bit
-            UINT8 addr_rw = (deviceaddr |= 0x01); // r: bit0=1
+            UINT8 addr_rw = ((deviceaddr<<1) | 0x01); // r: bit0=1
             if(currentschema <= REG_BASED_SCHEMA ) {
                 // w:  bit0 = 0  r: bit0=1
                 addr_rw &= 0xfe ;
@@ -97,7 +97,7 @@ void I2c::handleInterrupt() {
         {
             //OK ready to send again the slave address in read mode this time
             if( currentschema == READ_REG ) {
-                UINT8 addr_rw = (deviceaddr |= 0x01); // r: bit0=1
+                UINT8 addr_rw = ((deviceaddr<<1) | 0x01); // r: bit0=1
 
                 if(I2CSendByte(module, addr_rw) != I2C_MASTER_BUS_COLLISION)
                 {

@@ -49,7 +49,7 @@ class MPU_6050 {
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
 
-    void Init();
+    bool Init();
 
 protected:
     void setSampleRate(UINT8 rate);

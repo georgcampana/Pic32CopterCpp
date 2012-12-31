@@ -44,19 +44,15 @@
 
 
 
-#define I2C_CLOCK_FREQ              50000 // tested to work up to 400KHz
-
-#define I2C_MPU6050_ADDR        0xD0 // 0x68 << 1
-
-#define MPU_6050_WHO_AM_I       0x75
+#define I2C_CLOCK_FREQ              100000 // tested to work up to 400KHz
 
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
-MPU_6050 gyroscope();
-
+MPU_6050 motionsensor(i2c_mod_1);
 
 int main(void) {
 
+    
     mPORTDSetPinsDigitalOut(BIT_1);
     mPORTDClearBits(BIT_1);
     // configure for multi-vectored mode
@@ -65,16 +61,12 @@ int main(void) {
     // enable interrupts
     INTEnableInterrupts();
 
-    UINT8 i2cdata=0xee;
-    bool error = i2c_mod_1.ReadByteFromReg(I2C_MPU6050_ADDR, MPU_6050_WHO_AM_I, &i2cdata);
-
+    bool error = motionsensor.Init();
+    
     if (error) {
         DBPRINTF("Buserror");
     }
-    else {
 
-        if(i2cdata == 0x68)mPORTDToggleBits(BIT_1);
-    }
 
     DBPRINTF("Finished");
 
