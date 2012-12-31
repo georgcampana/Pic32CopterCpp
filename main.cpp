@@ -6,13 +6,14 @@
  */
 
 
-// PIC32MX440F256H Configuration Bit Settings
-#include <p32xxxx.h>
-#include <plib.h>
+#include "include/system.h"
 
 #include "include/i2cmanager.h"
 #include "include/mpu-6050.h"
 
+
+
+// PIC32MX440F256H Configuration Bit Settings
 // DEVCFG3
 // USERID = No Setting
 
@@ -41,11 +42,7 @@
 #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
-// we are running at 80MHz
-#define SYS_CLOCK (80000000L)
-#define GetSystemClock()            (SYS_CLOCK)
-#define GetPeripheralClock()        (SYS_CLOCK/2)
-#define GetInstructionClock()       (SYS_CLOCK)
+
 
 #define I2C_CLOCK_FREQ              50000 // tested to work up to 400KHz
 

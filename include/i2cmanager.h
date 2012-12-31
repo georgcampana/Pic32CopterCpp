@@ -8,8 +8,7 @@
 #ifndef I2CMANAGER_H
 #define	I2CMANAGER_H
 
-#include <p32xxxx.h>
-#include <plib.h>
+#include "system.h"
 
 class I2c {
     enum STATUS {

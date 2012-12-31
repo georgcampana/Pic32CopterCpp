@@ -7,6 +7,9 @@
 
 #include "include/i2cmanager.h"
 
+#include <p32xxxx.h>
+#include <plib.h>
+
 I2c* i2c1_ref;
 
 #ifdef	__cplusplus
