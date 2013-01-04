@@ -45,7 +45,11 @@ class MPU_6050 {
     UINT8 i2caddr;
     I2c& i2cmanager;
 
- public:
+    const static UINT8 dmpMemory[];
+    const static UINT8 dmpConfig[];
+    const static UINT8 dmpUpdates[];
+
+public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
 
