@@ -1,6 +1,6 @@
 /*
- * File:   main.c
- * Author: georg
+ * File:   i2cmanager.c
+ * Author: Georg Campana
  *
  * Created on 22 ottobre 2012, 0.29
  */
@@ -78,8 +78,8 @@ void I2c::handleInterrupt() {
                 else { //Let's assume Write "schema" in this else
                     if(datalen>0) {
                         //We start to write data
-                        if(I2CSendByte(module, *dataptr) != I2C_MASTER_BUS_COLLISION) {
-                            dataptr++;
+                        if(I2CSendByte(module, *datatxptr) != I2C_MASTER_BUS_COLLISION) {
+                            datatxptr++;
                             datalen--;
                         }
                         else { setBusError(); }
@@ -136,7 +136,7 @@ void I2c::handleInterrupt() {
 
                 if(I2CReceivedDataIsAvailable(module) == TRUE) {
                     if(datalen>0) {
-                        *dataptr = I2CGetByte(module);
+                        *datarxptr = I2CGetByte(module);
                         datalen--;
                     }
                     I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
@@ -175,8 +175,8 @@ void I2c::handleInterrupt() {
 
                     if(datalen>0) {
                         // Another byte to send
-                        if(I2CSendByte(module, *dataptr) != I2C_MASTER_BUS_COLLISION) {
-                            dataptr++;
+                        if(I2CSendByte(module, *datatxptr) != I2C_MASTER_BUS_COLLISION) {
+                            datatxptr++;
                             datalen--;
                             // status is the same DATA_SENT ( we need to wait for the next ack)
                         }
@@ -260,7 +260,8 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     currentschema = READ_REG;
     this->deviceaddr = devaddress;
     this->regaddress = regaddress;
-    this->dataptr = valuesdest;
+    this->datarxptr = valuesdest;
+    this->datatxptr = 0;
     this->datalen = len;
 
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
@@ -272,14 +273,15 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     return buserror;
 }
 
-bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* values) {
+bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values) {
     if(isBusy()) return false;
 
     resetAnyBusError();
     currentschema = WRITE_REG;
     this->deviceaddr = devaddress;
     this->regaddress = regaddress;
-    this->dataptr = values;
+    this->datatxptr = values;
+    this->datarxptr = 0;
     this->datalen = len;
 
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
@@ -308,7 +310,7 @@ bool I2c::ReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* va
     return buserror;
 }
 
-bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* values){
+bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values){
     StartWriteToReg(devaddreess, regaddress, len, values);
     while(isBusy() && buserror==false);
     return buserror;

@@ -1,6 +1,6 @@
 /* 
  * File:   system.h
- * Author: georg
+ * Author: Georg Campana
  *
  * Created on 24 dicembre 2012, 13.36
  */

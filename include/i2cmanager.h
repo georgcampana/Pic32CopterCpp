@@ -60,7 +60,8 @@ class I2c {
 
     UINT8 deviceaddr;
     UINT8 regaddress;
-    UINT8* dataptr;
+    const UINT8* datatxptr;
+    UINT8* datarxptr;
     UINT16 datalen;
     bool   buserror;
 
@@ -80,13 +81,13 @@ class I2c {
     bool StartWriteByteToReg(UINT8 devaddreess, UINT8 regaddress, UINT8 value);
 
     bool StartReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
-    bool StartWriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* values);
+    bool StartWriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values);
 
     bool ReadByteFromReg(UINT8 devaddreess, UINT8 regaddress, UINT8* valuedest);
     bool WriteByteToReg(UINT8 devaddreess, UINT8 regaddress, UINT8 value);
 
     bool ReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
-    bool WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* values);
+    bool WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values);
 };
 
 inline bool I2c::isBusy() {  return (currentstatus > BUS_IDLE)? true:false; }

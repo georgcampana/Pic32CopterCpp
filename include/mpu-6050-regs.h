@@ -60,6 +60,23 @@ enum MPU6050_REGS
 #       define MPUREG_SMPLRT_100HZ                              0x09
 #       define MPUREG_SMPLRT_50HZ                               0x13
     MPU6050_RA_CONFIG           =0x1A,
+#       define MPUREG_CONFIG_EXT_SYNC_MASK                      0x38
+#       define MPUREG_CONFIG_EXT_SYNC_OFF                       0x00
+#       define MPUREG_CONFIG_EXT_SYNC_TEMP                      0x08
+#       define MPUREG_CONFIG_EXT_SYNC_GYROX                     0x10
+#       define MPUREG_CONFIG_EXT_SYNC_GYROY                     0x18
+#       define MPUREG_CONFIG_EXT_SYNC_GYROZ                     0x20
+#       define MPUREG_CONFIG_EXT_SYNC_ACCX                      0x28
+#       define MPUREG_CONFIG_EXT_SYNC_ACCY                      0x30
+#       define MPUREG_CONFIG_EXT_SYNC_ACCZ                      0x38
+#       define MPUREG_CONFIG_DLPF_MASK                          0x07
+#       define MPUREG_CONFIG_DLPF_BW_256                        0x00
+#       define MPUREG_CONFIG_DLPF_BW_188                        0x01
+#       define MPUREG_CONFIG_DLPF_BW_98                         0x02
+#       define MPUREG_CONFIG_DLPF_BW_42                         0x03
+#       define MPUREG_CONFIG_DLPF_BW_20                         0x04
+#       define MPUREG_CONFIG_DLPF_BW_10                         0x05
+#       define MPUREG_CONFIG_DLPF_BW_5                          0x06
     MPU6050_RA_GYRO_CONFIG      =0x1B,
 #       define BITS_GYRO_FS_250DPS                              0x00
 #       define BITS_GYRO_FS_500DPS                              0x08

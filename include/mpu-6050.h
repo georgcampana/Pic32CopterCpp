@@ -57,6 +57,9 @@ public:
 
 protected:
     void setSampleRate(UINT8 rate);
+    void writeMemory(const UINT8* data2write, UINT16 datalen, UINT8 frombank = 0, UINT8 fromindex = 0);
+    void writeDmpConfigData(const UINT8* config2write, UINT16 cfgdatalen);
+
 
 };
 

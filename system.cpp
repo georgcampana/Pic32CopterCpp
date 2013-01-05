@@ -10,7 +10,7 @@
  * Attempt is to adapt the code to the Microchip PIC32 platform
  * using an interrupt based i2c base class
  * and being more c++ish using the first Microchip C++ compiler
- * Author: georg
+ * Author: Georg Campana
  *
  * Created on 22 ottobre 2012, 0.29
  */
