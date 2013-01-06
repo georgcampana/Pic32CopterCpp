@@ -136,7 +136,12 @@ void I2c::handleInterrupt() {
 
                 if(I2CReceivedDataIsAvailable(module) == TRUE) {
                     if(datalen>0) {
-                        *datarxptr = I2CGetByte(module);
+                        if(datarxptr != NULL) {
+                            *datarxptr++ = I2CGetByte(module);
+                        }
+                        else { // in case of no dest just waste the read byte
+                            I2CGetByte(module);
+                        }
                         datalen--;
                     }
                     I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
