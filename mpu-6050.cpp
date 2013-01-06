@@ -38,8 +38,12 @@ bool MPU_6050::Init() {
 
     //reset the device
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_DEVICE_RESET);
-    // we should wait a while here (40 ms should be enough)
-    System::DelayMS(40);
+    // we should wait a while here (50 ms should be enough)
+    System::DelayMS(50);
+
+    // more check code power mngmt1 should be 0x40 after a reset (sleep enabled)
+    UINT8 powermngmt1;
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_PWR_MGMT_1, &powermngmt1);
 
     // Set Gyro Z as clock source and switch off sleep bit
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_ZGYRO);
@@ -60,12 +64,13 @@ bool MPU_6050::Init() {
         UINT8 hwrevision = 0xff;
         i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_MEM_R_W, &hwrevision);
 
-        // back to the default memory page (bank=0
+        // back to the default memory page (bank=0)
         i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_BANK_SEL, 0) ;
 
         // now we read if the OTP flag is valid (this is also undocumented and a mistery)
         UINT8 otpvalid = 0xff;
         i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_XG_OFFS_TC, &otpvalid);
+        if(otpvalid & MPU6050_TC_OTP_BNK_VLD_BIT) DBPRINTF("OTP bank is valid") ;
     }
 
 
@@ -98,7 +103,7 @@ bool MPU_6050::Init() {
         // set i2c slave address to myself (0x68)
         i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_I2C_SLV0_ADDR, i2caddr);
         // reset i2c master interface
-        user_ctrl &= BIT_USER_CTRL_I2C_MST_RESET;
+        user_ctrl |= BIT_USER_CTRL_I2C_MST_RESET;
         i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
         System::DelayMS(20);
     }
@@ -128,13 +133,13 @@ bool MPU_6050::Init() {
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_DMP_CFG_1, 0x03);
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_DMP_CFG_2, 0x00);
 
-    // clear OTP flag & restore XG_offset (did we ever changed it ?)
-    current_xg_offs & (~MPU6050_TC_OTP_BNK_VLD_BIT); // clear OTP flag
+    // clear OTP flag & restore XG_offset (did we ever change it ?)
+    current_xg_offs &= (~MPU6050_TC_OTP_BNK_VLD_BIT); // clear OTP flag
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_XG_OFFS_TC, current_xg_offs);
 
-    // restore also YG and ZG
-    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_YG_OFFS_TC, gyro_y_offset);
-    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZG_OFFS_TC, gyro_z_offset);
+    // restore also YG and ZG offsets (realigned to right bit in the reg)
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_YG_OFFS_TC, gyro_y_offset<<1);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZG_OFFS_TC, gyro_z_offset<<1);
 
     // set user offsets to 0
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_XG_OFFS_USRH, 0);
@@ -154,7 +159,7 @@ bool MPU_6050::Init() {
     // reset FIFO
     UINT8 user_ctrl = 0x55;
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    user_ctrl |= BIT_USER_CTRL_FIFO_RESET;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
     // get FIFO counter (could probably be merged into one read call
@@ -181,22 +186,22 @@ bool MPU_6050::Init() {
     // reset FIFO
     user_ctrl = 0x55;
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    user_ctrl |= BIT_USER_CTRL_FIFO_RESET;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
     // enable FIFO
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_FIFO_EN;
+    user_ctrl |= BIT_USER_CTRL_FIFO_EN;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
     // enable DMP
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_DMP_EN;
+    user_ctrl |= BIT_USER_CTRL_DMP_EN;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
     // reset DMP
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_DMP_RESET;
+    user_ctrl |= BIT_USER_CTRL_DMP_RESET;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
     // set DMP update 3 of 7
@@ -212,30 +217,34 @@ bool MPU_6050::Init() {
     updatedata += updatedata[2]+3;
 
     // wait to get at least 3 octets (assuming we have less than 256)
-    for(fifocountl = 0; fifocountl < 3; ) {
-        i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+    for(fifocounter = fifocounth = fifocountl = 0; fifocounter < 3; ) {
+        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
+        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+        fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
     }
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
-    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocountl,NULL);
+    i2cerror = i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocounter,NULL);
 
-    // get the Interrupt status
+    // get the Interrupt status to clear pending INTS
     UINT8 intstatus;
-    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
+    i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
 
     // set DMP update 6 of 7
     writeDmpConfigData(updatedata, updatedata[2]+3);
     updatedata += updatedata[2]+3;
 
     // wait to get at least 3 octets (assuming we have less than 256)
-    for(fifocountl = 0; fifocountl < 3; ) {
-        i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+    for(fifocounter = fifocounth = fifocountl = 0; fifocounter < 3; ) {
+        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
+        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+        fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
     }
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
-    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocountl,NULL);
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocounter,NULL);
 
-    // get the Interrupt status
+    // get the Interrupt status to clear pending INTS
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
 
     // set DMP update 7 of 7
@@ -252,7 +261,7 @@ bool MPU_6050::Init() {
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
     // reset fifo
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
-    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    user_ctrl |= BIT_USER_CTRL_FIFO_RESET;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
     // reset interrupt
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
@@ -293,16 +302,18 @@ void MPU_6050::writeDmpConfigData(const UINT8* configdata, UINT16 cfgdatalen) {
         address = *configdata++;
         len = *configdata++;
         if(len == 0) { // special case used to enable DMP interrupts
-            if(*configdata++ == 0x01) {
+            if(*configdata == 0x01) {
                 i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_INT_ENABLE,
                                          BIT_DMP_INT_EN | BIT_FIFO_OFLOW_EN | BIT_ZMOT_EN) ;
             }
+            configdata++; // because in the special case the len is 0 but there
+            cfgdatalen--; // there is one data byte in fact
         }
         else {
             writeMemory(configdata, len, bank, address);
-            configdata += len;
-            cfgdatalen -= (len + 3); // 3 = (bank, address, len) + len[data]
         }
+        configdata += len;
+        cfgdatalen -= (len + 3); // 3 = (bank, address, len) + len[data]
     }
 }
 

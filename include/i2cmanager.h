@@ -77,17 +77,17 @@ class I2c {
     I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq);
 
     bool isBusy();
-    bool StartReadByteFromReg(UINT8 devaddreess, UINT8 regaddress, UINT8* valuedest);
-    bool StartWriteByteToReg(UINT8 devaddreess, UINT8 regaddress, UINT8 value);
+    bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
+    bool StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value);
 
-    bool StartReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
-    bool StartWriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values);
+    bool StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
+    bool StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values);
 
-    bool ReadByteFromReg(UINT8 devaddreess, UINT8 regaddress, UINT8* valuedest);
-    bool WriteByteToReg(UINT8 devaddreess, UINT8 regaddress, UINT8 value);
+    bool ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
+    bool WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value);
 
-    bool ReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
-    bool WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values);
+    bool ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
+    bool WriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values);
 };
 
 inline bool I2c::isBusy() {  return (currentstatus > BUS_IDLE)? true:false; }

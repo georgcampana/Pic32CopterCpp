@@ -74,7 +74,7 @@ int main(void) {
     {
         int c=256*1024*10;
         while(c--);
-        //mPORTDToggleBits(BIT_1);
+        mPORTDToggleBits(BIT_1);
     }
 
     return 0;

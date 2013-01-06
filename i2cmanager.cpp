@@ -259,7 +259,7 @@ bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value) {
 }
 
 bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
-    if(isBusy()) return false;
+    if(isBusy()) return true; // not ready
 
     resetAnyBusError();
     currentschema = READ_REG;
@@ -268,6 +268,8 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     this->datarxptr = valuesdest;
     this->datatxptr = 0;
     this->datalen = len;
+
+    if(len==0) return false; // read zero bytes is done ;) --> not an error
 
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
     if(I2CStart(module) != I2C_SUCCESS) {
@@ -279,7 +281,7 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
 }
 
 bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values) {
-    if(isBusy()) return false;
+    if(isBusy()) return true; // not ready
 
     resetAnyBusError();
     currentschema = WRITE_REG;
@@ -288,6 +290,8 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
     this->datatxptr = values;
     this->datarxptr = 0;
     this->datalen = len;
+
+    if(len==0) return false; // write zero bytes is done ;) --> not an error
 
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
     if(I2CStart(module) != I2C_SUCCESS) { // new status set in the line above
@@ -298,19 +302,19 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
     return buserror;
 }
 
-bool I2c::ReadByteFromReg(UINT8 devaddreess, UINT8 regaddress, UINT8* valuedest) {
-    StartReadByteFromReg(devaddreess, regaddress, valuedest);
+bool I2c::ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
+    StartReadByteFromReg(devaddress, regaddress, valuedest);
     while(isBusy() && buserror==false);
     return buserror;
 }
-bool I2c::WriteByteToReg(UINT8 devaddreess, UINT8 regaddress, UINT8 value){
-    StartWriteByteToReg(devaddreess, regaddress, value);
+bool I2c::WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value){
+    StartWriteByteToReg(devaddress, regaddress, value);
     while(isBusy() && buserror==false);
     return buserror;
 }
 
-bool I2c::ReadFromReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
-    StartReadFromReg(devaddreess, regaddress, len, valuesdest);
+bool I2c::ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
+    StartReadFromReg(devaddress, regaddress, len, valuesdest);
     while(isBusy() && buserror==false);
     return buserror;
 }

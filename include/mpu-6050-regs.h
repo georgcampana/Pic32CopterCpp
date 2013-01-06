@@ -37,7 +37,7 @@ enum MPU6050_REGS
     MPU6050_RA_XG_OFFS_TC       =0x00, //[7] PWR_MODE, [6:1] XG_OFFS_TC, [0] OTP_BNK_VLD
     MPU6050_RA_YG_OFFS_TC       =0x01, //[7] PWR_MODE, [6:1] YG_OFFS_TC, [0] OTP_BNK_VLD
     MPU6050_RA_ZG_OFFS_TC       =0x02, //[7] PWR_MODE, [6:1] ZG_OFFS_TC, [0] OTP_BNK_VLD
-#       define MPU6050_TC_OTP_BNK_VLD_BIT                       0
+#       define MPU6050_TC_OTP_BNK_VLD_BIT                       0x01
     MPU6050_RA_X_FINE_GAIN      =0x03, //[7:0] X_FINE_GAIN
     MPU6050_RA_Y_FINE_GAIN      =0x04, //[7:0] Y_FINE_GAIN
     MPU6050_RA_Z_FINE_GAIN      =0x05, //[7:0] Z_FINE_GAIN
