@@ -70,8 +70,9 @@ bool MPU_6050::Init() {
 
 
     // we read out the offsets of the gyros (6 bits starting from bit 6)
-    UINT8 gyro_x_offset = 0;
-    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_XG_OFFS_TC, &gyro_x_offset);
+    UINT8 current_xg_offs; // we need this value later when setting OTP to false
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_XG_OFFS_TC, &current_xg_offs);
+    UINT8 gyro_x_offset = current_xg_offs;
     gyro_x_offset &= 0x3f;
     gyro_x_offset >>= 1;
 
@@ -112,13 +113,149 @@ bool MPU_6050::Init() {
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_ZGYRO);
 
     // set interrupt on for DMP and FIFO overflow
-    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_INT_ENABLE, BIT_FIFO_OFLOW_INT | BIT_DMP_INT );
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_INT_ENABLE, BIT_FIFO_OFLOW_EN | BIT_DMP_INT_EN );
 
     // set sampling rate to 200Hz --> 4  in fact 1khz / (1 + 4) = 200 Hz
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_SMPLRT_DIV, 4 );
 
-    // set external frame sync to TEMP (disabled) and DLPF (low filter) to 42Hz
+    // set external frame sync to TEMPerature  (disabled) and DLPF (low filter) to 42Hz
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_CONFIG, /*MPUREG_CONFIG_EXT_SYNC_TEMP | */ MPUREG_CONFIG_DLPF_BW_42);
+
+    // set full range gyro scale +/+2000 degrees/sec
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_GYRO_CONFIG, BITS_GYRO_FS_2000DPS );
+
+    // set DMP configs, who knows what this is :(
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_DMP_CFG_1, 0x03);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_DMP_CFG_2, 0x00);
+
+    // clear OTP flag & restore XG_offset (did we ever changed it ?)
+    current_xg_offs & (~MPU6050_TC_OTP_BNK_VLD_BIT); // clear OTP flag
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_XG_OFFS_TC, current_xg_offs);
+
+    // restore also YG and ZG
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_YG_OFFS_TC, gyro_y_offset);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZG_OFFS_TC, gyro_z_offset);
+
+    // set user offsets to 0
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_XG_OFFS_USRH, 0);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_YG_OFFS_USRH, 0);
+    i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZG_OFFS_USRH, 0);
+
+
+    // set DMP update 1 of 7
+    const UINT8* updatedata = dmpUpdates;
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // set DMP update 2 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // reset FIFO
+    UINT8 user_ctrl = 0x55;
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+
+    // get FIFO counter (could probably be merged into one read call
+    UINT8 fifocounth, fifocountl;
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+    UINT16 fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
+
+    // we flush by wasting the bytes in the FIFO buffer passing a null dest
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocounter,NULL);
+
+    // set motion detection threshold to 2
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MOT_THR, 2);
+
+    // set zero motion detection to 156
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZRMOT_THR, 156);
+
+    // set motion detection duration to 80
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MOT_DUR, 80);
+
+    // set zero motion detection duration to 0
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_ZRMOT_DUR, 0);
+
+    // reset FIFO
+    user_ctrl = 0x55;
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+
+    // enable FIFO
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_FIFO_EN;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+
+    // enable DMP
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_DMP_EN;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+
+    // reset DMP
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_DMP_RESET;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+
+    // set DMP update 3 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // set DMP update 4 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // set DMP update 5 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // wait to get at least 3 octets (assuming we have less than 256)
+    for(fifocountl = 0; fifocountl < 3; ) {
+        i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+    }
+
+    // we flush by wasting the bytes in the FIFO buffer passing a null dest
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocountl,NULL);
+
+    // get the Interrupt status
+    UINT8 intstatus;
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
+
+    // set DMP update 6 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+    // wait to get at least 3 octets (assuming we have less than 256)
+    for(fifocountl = 0; fifocountl < 3; ) {
+        i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
+    }
+
+    // we flush by wasting the bytes in the FIFO buffer passing a null dest
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocountl,NULL);
+
+    // get the Interrupt status
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
+
+    // set DMP update 7 of 7
+    writeDmpConfigData(updatedata, updatedata[2]+3);
+    updatedata += updatedata[2]+3;
+
+
+    // we should be ready here
+    // let's switch off dmp , flush fifo and clear interrupt
+
+    // disable DMP
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= (~BIT_USER_CTRL_DMP_EN);
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+    // reset fifo
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &user_ctrl);
+    user_ctrl &= BIT_USER_CTRL_FIFO_RESET;
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
+    // reset interrupt
+    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
 
     return i2cerror;
 }
@@ -128,7 +265,7 @@ void MPU_6050::writeMemory(const UINT8* dataptr, UINT16 datalen, UINT8 frombank,
     UINT8 burstlen;
 
     while(datalen>0) {
-        // switch to bank the right bank
+        // switch to the right bank
         i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_BANK_SEL, frombank ) ;
         // now we point to the right location in that bank 
         i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MEM_START_ADDR, fromaddr) ;
@@ -142,7 +279,7 @@ void MPU_6050::writeMemory(const UINT8* dataptr, UINT16 datalen, UINT8 frombank,
         dataptr += burstlen;
         datalen -= burstlen;
         
-        fromaddr+=burstlen; // it's an octet so it will rotate every 256 (bank size)
+        fromaddr+=burstlen; // fromaddr is an octet so it will rotate every 256 (bank size)
         if(fromaddr==0) frombank++;
     }
 }
@@ -155,9 +292,17 @@ void MPU_6050::writeDmpConfigData(const UINT8* configdata, UINT16 cfgdatalen) {
         bank = *configdata++;
         address = *configdata++;
         len = *configdata++;
-        writeMemory(configdata, len, bank, address);
-        configdata += len;
-        cfgdatalen -= (len + 3); // 3 = bank, address, len + [data]
+        if(len == 0) { // special case used to enable DMP interrupts
+            if(*configdata++ == 0x01) {
+                i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_INT_ENABLE,
+                                         BIT_DMP_INT_EN | BIT_FIFO_OFLOW_EN | BIT_ZMOT_EN) ;
+            }
+        }
+        else {
+            writeMemory(configdata, len, bank, address);
+            configdata += len;
+            cfgdatalen -= (len + 3); // 3 = (bank, address, len) + len[data]
+        }
     }
 }
 

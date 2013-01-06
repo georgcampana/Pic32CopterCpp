@@ -52,8 +52,9 @@ class MPU_6050 {
 public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
-
     bool Init();
+
+    UINT8 getDmpPacketSize() ;
 
 protected:
     void setSampleRate(UINT8 rate);
@@ -63,7 +64,7 @@ protected:
 
 };
 
-
+inline UINT8 MPU_6050::getDmpPacketSize() { return 48; }
 
 
 #endif	/* MPU_6050_H */
