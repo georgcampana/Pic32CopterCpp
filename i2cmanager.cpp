@@ -42,7 +42,7 @@ void I2c::handleInterrupt() {
             {
                 currentstatus = S_ADDRESS_SENT;
             }
-            else { setBusError(); }
+            else { setBusError(SENDADDRESS_COLLISION); }
             
             break;
         }
@@ -55,9 +55,9 @@ void I2c::handleInterrupt() {
                 {
                     currentstatus = REG_ADDR_SENT;
                 }
-                else { setBusError(); }
+                else { setBusError(SENDREGADDR_COLLISION); }
             }
-            else { setBusError(); }
+            else { setBusError(SENDADDRESS_NOTACKED); }
             break;
         }
 
@@ -73,7 +73,7 @@ void I2c::handleInterrupt() {
                     {
                         currentstatus = RESTART_SENT;
                     }
-                    else { setBusError(); }
+                    else { setBusError(RESTART_COLLISION); }
                 }
                 else { //Let's assume Write "schema" in this else
                     if(datalen>0) {
@@ -82,13 +82,13 @@ void I2c::handleInterrupt() {
                             datatxptr++;
                             datalen--;
                         }
-                        else { setBusError(); }
+                        else { setBusError(WRITEBYTE_COLLISION); }
                     }
 
                     currentstatus = DATA_SENT;
                 }
             }
-            else { setBusError(); }
+            else { setBusError(REGADDR_NOTACKED); }
 
             break;
         }
@@ -103,7 +103,7 @@ void I2c::handleInterrupt() {
                 {
                     currentstatus = RS_ADDRESS_SENT;
                 }
-                else { setBusError(); }
+                else { setBusError(RESENDADDR_COLLISION); }
             }
 
             break;
@@ -120,11 +120,11 @@ void I2c::handleInterrupt() {
                     {
                         currentstatus = DATA_RECEIVE_ENABLED;
                     }
-                    else { setBusError(); }
+                    else { setBusError(RECEIVE_OVERFLOW); }
 
                 }
             }
-            else { setBusError(); }
+            else { setBusError(RESENDADDR_NOTACKED); }
             break;
         }
 
@@ -136,18 +136,18 @@ void I2c::handleInterrupt() {
 
                 if(I2CReceivedDataIsAvailable(module) == TRUE) {
                     if(datalen>0) {
+                        UINT8 readbyte = I2CGetByte(module);;
                         if(datarxptr != NULL) {
-                            *datarxptr++ = I2CGetByte(module);
+                            *datarxptr++ = readbyte;
                         }
-                        else { // in case of no dest just waste the read byte
-                            I2CGetByte(module);
-                        }
+                        // in case of no dest just waste the read byte
+         
                         datalen--;
                     }
                     I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
                     currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
                 }
-                else { setBusError(); }
+                else { setBusError(RCV_NODATA); }
             }
 
             break;
@@ -185,7 +185,7 @@ void I2c::handleInterrupt() {
                             datalen--;
                             // status is the same DATA_SENT ( we need to wait for the next ack)
                         }
-                        else { setBusError(); }
+                        else { setBusError(WRITEXBYTE_COLLISION); }
                     }
                     else {
                         // there was nothing to send: we stop here
@@ -195,7 +195,7 @@ void I2c::handleInterrupt() {
 
                 }
             }
-            else { setBusError(); }
+            else { setBusError(WRITE_NOTACKED); }
 
             break;
         }
@@ -274,7 +274,7 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
     if(I2CStart(module) != I2C_SUCCESS) {
         currentstatus = BUS_IDLE;
-        setBusError();
+        setBusError(START_COLLISION);
     }
 
     return buserror;
@@ -296,7 +296,7 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
     currentstatus = START_SENT; //better to set immediately so that an interrupt gets the right status
     if(I2CStart(module) != I2C_SUCCESS) { // new status set in the line above
         currentstatus = BUS_IDLE;
-        setBusError();
+        setBusError(START_COLLISION);
     }
 
     return buserror;

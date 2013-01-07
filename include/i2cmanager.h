@@ -41,7 +41,26 @@ class I2c {
 
         REG_BASED_SCHEMA
     };
+public:
+    enum BusError {
+        NO_ERROR = 0,
+        START_COLLISION,
+        SENDADDRESS_COLLISION,
+        SENDADDRESS_NOTACKED,
+        SENDREGADDR_COLLISION,
+        RESTART_COLLISION,
+        WRITEBYTE_COLLISION,
+        REGADDR_NOTACKED,
+        RESENDADDR_COLLISION,
+        RESENDADDR_NOTACKED,
+        RECEIVE_OVERFLOW,
+        RCV_NODATA,
+        WRITE_NOTACKED,
+        WRITEXBYTE_COLLISION // differs from WRITEBYTE_COLLISION because raised for n bytes after the first
 
+    };
+
+private:
 //    class TransferHandler {
 //    public:
 //        bool handleInterrupt();
@@ -64,10 +83,11 @@ class I2c {
     UINT8* datarxptr;
     UINT16 datalen;
     bool   buserror;
+    BusError errortype;
 
     void setupInterrupt();
 
-    void setBusError();
+    void setBusError(BusError type);
     void resetAnyBusError();
 
   public:
@@ -75,6 +95,8 @@ class I2c {
 
     //constructor
     I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq);
+
+    BusError getErrorType();
 
     bool isBusy();
     bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
@@ -91,12 +113,18 @@ class I2c {
 };
 
 inline bool I2c::isBusy() {  return (currentstatus > BUS_IDLE)? true:false; }
-inline void I2c::setBusError(){
+inline void I2c::setBusError(BusError type){
     buserror = true;
+    errortype = type;
 }
 
 inline void I2c::resetAnyBusError(){
     buserror = false;
+    errortype = NO_ERROR;
+}
+
+inline I2c::BusError I2c::getErrorType(){
+    return errortype;
 }
 
 #ifdef	__cplusplus
