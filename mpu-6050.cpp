@@ -243,10 +243,6 @@ bool MPU_6050::Init() {
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
     i2cerror = i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocounter, NULL);
-    if(i2cerror) {
-        I2c::BusError errortype= i2cmanager.getErrorType();
-        errortype = I2c::NO_ERROR; // useless assignment. It's there just to have a line for the breakpoint
-    }
 
     // get the Interrupt status to clear pending INTS
     i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
@@ -254,7 +250,6 @@ bool MPU_6050::Init() {
     // set DMP update 7 of 7
     writeDmpConfigData(updatedata, updatedata[2]+3);
     updatedata += updatedata[2]+3;
-
 
     // we should be ready here
     // let's switch off dmp , flush fifo and clear interrupt

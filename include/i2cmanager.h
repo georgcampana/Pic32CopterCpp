@@ -54,10 +54,11 @@ public:
         RESENDADDR_COLLISION,
         RESENDADDR_NOTACKED,
         RECEIVE_OVERFLOW,
+        RCVXBYTE_OVERFLOW,
         RCV_NODATA,
+        RCVXBYTE_NODATA,
         WRITE_NOTACKED,
         WRITEXBYTE_COLLISION // differs from WRITEBYTE_COLLISION because raised for n bytes after the first
-
     };
 
 private:
@@ -97,6 +98,7 @@ private:
     I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq);
 
     BusError getErrorType();
+    UINT16 getRemainingBytes();
 
     bool isBusy();
     bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
@@ -125,6 +127,10 @@ inline void I2c::resetAnyBusError(){
 
 inline I2c::BusError I2c::getErrorType(){
     return errortype;
+}
+
+inline UINT16 I2c::getRemainingBytes(){
+    return datalen;
 }
 
 #ifdef	__cplusplus

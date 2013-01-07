@@ -128,7 +128,6 @@ void I2c::handleInterrupt() {
             break;
         }
 
-        case DATA_ACK_SENT:
         case DATA_RECEIVE_ENABLED:
         {
             // we read out one byte (or more) and send our ACK or NACK for the last
@@ -147,12 +146,20 @@ void I2c::handleInterrupt() {
                     I2CAcknowledgeByte(module, (datalen==0)? FALSE:TRUE );
                     currentstatus = (datalen == 0) ? DATA_NACK_SENT : DATA_ACK_SENT ;
                 }
-                else { setBusError(RCV_NODATA); }
+                else { setBusError(RCV_NODATA);}
             }
 
             break;
         }
 
+        case DATA_ACK_SENT:
+        {
+            if(I2CReceiverEnable(module,TRUE) != I2C_RECEIVE_OVERFLOW)
+            {
+                currentstatus = DATA_RECEIVE_ENABLED;
+            }
+            else { setBusError(RCVXBYTE_OVERFLOW); }
+        }
 
         case DATA_NACK_SENT:
         {
