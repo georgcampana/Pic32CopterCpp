@@ -49,6 +49,8 @@ class MPU_6050 {
     const static UINT8 dmpConfig[];
     const static UINT8 dmpUpdates[];
 
+    UINT8 tempworkbuffer[128];
+
 public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
@@ -58,8 +60,11 @@ public:
 
 protected:
     void setSampleRate(UINT8 rate);
-    void writeMemory(const UINT8* data2write, UINT16 datalen, UINT8 frombank = 0, UINT8 fromindex = 0);
+    bool writeMemory(const UINT8* data2write, UINT16 datalen, bool verify=true, UINT8 frombank = 0, UINT8 fromindex = 0);
+    void readMemIntoWorkBuffer( UINT16 datalen, UINT8 frombank, UINT8 fromindex);
+    bool IsMemoryEqual(const UINT8* data2write, UINT16 datalen, UINT8 frombank, UINT8 fromindex);
     void writeDmpConfigData(const UINT8* config2write, UINT16 cfgdatalen);
+    UINT16 getFifoCount();
 
 
 };

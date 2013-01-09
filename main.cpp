@@ -44,7 +44,7 @@
 
 
 
-#define I2C_CLOCK_FREQ              100000 // tested to work up to 400KHz
+#define I2C_CLOCK_FREQ              20000 // tested to work up to 400KHz
 
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );

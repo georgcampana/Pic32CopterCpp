@@ -109,7 +109,8 @@ bool MPU_6050::Init() {
     }
 
     // write DMP firmware into the bank mem
-    writeMemory(dmpMemory, sizeof(dmpMemory));
+    bool verified = writeMemory(dmpMemory, sizeof(dmpMemory));
+    verified = true;
 
     // write DMP config into bank memory
     writeDmpConfigData(dmpConfig, sizeof(dmpConfig));
@@ -162,11 +163,8 @@ bool MPU_6050::Init() {
     user_ctrl |= BIT_USER_CTRL_FIFO_RESET;
     i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
 
-    // get FIFO counter (could probably be merged into one read call
-    UINT8 fifocounth, fifocountl;
-    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
-    i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
-    UINT16 fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
+    // get FIFO counter ;
+    UINT16 fifocounter = getFifoCount();
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
     i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_R_W, fifocounter,NULL);
@@ -217,10 +215,8 @@ bool MPU_6050::Init() {
     updatedata += updatedata[2]+3;
 
     // wait to get at least 3 octets (assuming we have less than 256)
-    for(fifocounter = fifocounth = fifocountl = 0; fifocounter < 3; ) {
-        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
-        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
-        fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
+    for(fifocounter = 0; fifocounter<3; ) {
+        fifocounter = getFifoCount();
     }
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
@@ -230,15 +226,13 @@ bool MPU_6050::Init() {
     UINT8 intstatus;
     i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_INT_STATUS, &intstatus);
 
-    // set DMP update 6 of 7
+    // set DMP update 6 of 7 (actually a strange read )
     writeDmpConfigData(updatedata, updatedata[2]+3);
     updatedata += updatedata[2]+3;
 
     // wait to get at least 3 octets (assuming we have less than 256)
-    for(fifocounter = fifocounth = fifocountl = 0; fifocounter < 3; ) {
-        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, &fifocounth);
-        i2cerror = i2cmanager.ReadByteFromReg(i2caddr, MPU6050_RA_FIFO_COUNTL, &fifocountl);
-        fifocounter = (((UINT16)fifocounth) << 8) | fifocountl;
+    for(fifocounter = 0; fifocounter<3; ) {
+        fifocounter = getFifoCount();
     }
 
     // we flush by wasting the bytes in the FIFO buffer passing a null dest
@@ -268,28 +262,67 @@ bool MPU_6050::Init() {
     return i2cerror;
 }
 
-void MPU_6050::writeMemory(const UINT8* dataptr, UINT16 datalen, UINT8 frombank, UINT8 fromaddr) {
+bool MPU_6050::writeMemory(const UINT8* dataptr, UINT16 datalen, bool verify, UINT8 frombank, UINT8 fromaddr) {
 
     UINT8 burstlen;
+    bool verified = true;
 
     while(datalen>0) {
-        // switch to the right bank
-        i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_BANK_SEL, frombank ) ;
-        // now we point to the right location in that bank 
-        i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MEM_START_ADDR, fromaddr) ;
-        
         // let's burst until we are aligned with a chunck bundary
         burstlen = MPU6050_BANK_BURST_LEN - (fromaddr & MPU6050_BANK_BURST_LEN_MASK);
         // in case of less data than chunck lenght the chunk is the data lenght
         if(datalen < burstlen) burstlen = datalen;
-        
+         // switch to the right bank
+        i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_BANK_SEL, frombank ) ;
+        // now we point to the right location in that bank
+        i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MEM_START_ADDR, fromaddr) ;
+
         i2cmanager.WriteToReg(i2caddr, MPU6050_RA_MEM_R_W, burstlen, dataptr);
+
+        UINT16 notsentbytes = i2cmanager.getRemainingBytes();
+        notsentbytes = false;
+
+        if(verify) {
+            if(!IsMemoryEqual(dataptr, burstlen, frombank, fromaddr)) {
+                verified = false;
+                break;
+            }
+        }
+
         dataptr += burstlen;
         datalen -= burstlen;
         
         fromaddr+=burstlen; // fromaddr is an octet so it will rotate every 256 (bank size)
         if(fromaddr==0) frombank++;
     }
+
+    return verified;
+}
+
+bool MPU_6050::IsMemoryEqual(const UINT8* dataptr, UINT16 datalen, UINT8 frombank, UINT8 fromaddr) {
+
+    UINT8 burstlen;
+    bool isequal = true;
+
+    while(datalen>0) {
+        // let's burst until we are aligned with a chunck bundary
+        burstlen = MPU6050_BANK_BURST_LEN - (fromaddr & MPU6050_BANK_BURST_LEN_MASK);
+        // in case of less data than chunck lenght the chunk is the data lenght
+        if(datalen < burstlen) burstlen = datalen;
+
+        readMemIntoWorkBuffer(burstlen, frombank, fromaddr);
+
+        for(UINT16 c=0; c<burstlen; c++) {
+            if(tempworkbuffer[c] != dataptr[c]) {
+                isequal = false;
+                break;
+            }
+        }
+
+        if(isequal == false) break;
+    }
+
+    return isequal;
 }
 
 void MPU_6050::writeDmpConfigData(const UINT8* configdata, UINT16 cfgdatalen) {
@@ -309,7 +342,7 @@ void MPU_6050::writeDmpConfigData(const UINT8* configdata, UINT16 cfgdatalen) {
             cfgdatalen--; // there is one data byte in fact
         }
         else {
-            writeMemory(configdata, len, bank, address);
+            writeMemory(configdata, len, false, bank, address);
         }
         configdata += len;
         cfgdatalen -= (len + 3); // 3 = (bank, address, len) + len[data]
@@ -321,3 +354,15 @@ void MPU_6050::setSampleRate(UINT8 rate) {
 }
 
 
+UINT16 MPU_6050::getFifoCount() {
+    UINT8 buffer[2];
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_FIFO_COUNTH, 2, buffer);
+    return (((UINT16)buffer[0]) << 8) | buffer[1];
+}
+
+void MPU_6050::readMemIntoWorkBuffer( UINT16 datalen, UINT8 frombank, UINT8 fromindex) {
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_BANK_SEL, frombank ) ;
+    // now we point to the right location in that bank
+    i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_MEM_START_ADDR, fromindex) ;
+    i2cmanager.ReadFromReg(i2caddr, MPU6050_RA_MEM_R_W, datalen, tempworkbuffer);
+}
