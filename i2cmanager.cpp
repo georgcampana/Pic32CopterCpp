@@ -159,6 +159,7 @@ void I2c::handleInterrupt() {
                 currentstatus = DATA_RECEIVE_ENABLED;
             }
             else { setBusError(RCVXBYTE_OVERFLOW); }
+            break;
         }
 
         case DATA_NACK_SENT:
