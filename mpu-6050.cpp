@@ -279,9 +279,6 @@ bool MPU_6050::writeMemory(const UINT8* dataptr, UINT16 datalen, bool verify, UI
 
         i2cmanager.WriteToReg(i2caddr, MPU6050_RA_MEM_R_W, burstlen, dataptr);
 
-        UINT16 notsentbytes = i2cmanager.getRemainingBytes();
-        notsentbytes = false;
-
         if(verify) {
             if(!IsMemoryEqual(dataptr, burstlen, frombank, fromaddr)) {
                 verified = false;
@@ -320,6 +317,8 @@ bool MPU_6050::IsMemoryEqual(const UINT8* dataptr, UINT16 datalen, UINT8 fromban
         }
 
         if(isequal == false) break;
+
+        datalen -= burstlen;
     }
 
     return isequal;
