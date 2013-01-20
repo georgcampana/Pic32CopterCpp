@@ -11,17 +11,20 @@
 #include <plib.h>
 
 I2c* i2c1_ref;
+I2c* i2c2_ref;
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-void __ISR(_I2C_1_VECTOR, ipl5) I2cInterruptServiceRoutine(void)
+void __ISR(_I2C_1_VECTOR, ipl5) I2c1InterruptServiceRoutine(void)
 {
-//    INTClearFlag(INT_I2C1);
-    INTClearFlag(INT_I2C1B);
-    INTClearFlag(INT_I2C1M);
     i2c1_ref->handleInterrupt();
+}
+
+void __ISR(_I2C_2_VECTOR, ipl5) I2c2InterruptServiceRoutine(void)
+{
+    i2c2_ref->handleInterrupt();
 }
 
 #ifdef	__cplusplus
@@ -30,6 +33,11 @@ void __ISR(_I2C_1_VECTOR, ipl5) I2cInterruptServiceRoutine(void)
 
 
 void I2c::handleInterrupt() {
+
+    //    INTClearFlag(INT_I2C1);
+    INTClearFlag((INT_SOURCE)INT_SOURCE_I2C_ERROR(module));
+    INTClearFlag((INT_SOURCE)INT_SOURCE_I2C_MASTER(module));
+
     switch(currentstatus) {
         case START_SENT:
         {   //Now we send the slave Device address + R/W bit
@@ -177,6 +185,8 @@ void I2c::handleInterrupt() {
         {
             // Transaction completed Bus is idle now
             currentstatus = BUS_IDLE ;
+            // let's see if have to notify a listener
+            if(listener2notify!=NULL) listener2notify->TransferCompleted(errortype, datalen);
             break;
         }
 
@@ -218,20 +228,20 @@ void I2c::handleInterrupt() {
 
 void I2c::setupInterrupt() {
     // Configure the interrupt priority, level 5
-    INTSetVectorPriority( INT_I2C_1_VECTOR,
+    INTSetVectorPriority( (INT_VECTOR)INT_VECTOR_I2C(module),
                           INT_PRIORITY_LEVEL_5);
 
     // Configure the interrupt sub-priority, level 2
-    INTSetVectorSubPriority( INT_I2C_1_VECTOR,
+    INTSetVectorSubPriority( (INT_VECTOR)INT_VECTOR_I2C(module),
                              INT_SUB_PRIORITY_LEVEL_2);
 
     // Clear the interrupt source flag
-    INTClearFlag(INT_I2C1B);
-    INTClearFlag(INT_I2C1M);
+    INTClearFlag((INT_SOURCE)INT_SOURCE_I2C_ERROR(module));
+    INTClearFlag((INT_SOURCE)INT_SOURCE_I2C_MASTER(module));
 
     // Enable the interrupt source
     //INTEnable(INT_I2C1B, INT_ENABLED);
-    INTEnable(INT_I2C1M, INT_ENABLED);
+    INTEnable((INT_SOURCE)INT_SOURCE_I2C_MASTER(module), INT_ENABLED);
 }
 
 I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
@@ -239,6 +249,7 @@ I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
     module = mod;
     currentstatus = NOT_INIT;
     buserror = false;
+    listener2notify = NULL;
 
     if(mod == I2C1) {
         i2c1_ref = this;
@@ -258,15 +269,15 @@ I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
 }
 
 
-bool I2c::StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
-    return StartReadFromReg(devaddress, regaddress, 1, valuedest);
+bool I2c::StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest, EventListener* listener) {
+    return StartReadFromReg(devaddress, regaddress, 1, valuedest, listener);
 }
 
-bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value) {
-    return StartWriteToReg(devaddress,regaddress, 1, &value);
+bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value, EventListener* listener) {
+    return StartWriteToReg(devaddress,regaddress, 1, &value, listener);
 }
 
-bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
+bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest, EventListener* listener) {
     if(isBusy()) return true; // not ready
 
     resetAnyBusError();
@@ -276,6 +287,8 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     this->datarxptr = valuesdest;
     this->datatxptr = 0;
     this->datalen = len;
+    this->listener2notify = listener;
+
 
     if(len==0) return false; // read zero bytes is done ;) --> not an error
 
@@ -288,7 +301,7 @@ bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8
     return buserror;
 }
 
-bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values) {
+bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values, EventListener* listener) {
     if(isBusy()) return true; // not ready
 
     resetAnyBusError();
@@ -298,6 +311,8 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
     this->datatxptr = values;
     this->datarxptr = 0;
     this->datalen = len;
+    this->listener2notify = listener;
+
 
     if(len==0) return false; // write zero bytes is done ;) --> not an error
 

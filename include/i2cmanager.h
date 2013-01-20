@@ -61,17 +61,13 @@ public:
         WRITEXBYTE_COLLISION // differs from WRITEBYTE_COLLISION because raised for n bytes after the first
     };
 
+    class  EventListener {
+      public:
+        void TransferCompleted(BusError result, UINT16 remainingbytes);
+    };
+
 private:
-//    class TransferHandler {
-//    public:
-//        bool handleInterrupt();
-//    };
-//
-//    class ReadByteHandler : TransferHandler {
-//    public:
-//        bool handleInterrupt();
-//        ReadByteHandler();
-//    };
+
 
     STATUS currentstatus;
     ACCESS_SCHEMA currentschema;
@@ -85,6 +81,7 @@ private:
     UINT16 datalen;
     bool   buserror;
     BusError errortype;
+    EventListener* listener2notify;
 
     void setupInterrupt();
 
@@ -101,11 +98,11 @@ private:
     UINT16 getRemainingBytes();
 
     bool isBusy();
-    bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
-    bool StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value);
+    bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest, EventListener* listener=NULL);
+    bool StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value, EventListener* listener=NULL);
 
-    bool StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest);
-    bool StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values);
+    bool StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest, EventListener* listener=NULL);
+    bool StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values, EventListener* listener=NULL);
 
     bool ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest);
     bool WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value);
@@ -131,6 +128,10 @@ inline I2c::BusError I2c::getErrorType(){
 
 inline UINT16 I2c::getRemainingBytes(){
     return datalen;
+}
+
+inline void I2c::EventListener::TransferCompleted(BusError result, UINT16 remainingbytes) {
+    // do nothing
 }
 
 #ifdef	__cplusplus
