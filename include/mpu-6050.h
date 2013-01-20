@@ -20,6 +20,8 @@
 #define	MPU_6050_H
 
 #include <GenericTypeDefs.h>
+#include "i2cmanager.h"
+
 
 #ifdef	__cplusplus
 extern "C" {
@@ -31,8 +33,8 @@ extern "C" {
 }
 #endif
 
+#define DMP_FIFO_PKT_LEN 48
 
-class I2c;
 
 enum MPU6050_I2C_ADDR  {
     MPU6050_ADDRESS_AD0_LOW = 0x68,
@@ -41,7 +43,7 @@ enum MPU6050_I2C_ADDR  {
 };
 
 
-class MPU_6050 {
+class MPU_6050 : public I2c::EventListener {
     UINT8 i2caddr;
     I2c& i2cmanager;
 
@@ -55,8 +57,8 @@ public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
     bool Init();
-
-    UINT8 getDmpPacketSize() ;
+    bool fillQuaternion();
+    bool setFifoInterruptPin(UINT8 port, UINT8 pin);
 
 protected:
     void setSampleRate(UINT8 rate);
@@ -67,10 +69,37 @@ protected:
     UINT16 getFifoCount();
 
 
+
+public:
+    // buffer[0]  - buffer[3] Quaternione w
+    // buffer[4]  - buffer[7]  "      "   x
+    // buffer[8]  - buffer[11]  "      "  y
+    // buffer[12] - buffer[15]  "      "  z
+    // buffer[16] - buffer[19]  Gyro  x
+    // buffer[20] - buffer[23]  Gyro  y
+    // buffer[24] - buffer[27]  Gyro  z
+    // buffer[28] - buffer[31]  Accell  x
+    // buffer[32] - buffer[35]  Accell  y
+    // buffer[36] - buffer[39]  Accell  z
+    // buffer[40] - buffer[41]  maybe Temperature ????????
+
+    class DmpDataPacket {
+        UINT8 buffer[DMP_FIFO_PKT_LEN];
+
+        public:
+
+            DmpDataPacket();
+
+            UINT8 getPacketSize();
+            UINT8* getBuffer2Fill();
+
+
+    };
+
 };
 
-inline UINT8 MPU_6050::getDmpPacketSize() { return 48; }
-
+inline UINT8 MPU_6050::DmpDataPacket::getPacketSize() { return DMP_FIFO_PKT_LEN; }
+inline UINT8* MPU_6050::DmpDataPacket::getBuffer2Fill() { return buffer; }
 
 #endif	/* MPU_6050_H */
 
