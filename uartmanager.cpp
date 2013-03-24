@@ -3,6 +3,11 @@
  * Author: Georg Campana
  *
  * Created on 01 January 2013
+ *
+ * When the class client is writing or reading data interrupts are disabled for a short moment
+ * When the interrupt code is running there should be no problem in terms of concurrencies
+ * unless an interrupt with a higher priority interrupts the uart int handler and writes to the serial
+ *
  */
 
 #include "include/uartmanager.h"
@@ -20,22 +25,27 @@ extern "C" {
 #endif
 
 void __ISR(_UART_1_VECTOR, ipl5) Uart1InterruptServiceRoutine(void){
-
-
-
+    uart1_ref->handleInterrupt();
 }
 
+void __ISR(_UART_2_VECTOR, ipl5) Uart2InterruptServiceRoutine(void){
+    uart2_ref->handleInterrupt();
+}
 
 #ifdef	__cplusplus
 }
 #endif
 
-UartManager::UartManager(UART_MODULE mod, UINT16 baud) {
+UartManager::UartManager(UART_MODULE mod, UINT32 baud) {
     module = mod;
         
-    txptr = txbuffer;
-    rxptr = rxbuffer;
-    txlen = rxlen = 0;
+
+    if(mod == UART1 ) {
+        uart1_ref = this;
+    }
+    else { // UART2
+        uart2_ref = this;
+    }
 
     UARTConfigure(module, UART_ENABLE_PINS_TX_RX_ONLY);
     // have to force/cast to the enum because it generates an error otherwise
@@ -53,51 +63,30 @@ UartManager::UartManager(UART_MODULE mod, UINT16 baud) {
 
 void UartManager::clearRxBuffer() {
     unsigned int int_status = INTDisableInterrupts();
-    rxlen = 0;
+    rxbuffer.reset();
     INTRestoreInterrupts(int_status);
 }
 
 void UartManager::clearTxBuffer() {
     unsigned int int_status = INTDisableInterrupts();
-    txlen = 0;
+    txbuffer.reset();
     INTRestoreInterrupts(int_status);
 }
 
-UINT16 UartManager::write(char* string2write) {
+UINT16 UartManager::write(const char* string2write) {
     
     if(string2write==NULL) return 0;
-    
-    UINT32 strlen = 0;
-    for(char* cntptr = string2write; *cntptr==NULL; cntptr++) strlen++;
-    
-    if(strlen==0) return 0;
-    
-    if(strlen > UART_TX_BUFFER_LEN) {
-        strlen = UART_TX_BUFFER_LEN;
-    }
-    UINT16 transferred = strlen;
+
+    UINT16 transferred = 0;
     
     unsigned int int_status = INTDisableInterrupts();
     {
-        UINT16 bytesbeforeend = &txbuffer[UART_TX_BUFFER_LEN] - txptr;
-        // let's fill till we hit the end of the buffer and then rotate
-        if(strlen > bytesbeforeend) {
-            while(bytesbeforeend--) {
-               *txptr++ = *string2write++;
+        for(const char* cntptr = string2write; *cntptr!=NULL; cntptr++) {
+            if(txbuffer.putChar(*cntptr) == false) {
+                break;
             }
-            strlen -= bytesbeforeend;
-
-            if(txptr == &txbuffer[UART_TX_BUFFER_LEN]) {
-                txptr = txbuffer ;
-            }
+            transferred++;
         }
-        
-        while(strlen--) {
-            *txptr++ = *string2write++;
-        }
-        
-        txlen += transferred;
-        if(txlen > UART_TX_BUFFER_LEN)txlen = UART_TX_BUFFER_LEN;
     }
     INTRestoreInterrupts(int_status);    
     
@@ -105,7 +94,7 @@ UINT16 UartManager::write(char* string2write) {
 }
 
 bool UartManager::write(char chart2write) {
-
+    return txbuffer.putChar(chart2write);
 }
 
 UINT16 UartManager::countRxChars() {
@@ -130,3 +119,38 @@ void UartManager::setupInterrupt() {
     INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
 
 }
+
+void UartManager::handleInterrupt() {
+    // we should get an interrupt when there is something in RX
+    // and when the tx buffer is empty instead
+
+    //RX interrupt?
+    if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_RX(module)) )
+    {
+        // Clear the RX interrupt Flag
+        INTClearFlag((INT_SOURCE)INT_SOURCE_UART_RX(module));
+        
+        while(UARTReceivedDataIsAvailable(module))
+        {
+            rxbuffer.putChar( UARTGetDataByte(module) );
+        }
+    }
+
+    //TX interrupt
+    if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_TX(module)) )
+    {
+       INTClearFlag((INT_SOURCE)INT_SOURCE_UART_TX(module));
+       // Anything to send ?
+       if(txbuffer.getDataLen() >0) {
+           
+          // I should have some free bytes in  the TX FIFO buffer
+           while(UARTTransmitterIsReady(module)) { // buffer is not full
+               mPORTDSetBits(BIT_1);
+               INT16 nextchar = txbuffer.getChar();
+               if(nextchar == -1) break;
+               UARTSendDataByte(module,(BYTE)nextchar);
+           }
+       }
+    }
+}
+

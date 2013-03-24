@@ -367,4 +367,8 @@ void MPU_6050::readMemIntoWorkBuffer( UINT16 datalen, UINT8 frombank, UINT8 from
 
 bool MPU_6050::setFifoInterruptPin(UINT8 port, UINT8 pin) {
 
+    // set pin to receive the interrupt from the MPU6050 and generate the
+    // correspondent interrupt here in the driver to fetch the data
+    // and/or inform the device client
+
 }

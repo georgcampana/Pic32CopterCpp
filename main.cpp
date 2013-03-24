@@ -10,6 +10,7 @@
 
 #include "include/i2cmanager.h"
 #include "include/mpu-6050.h"
+#include "include/uartmanager.h"
 
 
 
@@ -49,12 +50,16 @@
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
 MPU_6050 motionsensor(i2c_mod_1);
+UartManager debugserial(UART1, 115200);
 
 int main(void) {
 
-    
+    debugserial.write("**** Pic32Copter: Hello World ****\n");
+
+    // Led on the Pingulux micro
     mPORTDSetPinsDigitalOut(BIT_1);
     mPORTDClearBits(BIT_1);
+
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
 
@@ -74,7 +79,7 @@ int main(void) {
     {
         int c=256*1024*10;
         while(c--);
-        mPORTDToggleBits(BIT_1);
+        //mPORTDToggleBits(BIT_1);
     }
 
     return 0;
