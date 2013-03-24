@@ -34,3 +34,5 @@
 
 
 }
+
+int System::dbgcounter = 0;

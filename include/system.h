@@ -34,6 +34,7 @@ class System {
 
 public:
     static void DelayMS(UINT16 ms2delay);
+    static int dbgcounter;
 
 
 

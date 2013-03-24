@@ -45,12 +45,13 @@
 
 
 
-#define I2C_CLOCK_FREQ              20000 // tested to work up to 400KHz
-
+#define I2C_CLOCK_FREQ      20000 // tested to work up to 400KHz
+#define UART_BAUD_RATE      9600
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
 MPU_6050 motionsensor(i2c_mod_1);
-UartManager debugserial(UART1, 115200);
+UartManager debugserial(UART1, UART_BAUD_RATE);
+
 
 int main(void) {
 
@@ -75,11 +76,13 @@ int main(void) {
 
     DBPRINTF("Finished");
 
+    System::dbgcounter++;
+
     while(1)
     {
         int c=256*1024*10;
         while(c--);
-        //mPORTDToggleBits(BIT_1);
+        mPORTDToggleBits(BIT_1);
     }
 
     return 0;

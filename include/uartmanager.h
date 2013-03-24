@@ -54,6 +54,7 @@ inline INT16 CircularBuffer<I>::getChar() {
     if(datalen > 0) {
         UINT8 char2return = *rdptr++;
         if(rdptr == &buffer[I]) rdptr = buffer;
+        return char2return;
     }
 
     return -1;

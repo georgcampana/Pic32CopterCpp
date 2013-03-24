@@ -141,14 +141,13 @@ void UartManager::handleInterrupt() {
     {
        INTClearFlag((INT_SOURCE)INT_SOURCE_UART_TX(module));
        // Anything to send ?
-       if(txbuffer.getDataLen() >0) {
-           
+       if(txbuffer.getDataLen() >0) { 
           // I should have some free bytes in  the TX FIFO buffer
            while(UARTTransmitterIsReady(module)) { // buffer is not full
-               mPORTDSetBits(BIT_1);
                INT16 nextchar = txbuffer.getChar();
                if(nextchar == -1) break;
                UARTSendDataByte(module,(BYTE)nextchar);
+               System::dbgcounter++;
            }
        }
     }
