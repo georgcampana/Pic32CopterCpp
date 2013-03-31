@@ -75,7 +75,7 @@ void UartManager::clearTxBuffer() {
 
 UINT16 UartManager::write(const char* string2write) {
     
-    if(string2write==NULL) return 0;
+    if(string2write==NULL || *string2write == 0x00) return 0;
 
     UINT16 transferred = 0;
     
@@ -87,6 +87,10 @@ UINT16 UartManager::write(const char* string2write) {
             }
             transferred++;
         }
+
+        if(transferred) {
+            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+        }
     }
     INTRestoreInterrupts(int_status);    
     
@@ -94,7 +98,18 @@ UINT16 UartManager::write(const char* string2write) {
 }
 
 bool UartManager::write(char chart2write) {
-    return txbuffer.putChar(chart2write);
+    bool success = false;
+    if(chart2write != 0x00) {
+        unsigned int int_status = INTDisableInterrupts();
+        {
+            success =  txbuffer.putChar(chart2write);
+            if(success) {
+                INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+            }
+        }
+        INTRestoreInterrupts(int_status);
+    }
+    return success;
 }
 
 UINT16 UartManager::countRxChars() {
@@ -116,8 +131,6 @@ void UartManager::setupInterrupt() {
     INTSetVectorSubPriority((INT_VECTOR)INT_VECTOR_UART(module), INT_SUB_PRIORITY_LEVEL_3);
 
     INTEnable((INT_SOURCE)INT_SOURCE_UART_RX(module), INT_ENABLED);
-    INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
-
 }
 
 void UartManager::handleInterrupt() {
@@ -145,10 +158,18 @@ void UartManager::handleInterrupt() {
           // I should have some free bytes in  the TX FIFO buffer
            while(UARTTransmitterIsReady(module)) { // buffer is not full
                INT16 nextchar = txbuffer.getChar();
-               if(nextchar == -1) break;
+               if(nextchar == -1) {
+                   // empty circular buffer; we switch interrupts off, until we get more data
+                   INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
+                   break;
+               }
                UARTSendDataByte(module,(BYTE)nextchar);
                System::dbgcounter++;
            }
+       }
+       else {
+           // nothing to send switch off INTs (should never happen)
+           INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
        }
     }
 }
