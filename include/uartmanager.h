@@ -42,7 +42,7 @@ inline bool CircularBuffer<I>::putChar(char char2put) {
         return false;
     }
 
-    *wrptr++ == char2put;
+    *wrptr++ = char2put;
     datalen++;
     if(wrptr == &buffer[I]) wrptr = buffer;
     return true;
@@ -84,7 +84,7 @@ class UartManager {
     UART_MODULE module;
 
 public:
-    UartManager(UART_MODULE mod, UINT32 baud = 115000);
+    UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud = 115000);
 
     void handleInterrupt();
     void clearRxBuffer();

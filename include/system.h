@@ -25,7 +25,7 @@ extern "C" {
 // we are running at 80MHz
 #define SYS_CLOCK (80000000L)
 #define GetSystemClock()            (SYS_CLOCK)
-#define GetPeripheralClock()        (SYS_CLOCK/2)
+#define GetPeripheralClock()        (GetSystemClock()/(1 << OSCCONbits.PBDIV))
 #define GetInstructionClock()       (SYS_CLOCK)
 
 

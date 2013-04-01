@@ -56,7 +56,7 @@ UartManager::UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud) {
     UARTSetLineControl(module, (UART_LINE_CONTROL_MODE)(UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1));
 
     UARTSetDataRate(module, perif_freq, baud) ;
-   
+
     UARTEnable(module, (UART_ENABLE_MODE)UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
     
     setupInterrupt();

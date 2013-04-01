@@ -35,9 +35,6 @@ int main(void) {
     // enable interrupts
     INTEnableInterrupts();
 
-    debugserial.write("**** Pic32Copter: Hello World ****\n");
-    debugserial.write("**** This is the second line ****\n");
-
     bool error = motionsensor.Init();
     
     if (error) {
@@ -54,6 +51,8 @@ int main(void) {
         int c=256*1024*10;
         while(c--);
         mPORTDToggleBits(BIT_1);
+        debugserial.write("**** Pic32Copter: Hello World ****\r\n");
+        debugserial.write("**** This is the second line ****\r\n");
     }
 
     return 0;
