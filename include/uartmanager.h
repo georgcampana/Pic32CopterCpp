@@ -42,7 +42,7 @@ inline bool CircularBuffer<I>::putChar(char char2put) {
         return false;
     }
 
-    *wrptr++ == char2put;
+    *wrptr++ = char2put;
     datalen++;
     if(wrptr == &buffer[I]) wrptr = buffer;
     return true;
