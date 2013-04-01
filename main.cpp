@@ -45,8 +45,8 @@
 
 
 
-#define I2C_CLOCK_FREQ      20000 // tested to work up to 400KHz
-#define UART_BAUD_RATE      9600
+#define I2C_CLOCK_FREQ      (20000) // tested to work up to 400KHz
+#define UART_BAUD_RATE      (9600)
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
 MPU_6050 motionsensor(i2c_mod_1);
@@ -55,7 +55,6 @@ UartManager debugserial(UART1, UART_BAUD_RATE);
 
 int main(void) {
 
-    debugserial.write("**** Pic32Copter: Hello World ****\n");
 
     // Led on the Pingulux micro
     mPORTDSetPinsDigitalOut(BIT_1);
@@ -66,6 +65,9 @@ int main(void) {
 
     // enable interrupts
     INTEnableInterrupts();
+
+    debugserial.write("**** Pic32Copter: Hello World ****\n");
+    debugserial.write("**** This is the second line ****\n");
 
     bool error = motionsensor.Init();
     

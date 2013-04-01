@@ -51,11 +51,12 @@ UartManager::UartManager(UART_MODULE mod, UINT32 baud) {
     // have to force/cast to the enum because it generates an error otherwise
     // when compiled under c++ --> should be communicated to microchip
     // to ammend the xc32 compiler
-
     UARTSetFifoMode(module, (UART_FIFO_MODE)(UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_TX_BUFFER_EMPTY));
+
     UARTSetLineControl(module, (UART_LINE_CONTROL_MODE)(UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1));
+
     UARTSetDataRate(module, GetPeripheralClock(), baud) ;
-   
+
     UARTEnable(module, (UART_ENABLE_MODE)UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
     
     setupInterrupt();
@@ -164,13 +165,14 @@ void UartManager::handleInterrupt() {
                    break;
                }
                UARTSendDataByte(module,(BYTE)nextchar);
-               System::dbgcounter++;
            }
        }
        else {
            // nothing to send switch off INTs (should never happen)
            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
        }
+
+       System::dbgcounter++;
     }
 }
 
