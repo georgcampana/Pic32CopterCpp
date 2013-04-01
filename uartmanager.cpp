@@ -36,7 +36,7 @@ void __ISR(_UART_2_VECTOR, ipl5) Uart2InterruptServiceRoutine(void){
 }
 #endif
 
-UartManager::UartManager(UART_MODULE mod, UINT32 baud) {
+UartManager::UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud) {
     module = mod;
         
 
@@ -54,7 +54,7 @@ UartManager::UartManager(UART_MODULE mod, UINT32 baud) {
 
     UARTSetFifoMode(module, (UART_FIFO_MODE)(UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_TX_BUFFER_EMPTY));
     UARTSetLineControl(module, (UART_LINE_CONTROL_MODE)(UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1));
-    UARTSetDataRate(module, GetPeripheralClock(), baud) ;
+    UARTSetDataRate(module, perif_freq, baud) ;
    
     UARTEnable(module, (UART_ENABLE_MODE)UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
     
