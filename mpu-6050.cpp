@@ -120,7 +120,7 @@ bool MPU_6050::Init() {
     // set interrupt on for DMP and FIFO overflow
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_INT_ENABLE, BIT_FIFO_OFLOW_EN | BIT_DMP_INT_EN );
 
-    // set sampling rate to 200Hz --> 4  in fact 1khz / (1 + 4) = 200 Hz
+    // set sampling rate to 200Hz --> 4 ; in fact 1khz / (1 + 4) = 200 Hz
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_SMPLRT_DIV, 4 );
 
     // set external frame sync to TEMPerature  (disabled) and DLPF (low filter) to 42Hz

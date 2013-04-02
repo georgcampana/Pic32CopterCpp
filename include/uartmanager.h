@@ -21,7 +21,7 @@ class CircularBuffer {
     UINT8 *wrptr;
     UINT8 *rdptr;
     UINT16 datalen;
-    
+
 public:
     CircularBuffer();
     
@@ -81,8 +81,9 @@ class UartManager {
     CircularBuffer<UART_TX_BUFFER_LEN> txbuffer;
     CircularBuffer<UART_RX_BUFFER_LEN> rxbuffer;
 
-    UART_MODULE module;
+    const UART_MODULE module;
 
+    bool localecho;
 public:
     UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud = 115000);
 
@@ -98,6 +99,7 @@ public:
 
     UINT16 readLine(UINT8* dest, UINT16 maxlen);
 
+    void setLocalEcho(bool newstate);
 protected:
     void setupInterrupt();
 

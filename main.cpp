@@ -13,8 +13,8 @@
 #include "include/uartmanager.h"
 
 
-#define I2C_CLOCK_FREQ      (20000) // tested to work up to 400KHz
-#define UART_BAUD_RATE      (9600)
+#define I2C_CLOCK_FREQ      (100000) // tested to work up to 400KHz
+#define UART_BAUD_RATE      (115200)
 
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
@@ -35,6 +35,11 @@ int main(void) {
     // enable interrupts
     INTEnableInterrupts();
 
+    debugserial.write("**** Pic32Copter: Hello World ****\r\n");
+    debugserial.write("**** This is the second line ****\r\n");
+
+    debugserial.setLocalEcho(true);
+
     bool error = motionsensor.Init();
     
     if (error) {
@@ -51,8 +56,6 @@ int main(void) {
         int c=256*1024*10;
         while(c--);
         mPORTDToggleBits(BIT_1);
-        debugserial.write("**** Pic32Copter: Hello World ****\r\n");
-        debugserial.write("**** This is the second line ****\r\n");
     }
 
     return 0;
