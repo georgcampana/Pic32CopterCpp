@@ -10,10 +10,6 @@
 
 #include "system.h"
 
-
-#endif	/* UARTMANAGER_H */
-
-
 template<int I>
 class CircularBuffer {
     UINT8 buffer[I];
@@ -104,3 +100,5 @@ protected:
     void setupInterrupt();
 
 };
+
+#endif	/* UARTMANAGER_H */

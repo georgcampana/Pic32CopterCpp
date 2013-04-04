@@ -57,8 +57,12 @@ public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
     bool Init();
+
     bool fillQuaternion();
+    bool setQuaternionContainer();
+
     bool setFifoInterruptPin(UINT8 port, UINT8 pin);
+    bool setDataRdyPin(UINT8 port, UINT8 pin);
 
 protected:
     void setSampleRate(UINT8 rate);

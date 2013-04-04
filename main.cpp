@@ -11,6 +11,8 @@
 #include "include/i2cmanager.h"
 #include "include/mpu-6050.h"
 #include "include/uartmanager.h"
+#include "include/digitaliomanager.h"
+#include "include/dbgout.h"
 
 
 #define I2C_CLOCK_FREQ      (100000) // tested to work up to 400KHz
@@ -18,11 +20,13 @@
 
 
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
+DigitalIOManager digitalports;
 MPU_6050 motionsensor(i2c_mod_1);
 UartManager debugserial(UART1, GetPeripheralClock(), UART_BAUD_RATE);
-
+DebugConsole dbgout(debugserial);
 
 int main(void) {
+
 
 
     // Led on the Pingulux micro
@@ -35,10 +39,9 @@ int main(void) {
     // enable interrupts
     INTEnableInterrupts();
 
-    debugserial.write("**** Pic32Copter: Hello World ****\r\n");
-    debugserial.write("**** This is the second line ****\r\n");
+    dbgout << "**** Pic32Copter: Hello World ****\r\n";
+    dbgout << "**** This is the second line ****\r\n";
 
-    debugserial.setLocalEcho(true);
 
     bool error = motionsensor.Init();
     
@@ -50,6 +53,8 @@ int main(void) {
     DBPRINTF("Finished");
 
     System::dbgcounter++;
+
+    dbgout << "dbgcounter=" << System::dbgcounter;
 
     while(1)
     {

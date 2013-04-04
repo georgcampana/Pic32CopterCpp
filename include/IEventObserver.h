@@ -10,7 +10,7 @@
 
 class IEventObserver {
 
-    bool onEventFired(int eventid) = 0;
+    virtual bool onEventFired(int eventid) = 0;
     
 
 };
