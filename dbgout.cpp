@@ -14,8 +14,14 @@
 #ifndef DEBUG
 
 // let me avoid to include heavy headers
-extern char *	ltoa(char * buf, long val, int base);
-extern char *	ultoa(char * buf, unsigned long val, int base);
+static void ltoa(char * buf, long val, int base) {
+    if(val==0) *buf++= '0';
+    else
+    if(val<0) val=-val;
+
+    while
+}
+static void ultoa(char * buf, unsigned long val, int base);
 
 
 DebugConsole::DebugConsole(UartManager& serialif) : outconsole(serialif) {
@@ -23,13 +29,13 @@ DebugConsole::DebugConsole(UartManager& serialif) : outconsole(serialif) {
 }
 
 DebugConsole& DebugConsole::operator << (long lnumber) {
-    ::ltoa(asciibuffer, lnumber, 10);
+    ltoa(asciibuffer, lnumber, 10);
     outconsole.write(asciibuffer);
     return *this;
 }
 
 DebugConsole& DebugConsole::operator << (unsigned long ulnumber) {
-    ::ultoa(asciibuffer, ulnumber, 10);
+    ultoa(asciibuffer, ulnumber, 10);
     outconsole.write(asciibuffer);
     return *this;
 }
