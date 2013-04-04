@@ -27,7 +27,7 @@ DebugConsole dbgout(debugserial);
 
 int main(void) {
 
-
+    //float testf = 5/3;
 
     // Led on the Pingulux micro
     mPORTDSetPinsDigitalOut(BIT_1);
@@ -53,8 +53,9 @@ int main(void) {
     DBPRINTF("Finished");
 
     System::dbgcounter++;
+    // testf++;
 
-    dbgout << "dbgcounter=" << System::dbgcounter;
+    dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
 
     while(1)
     {

@@ -23,17 +23,13 @@ public:
     DebugConsole& operator << (unsigned int unumber) ;
     DebugConsole& operator << (char cnumber) ;
     DebugConsole& operator << (unsigned char ucnumber) ;
-    DebugConsole& operator << (long lnumber) ;
-    DebugConsole& operator << (unsigned long ulnumber) ;
     DebugConsole& operator << (const char* string) ;
     DebugConsole& operator << (bool onezero) ;
     DebugConsole& operator << (float fnumber) ;
 };
 
-inline  DebugConsole& DebugConsole::operator << (int number) { return this->operator <<((long)number);};
-inline  DebugConsole& DebugConsole::operator << (unsigned int unumber) { return this->operator <<((unsigned long)unumber);};
-inline  DebugConsole& DebugConsole::operator << (char cnumber) { return this->operator <<((long)cnumber);};
-inline  DebugConsole& DebugConsole::operator << (unsigned char ucnumber) { return this->operator <<((unsigned char)ucnumber);};
+inline  DebugConsole& DebugConsole::operator << (char cnumber) { return this->operator <<((int)cnumber);};
+inline  DebugConsole& DebugConsole::operator << (unsigned char ucnumber) { return this->operator <<((unsigned int)ucnumber);};
 
 extern DebugConsole cout;
 

@@ -52,7 +52,10 @@ class OutputPin {
     int pinno;
     bool lastset;
 
-
+    virtual void Toggle() = 0;
+    virtual void Clear() = 0;
+    virtual void Set() = 0;
+    virtual void SetAsOut() = 0;
 
 public:
     OutputPin(int pin);
@@ -68,7 +71,13 @@ public:
     bool get();
 };
 
-//class OutPinP
+class OutPinPortD : OutputPin {
+public:
+    void Toggle();
+    void Clear();
+    void Set();
+    void SetAsOut();
+};
 
 #endif	/* DIGITALIOMANAGER_H */
 
