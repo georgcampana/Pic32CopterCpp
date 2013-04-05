@@ -10,6 +10,15 @@
 
 #include "ieventobserver.h"
 
+
+class InputPin {
+    int pinno;
+    bool lastset;
+public:
+    InputPin(int pin, bool pullup = false);
+    bool get();
+};
+
 typedef class PinChangeHandler* PinChangeHandlerPtr;
 
 class PinChangeHandler {
@@ -48,14 +57,17 @@ public:
 
 };
 
+
+// OutputPin
 class OutputPin {
-    int pinno;
+protected:
+    const int pinno;
     bool lastset;
 
-    virtual void Toggle() = 0;
-    virtual void Clear() = 0;
-    virtual void Set() = 0;
-    virtual void SetAsOut() = 0;
+    virtual void Toggle()=0;
+    virtual void Clear()=0;
+    virtual void Set()=0;
+    virtual void SetAsOut()=0;
 
 public:
     OutputPin(int pin);
@@ -63,20 +75,41 @@ public:
     bool set(bool newstatus);
 };
 
-class InputPin {
-    int pinno;
-    bool lastset;
+
+class OutPinPortA : public OutputPin {
+    virtual void Toggle();
+    virtual void Clear();
+    virtual void Set();
+    virtual void SetAsOut();
 public:
-    InputPin(int pin, bool pullup = false);
-    bool get();
+    OutPinPortA(int pin);
 };
 
-class OutPinPortD : OutputPin {
+class OutPinPortB : public OutputPin {
+    virtual void Toggle();
+    virtual void Clear();
+    virtual void Set();
+    virtual void SetAsOut();
 public:
-    void Toggle();
-    void Clear();
-    void Set();
-    void SetAsOut();
+    OutPinPortB(int pin);
+};
+
+class OutPinPortC : public OutputPin {
+    virtual void Toggle();
+    virtual void Clear();
+    virtual void Set();
+    virtual void SetAsOut();
+public:
+    OutPinPortC(int pin);    
+};
+
+class OutPinPortD : public OutputPin {
+    virtual void Toggle();
+    virtual void Clear();
+    virtual void Set();
+    virtual void SetAsOut();
+public:
+    OutPinPortD(int pin);    
 };
 
 #endif	/* DIGITALIOMANAGER_H */

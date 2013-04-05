@@ -25,13 +25,14 @@ MPU_6050 motionsensor(i2c_mod_1);
 UartManager debugserial(UART1, GetPeripheralClock(), UART_BAUD_RATE);
 DebugConsole dbgout(debugserial);
 
+OutPinPortD led(BIT_1);
+
 int main(void) {
 
     //float testf = 5/3;
 
     // Led on the Pingulux micro
-    mPORTDSetPinsDigitalOut(BIT_1);
-    mPORTDClearBits(BIT_1);
+    led << false;
 
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
