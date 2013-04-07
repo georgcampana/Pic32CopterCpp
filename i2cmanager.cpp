@@ -244,7 +244,7 @@ void I2c::setupInterrupt() {
     INTEnable((INT_SOURCE)INT_SOURCE_I2C_MASTER(module), INT_ENABLED);
 }
 
-    I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
+I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
 
     module = mod;
     currentstatus = NOT_INIT;

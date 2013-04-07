@@ -18,14 +18,21 @@
 #define I2C_CLOCK_FREQ      (100000) // tested to work up to 400KHz
 #define UART_BAUD_RATE      (115200)
 
-
+// I2C driver
 I2c i2c_mod_1(I2C1, GetPeripheralClock(), I2C_CLOCK_FREQ );
-DigitalIOManager digitalports;
+// Invensense sensor, with the interrupt line connected to CN15/RD6
 MPU_6050 motionsensor(i2c_mod_1);
+InputPin mpu6050intpin(IOPORT_D, BIT_6);
+PinChangeHandler mpu6050datardy(mpu6050intpin, CN15_ENABLE);
+
+DigitalIO digitalports;
+
+// Uart Manager, used for the debug console
 UartManager debugserial(UART1, GetPeripheralClock(), UART_BAUD_RATE);
 DebugConsole dbgout(debugserial);
 
-OutPinPortD led(BIT_1);
+// led present on the Pinguino micro
+OutputPin led(IOPORT_D, BIT_1);
 
 int main(void) {
 
@@ -34,9 +41,11 @@ int main(void) {
     // Led on the Pingulux micro
     led << false;
 
+    digitalports.addPinChangeHandler(&mpu6050datardy);
+    digitalports.enableChangeNotification(true);
+
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
-
     // enable interrupts
     INTEnableInterrupts();
 
@@ -62,7 +71,7 @@ int main(void) {
     {
         int c=256*1024*10;
         while(c--);
-        mPORTDToggleBits(BIT_1);
+        led.toggle();
     }
 
     return 0;

@@ -9,20 +9,26 @@
 #define	DIGITALIOMANAGER_H
 
 #include "ieventobserver.h"
-
+//#include <plib.h>
 
 class InputPin {
-    int pinno;
+    const IoPortId pinport;
+    const int pinno;
     bool lastset;
+
 public:
-    InputPin(int pin, bool pullup = false);
+    InputPin(IoPortId port, int pin);
     bool get();
+    InputPin& operator >> (bool& result);
 };
+
 
 typedef class PinChangeHandler* PinChangeHandlerPtr;
 
 class PinChangeHandler {
-
+    const InputPin& inpin;
+    const int cnotifypin;
+    const IEventObserver* pinobserver;
 public:
     enum PullUpDown {
         PUD_NONE =0,
@@ -31,14 +37,16 @@ public:
     };
 
 private:
-    friend class DigitalIOManager;
+    friend class DigitalIO;
     bool laststatus;
     bool currentstatus;
 
     PinChangeHandlerPtr nexthandler;
     IEventObserver* observer;
 public:
-    PinChangeHandler(int pin, PullUpDown pullmode, IEventObserver* observer=0  );
+    PinChangeHandler(   InputPin& pinport, int cnpin,
+                        PullUpDown pullmode=PUD_NONE,
+                        IEventObserver* observer=0  );
 
     bool Read();
     bool ReadOld();
@@ -47,70 +55,36 @@ public:
 
 
 
-class DigitalIOManager {
+class DigitalIO {
 
     PinChangeHandlerPtr firsthandler;
 public:
-    void AddPinChangeHandler(PinChangeHandlerPtr changehandler);
+    void addPinChangeHandler(PinChangeHandlerPtr changehandler);
 
-    void handleCnInterrupt();
+    void handleInterrupt();
+
+    void enableChangeNotification(bool newstatus);
+
+    DigitalIO();
 
 };
 
 
 // OutputPin
 class OutputPin {
-protected:
+    const IoPortId pinport;
     const int pinno;
     bool lastset;
 
-    virtual void Toggle()=0;
-    virtual void Clear()=0;
-    virtual void Set()=0;
-    virtual void SetAsOut()=0;
-
 public:
-    OutputPin(int pin);
+    OutputPin(IoPortId port, int pin, bool opendrain=false);
     void operator << (bool newstatus) ;
     bool set(bool newstatus);
+    bool toggle();
 };
 
 
-class OutPinPortA : public OutputPin {
-    virtual void Toggle();
-    virtual void Clear();
-    virtual void Set();
-    virtual void SetAsOut();
-public:
-    OutPinPortA(int pin);
-};
 
-class OutPinPortB : public OutputPin {
-    virtual void Toggle();
-    virtual void Clear();
-    virtual void Set();
-    virtual void SetAsOut();
-public:
-    OutPinPortB(int pin);
-};
-
-class OutPinPortC : public OutputPin {
-    virtual void Toggle();
-    virtual void Clear();
-    virtual void Set();
-    virtual void SetAsOut();
-public:
-    OutPinPortC(int pin);    
-};
-
-class OutPinPortD : public OutputPin {
-    virtual void Toggle();
-    virtual void Clear();
-    virtual void Set();
-    virtual void SetAsOut();
-public:
-    OutPinPortD(int pin);    
-};
 
 #endif	/* DIGITALIOMANAGER_H */
 
