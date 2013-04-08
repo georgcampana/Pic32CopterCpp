@@ -99,7 +99,8 @@ void DigitalIO::addPinChangeHandler(PinChangeHandlerPtr changehandler) {
 
 // generic pin interface
 OutputPin::OutputPin(IoPortId port, int pin, bool opendrain) : pinno(pin), pinport(port) {
-
+    PORTSetPinsDigitalOut(pinport,pinno);
+    PORTClearBits(pinport, pinno);
 }
 void OutputPin::operator << (bool newstatus) {
     newstatus? PORTSetBits(pinport, pinno) : PORTClearBits(pinport, pinno);

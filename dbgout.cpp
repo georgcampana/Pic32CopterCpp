@@ -74,7 +74,7 @@ DebugConsole& DebugConsole::operator << (const char* string) {
 
 DebugConsole& DebugConsole::operator << (bool onezero) {
     if(onezero == true) outconsole.write("true");
-    else  outconsole.write("true"); 
+    else  outconsole.write("false");
     return *this;
 }
 

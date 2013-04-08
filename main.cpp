@@ -42,7 +42,7 @@ int main(void) {
     led << false;
 
     digitalports.addPinChangeHandler(&mpu6050datardy);
-    digitalports.enableChangeNotification(true);
+    //digitalports.enableChangeNotification(true);
 
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
@@ -51,27 +51,29 @@ int main(void) {
 
     dbgout << "**** Pic32Copter: Hello World ****\r\n";
     dbgout << "**** This is the second line ****\r\n";
-
+    dbgout << "**** This is the third line ****\r\n";
 
     bool error = motionsensor.Init();
-    
+
+    dbgout << "**** This is the fourth line ****\r\n";
     if (error) {
-        DBPRINTF("Buserror");
+        dbgout << "i2c buserror";
     }
-
-
-    DBPRINTF("Finished");
 
     System::dbgcounter++;
     // testf++;
 
-    dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
+    //dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
 
     while(1)
     {
-        int c=256*1024*10;
+        int c=16*1024*10;
         while(c--);
         led.toggle();
+        //dbgout << "dbgcounter=" << System::dbgcounter;
+        dbgout << "543210 Another line - " << true;
+        dbgout << System::dbgcounter;
+        dbgout << "\r\n";
     }
 
     return 0;
