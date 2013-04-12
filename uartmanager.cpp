@@ -187,7 +187,7 @@ void UartManager::handleInterrupt() {
     //TX interrupt
     if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_TX(module)) )
     {
-       INTClearFlag((INT_SOURCE)INT_SOURCE_UART_TX(module));
+       int sent = 0;
        // Anything to send ?
        if(txbuffer.getDataLen() >0) { 
           // I should have some free bytes in  the TX FIFO buffer
@@ -199,11 +199,18 @@ void UartManager::handleInterrupt() {
                    break;
                }
                UARTSendDataByte(module,(BYTE)nextchar);
+               sent++;
            }
        }
        else {
            // nothing to send switch off INTs (should never happen)
            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
+       }
+
+       if(sent >0 ) {
+           // if we didn't send anything then we do not clear the int
+           // but simply disable it (see above)
+           INTClearFlag((INT_SOURCE)INT_SOURCE_UART_TX(module));
        }
     }
 }
