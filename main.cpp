@@ -63,17 +63,14 @@ int main(void) {
     System::dbgcounter++;
     // testf++;
 
-    //dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
+    dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
 
     while(1)
     {
         int c=16*1024*10;
         while(c--);
         led.toggle();
-        //dbgout << "dbgcounter=" << System::dbgcounter;
-        dbgout << "543210 Another line - " << true;
-        dbgout << System::dbgcounter;
-        dbgout << "\r\n";
+        dbgout << "dbgcounter=" << System::dbgcounter;
     }
 
     return 0;
