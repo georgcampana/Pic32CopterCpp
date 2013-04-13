@@ -25,6 +25,9 @@ MPU_6050 motionsensor(i2c_mod_1);
 InputPin mpu6050intpin(IOPORT_D, BIT_6);
 PinChangeHandler mpu6050datardy(mpu6050intpin, CN15_ENABLE);
 
+InputPin btinputpin(IOPORT_D, BIT_4);
+PinChangeHandler btnchange(btinputpin, CN13_ENABLE);
+
 DigitalIO digitalports;
 
 // Uart Manager, used for the debug console
@@ -42,7 +45,8 @@ int main(void) {
     led << false;
 
     digitalports.addPinChangeHandler(&mpu6050datardy);
-    //digitalports.enableChangeNotification(true);
+    digitalports.addPinChangeHandler(&btnchange);
+    digitalports.enableChangeNotification(true);
 
     // configure for multi-vectored mode
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
@@ -70,7 +74,7 @@ int main(void) {
         int c=16*1024*10;
         while(c--);
         led.toggle();
-        dbgout << "dbgcounter=" << System::dbgcounter;
+        dbgout << "dbgcounter=" << System::dbgcounter << " ";
     }
 
     return 0;

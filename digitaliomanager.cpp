@@ -28,17 +28,28 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl6) DigitalIO1InterruptServiceRoutine(void)
 #endif
 
 void DigitalIO::handleInterrupt() {
+   System::dbgcounter++;
 
+   PinChangeHandlerPtr cnhandler = firsthandler;
 
+   while(cnhandler) {
 
-    mCNClearIntFlag();
+       if(cnhandler->ReadOld() != cnhandler->Read()) {
+           cnhandler->notifyObserver();
+           cnhandler->SetOld();
+       }
+
+       cnhandler = cnhandler->nexthandler;
+   }
+
+   mCNClearIntFlag();
 }
 
 InputPin::InputPin(IoPortId port, int pin) : pinport(port), pinno(pin) {
     PORTSetPinsDigitalIn(pinport, pinno);
 }
 
-bool InputPin::get() {
+bool InputPin::get() const {
     return (PORTReadBits(pinport, pinno))? true : false;
 }
 
@@ -61,14 +72,28 @@ PinChangeHandler::PinChangeHandler(
     // Ex. mCNOpen(CN_ON | CN_IDLE_CON, CN0_ENABLE | CN1_ENABLE, CN0_PULLUP_ENABLE | CN1_PULLUP_ENABLE);
     mCNOpen(CN_ON | CN_IDLE_CON, cnpin, pullup);
 
+    SetOld();
 }
 
+void PinChangeHandler::notifyObserver() {
+    if(pinobserver) pinobserver->onEventFired(0);
+}
+
+bool PinChangeHandler::Read() const {
+    return inpin.get();
+}
+bool PinChangeHandler::ReadOld() const {
+    return laststatus;
+}
+
+void PinChangeHandler::SetOld() {
+    laststatus = Read();
+}
 
 DigitalIO::DigitalIO() {
     firsthandler = NULL;
 
     digitinout_ref = this;
-
 }
 
 void DigitalIO::enableChangeNotification(bool newstatus) {

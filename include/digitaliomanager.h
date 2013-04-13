@@ -8,6 +8,7 @@
 #ifndef DIGITALIOMANAGER_H
 #define	DIGITALIOMANAGER_H
 
+#include "system.h"
 #include "ieventobserver.h"
 //#include <plib.h>
 
@@ -18,7 +19,7 @@ class InputPin {
 
 public:
     InputPin(IoPortId port, int pin);
-    bool get();
+    bool get() const;
     InputPin& operator >> (bool& result);
 };
 
@@ -28,7 +29,14 @@ typedef class PinChangeHandler* PinChangeHandlerPtr;
 class PinChangeHandler {
     const InputPin& inpin;
     const int cnotifypin;
-    const IEventObserver* pinobserver;
+    const IEventObserverPrt pinobserver;
+    friend class DigitalIO;
+    bool laststatus;
+    //bool currentstatus;
+
+    PinChangeHandlerPtr nexthandler;
+
+    void notifyObserver();
 public:
     enum PullUpDown {
         PUD_NONE =0,
@@ -36,21 +44,13 @@ public:
         PUD_DOWN
     };
 
-private:
-    friend class DigitalIO;
-    bool laststatus;
-    bool currentstatus;
-
-    PinChangeHandlerPtr nexthandler;
-    IEventObserver* observer;
-public:
     PinChangeHandler(   InputPin& pinport, int cnpin,
                         PullUpDown pullmode=PUD_NONE,
-                        IEventObserver* observer=0  );
+                        IEventObserverPrt observer=0  );
 
-    bool Read();
-    bool ReadOld();
-
+    bool Read() const;
+    bool ReadOld() const;
+    void SetOld();
 };
 
 

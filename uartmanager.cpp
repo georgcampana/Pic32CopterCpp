@@ -166,7 +166,7 @@ void UartManager::setupInterrupt() {
 void UartManager::handleInterrupt() {
     // we should get an interrupt when there is something in RX
     // and when the tx buffer is empty instead
-    System::dbgcounter++;
+
     //RX interrupt?
     if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_RX(module)) )
     {

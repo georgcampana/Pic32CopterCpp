@@ -10,11 +10,12 @@
 
 class IEventObserver {
 
+public:
     virtual bool onEventFired(int eventid) = 0;
     
 
 };
 
-
+typedef IEventObserver* IEventObserverPrt;
 #endif	/* IEVENTOBSERVER_H */
 
