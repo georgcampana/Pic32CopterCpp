@@ -186,7 +186,10 @@ void I2c::handleInterrupt() {
             // Transaction completed Bus is idle now
             currentstatus = BUS_IDLE ;
             // let's see if have to notify a listener
-            if(listener2notify!=NULL) listener2notify->TransferCompleted(errortype, datalen);
+            if(listener2notify!=NULL) {
+                listener2notify->TransferCompleted(errortype, datalen);
+                listener2notify = NULL;
+            }
             break;
         }
 

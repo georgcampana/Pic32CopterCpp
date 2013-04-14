@@ -54,15 +54,15 @@ int main(void) {
     INTEnableInterrupts();
 
     dbgout << "**** Pic32Copter: Hello World ****\r\n";
-    dbgout << "**** This is the second line ****\r\n";
-    dbgout << "**** This is the third line ****\r\n";
-
+    dbgout << "**** Going to init the sensors****\r\n";
     bool error = motionsensor.Init();
 
-    dbgout << "**** This is the fourth line ****\r\n";
-    if (error) {
-        dbgout << "i2c buserror";
-    }
+    dbgout << "MPU6050 initialized\r\n";
+    if (error) { dbgout << "i2c buserror during MPU6050 init \r\n"; }
+
+    dbgout << "Going to enable the DMP\r\n";
+    error = motionsensor.enableDMP();
+    if (error) { dbgout << "i2c buserror during MPU6050 init \r\n"; }
 
     System::dbgcounter++;
     // testf++;

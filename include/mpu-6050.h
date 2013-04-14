@@ -53,6 +53,15 @@ class MPU_6050 : public I2c::EventListener {
 
     UINT8 tempworkbuffer[128];
 
+    // State machine for interrupt trasfers using the i2c
+    enum I2cStateMachine {
+        I2C_NONE = 0,
+        I2C_CTRL_READ,
+        I2C_CTRL_WRITTEN
+    } i2cstate;
+    // used across i2c transfers
+    UINT8 tmpregvalue;
+
 public:
 
     MPU_6050(I2c& busmanager, UINT8 busaddress = MPU6050_DEFAULT_ADDRESS );
@@ -62,7 +71,10 @@ public:
     bool setQuaternionContainer();
 
     bool setFifoInterruptPin(UINT8 port, UINT8 pin);
-    bool setDataRdyPin(UINT8 port, UINT8 pin);
+//  bool setDataRdyPin(UINT8 port, UINT8 pin);
+    bool enableDMP(bool enabled = true);
+
+    virtual void TransferCompleted(I2c::BusError result, UINT16 remainingbytes);
 
 protected:
     void setSampleRate(UINT8 rate);
@@ -71,8 +83,6 @@ protected:
     bool IsMemoryEqual(const UINT8* data2write, UINT16 datalen, UINT8 frombank, UINT8 fromindex);
     void writeDmpConfigData(const UINT8* config2write, UINT16 cfgdatalen);
     UINT16 getFifoCount();
-
-
 
 public:
     // buffer[0]  - buffer[3] Quaternione w
@@ -106,4 +116,3 @@ inline UINT8 MPU_6050::DmpDataPacket::getPacketSize() { return DMP_FIFO_PKT_LEN;
 inline UINT8* MPU_6050::DmpDataPacket::getBuffer2Fill() { return buffer; }
 
 #endif	/* MPU_6050_H */
-

@@ -27,7 +27,7 @@
 #define MPU6050_BANK_BURST_LEN 16  // if changed ammend the mask below too
 #define MPU6050_BANK_BURST_LEN_MASK 0x0f // see above
 
-MPU_6050::MPU_6050(I2c& busmanager, UINT8 busaddress ): i2cmanager(busmanager), i2caddr(busaddress) {
+MPU_6050::MPU_6050(I2c& busmanager, UINT8 busaddress ): i2cmanager(busmanager), i2caddr(busaddress), i2cstate(I2C_NONE) {
 
 }
 
@@ -370,5 +370,30 @@ bool MPU_6050::setFifoInterruptPin(UINT8 port, UINT8 pin) {
     // set pin to receive the interrupt from the MPU6050 and generate the
     // correspondent interrupt here in the driver to fetch the data
     // and/or inform the device client
+
+}
+
+bool MPU_6050::enableDMP(bool enabled) {
+    if(i2cstate != I2C_NONE) return true;
+
+    i2cstate = I2C_CTRL_READ;
+    return i2cmanager.StartReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &tmpregvalue, this) ;
+}
+
+void MPU_6050::TransferCompleted(I2c::BusError result, UINT16 remainingbytes) {
+    System::dbgcounter+=10;
+    switch(i2cstate) {
+        case I2C_CTRL_READ:
+            i2cstate = I2C_CTRL_WRITTEN;
+            tmpregvalue |= BIT_USER_CTRL_DMP_EN;
+            i2cmanager.StartWriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, tmpregvalue, this) ;
+            break;
+        case I2C_CTRL_WRITTEN:
+            // Dmp should be enabled now
+            i2cstate = I2C_NONE;
+            break;
+        default:
+            break;
+    }
 
 }

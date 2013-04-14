@@ -63,7 +63,7 @@ public:
 
     class  EventListener {
       public:
-        void TransferCompleted(BusError result, UINT16 remainingbytes);
+        virtual void TransferCompleted(BusError result, UINT16 remainingbytes);
     };
 
 private:
