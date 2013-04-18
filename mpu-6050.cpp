@@ -375,25 +375,32 @@ bool MPU_6050::setFifoInterruptPin(UINT8 port, UINT8 pin) {
 
 bool MPU_6050::enableDMP(bool enabled) {
     if(i2cstate != I2C_NONE) return true;
-
+    i2ctrans = enabled ? I2C_DMP_ON : I2C_DMP_OFF;
     i2cstate = I2C_CTRL_READ;
     return i2cmanager.StartReadByteFromReg(i2caddr, MPU6050_RA_USER_CTRL, &tmpregvalue, this) ;
 }
 
 void MPU_6050::TransferCompleted(I2c::BusError result, UINT16 remainingbytes) {
-    System::dbgcounter+=10;
+
     switch(i2cstate) {
         case I2C_CTRL_READ:
             i2cstate = I2C_CTRL_WRITTEN;
-            tmpregvalue |= BIT_USER_CTRL_DMP_EN;
+            switch(i2ctrans) {
+                case I2C_DMP_ON:
+                    tmpregvalue |= BIT_USER_CTRL_DMP_EN;
+                    break;
+                case I2C_DMP_OFF:
+                    tmpregvalue &= (~BIT_USER_CTRL_DMP_EN);
+                    break;
+            }
             i2cmanager.StartWriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, tmpregvalue, this) ;
             break;
         case I2C_CTRL_WRITTEN:
             // Dmp should be enabled now
             i2cstate = I2C_NONE;
+            i2ctrans = I2C_TRANS_NONE;
             break;
         default:
             break;
     }
-
 }

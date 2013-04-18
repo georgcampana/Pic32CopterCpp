@@ -59,6 +59,11 @@ class MPU_6050 : public I2c::EventListener {
         I2C_CTRL_READ,
         I2C_CTRL_WRITTEN
     } i2cstate;
+    enum I2cTransType {
+        I2C_TRANS_NONE = 0,
+        I2C_DMP_ON,
+        I2C_DMP_OFF
+    } i2ctrans;
     // used across i2c transfers
     UINT8 tmpregvalue;
 

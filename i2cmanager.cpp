@@ -188,7 +188,6 @@ void I2c::handleInterrupt() {
             // let's see if have to notify a listener
             if(listener2notify!=NULL) {
                 listener2notify->TransferCompleted(errortype, datalen);
-                listener2notify = NULL;
             }
             break;
         }
