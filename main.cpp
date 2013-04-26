@@ -14,7 +14,6 @@
 #include "include/digitaliomanager.h"
 #include "include/dbgout.h"
 
-
 #define I2C_CLOCK_FREQ      (100000) // tested to work up to 400KHz
 #define UART_BAUD_RATE      (115200)
 
@@ -36,6 +35,8 @@ DebugConsole dbgout(debugserial);
 
 // led present on the Pinguino micro
 OutputPin led(IOPORT_D, BIT_1);
+
+extern void testexec();
 
 int main(void) {
 
@@ -76,6 +77,9 @@ int main(void) {
         led.toggle();
         dbgout << "dbgcounter=" << System::dbgcounter << " ";
     }
+
+
+    testexec();
 
     return 0;
 }
