@@ -8,6 +8,7 @@
 #include "include/semaphore.h"
 #include "include/kernel.h"
 
+// could reschedule the Task
 bool Semaphore::Obtain(int maxwaitms) {
     // stop ints
     
@@ -37,6 +38,7 @@ bool Semaphore::Obtain(int maxwaitms) {
     return (grantedtask == Kernel::GetRunningTask());
 }
 
+// could reschedule the Task
 void Semaphore::Release() {
 
 }

@@ -56,6 +56,6 @@ void Kernel::Reschedule() {
 // should be called by a service interrupt only (SysTimer)
 void Kernel::QuantumElapsed() {
     runningnow->RemoveFromList();
-    readytasks->Enqueue(runningnow);
+    readytasks.Enqueue(runningnow);
     Reschedule();
 }
