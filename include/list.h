@@ -46,12 +46,13 @@ inline List::List() : head(Node::NT_LISTHEAD, 0, &tail, 0),
                       tail(Node::NT_LISTTAIL, 0, 0, &head) {}
 
 inline void List::Append(Node* newnode) {
-    head.Append(newnode);
+    tail.AddInFront(newnode);
 }
 
 inline void List::AddAsFirst(Node* newnode) {
-    tail.AddInFront(newnode);
+    head.Append(newnode);
 }
+
 
 
 #endif	/* LIST_H */

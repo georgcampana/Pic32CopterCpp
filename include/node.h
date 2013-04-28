@@ -27,6 +27,7 @@ class Node {
 
     Node* GetNext() const;
     Node* GetPrev() const;
+    int GetPriority() const;
     void RemoveFromList();
 
     void Append(Node* newnode);
@@ -38,12 +39,14 @@ class Node {
     Node* next;
     Node* prev;
     int priority;
-    Nodetype type;
+    Nodetype ntype;
 };
 
-inline Node::Node(Nodetype typ, int pri, Node* n, Node* p) : priority(pri), type(typ), next(n), prev(p) {}
+inline Node::Node(Nodetype typ, int pri, Node* n, Node* p) : priority(pri), ntype(typ), next(n), prev(p) {}
 inline Node* Node::GetNext() const { return next;}
 inline Node* Node::GetPrev() const { return prev;}
+inline int Node::GetPriority() const { return priority;}
+
 inline void Node::RemoveFromList() {
     if(next)next->prev = prev;
     if(prev)prev->next = next;

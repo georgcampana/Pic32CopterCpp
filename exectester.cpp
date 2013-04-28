@@ -1,4 +1,7 @@
 #include "include/list.h"
+#include "include/task.h"
+#include "include/kernel.h"
+
 
 class NamedNode : public Node {
 
@@ -8,28 +11,37 @@ public:
 
 };
 
-class Message : public NamedNode {
+class Msg : public NamedNode {
     void* msgptr;
 public:
-    Message(const char* name) : NamedNode(name) {
+    Msg(const char* name) : NamedNode(name) {
         
     }
 };
 
+class TestTask : public Task<256> {
+ public:
+    void OnRun() {
+
+        TaskBase* myself = Kernel::GetRunningTask();
+
+    }
+};
+
+TestTask newtask;
+
 void testexec() {
 
-    Message testnode("puppa");
-
+    Msg testnode("puppa");
     List msglist;
-
     msglist.AddAsFirst(&testnode);
-
-    Message* cursor = (Message*)msglist.GetFirst();
+    Msg* cursor = (Msg*)msglist.GetFirst();
 
     while(msglist.IsTail(cursor) == false) {
-
         // do things here
-        cursor = (Message*)cursor->GetNext();
+        cursor = (Msg*)cursor->GetNext();
     }
+
+    Kernel::AddTask(&newtask);
 
 }

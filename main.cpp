@@ -70,6 +70,8 @@ int main(void) {
 
     dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
 
+    testexec();
+
     while(1)
     {
         int c=16*1024*10;
@@ -79,7 +81,7 @@ int main(void) {
     }
 
 
-    testexec();
+
 
     return 0;
 }
