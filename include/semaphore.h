@@ -28,9 +28,7 @@ private:
     List taskqueue;
 };
 
-inline Semaphore::WaitingTask::WaitingTask(TaskBase* task2queue, SignalPool::SIGNAL sig2use) : taskinqueue(task2queue), tasksignal(sig2use) {
-
-}
+inline Semaphore::WaitingTask::WaitingTask(TaskBase* task2queue, SignalPool::SIGNAL sig2use) : taskinqueue(task2queue), tasksignal(sig2use) {}
 
 #endif	/* SEMAPHORE_H */
 

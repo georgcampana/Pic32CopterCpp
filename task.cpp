@@ -20,11 +20,32 @@ void TaskBase::OnRun() {
 
 }
 
+void TaskBase::Delay(int waitms) {
+    SysTimer::AddWaitingTask(this, waitms);
+    Kernel::PutOnWait(this);
+    Kernel::Reschedule(); // here the task will be stopped -> context switch
+}
 
 SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxms) {
     // stop ints
     // check if signals match already, otherise reschedule
-    TaskBase* myself = Kernel::GetRunningTask();
+    SignalPool::SIGNALMASK resultsigs = tasksignals.CheckAndReset(sigs2wait);
+
+    if(resultsigs == 0) {
+        // no matching signals let's add to system timer
+        if(maxms > 0) { 
+            Delay(maxms);
+        }
+        else {
+            Kernel::PutOnWait(this);
+            Kernel::Reschedule();
+        }
+        resultsigs = tasksignals.CheckAndReset(sigs2wait);
+    }
 
     // restore ints
+
+    return resultsigs;
 }
+
+

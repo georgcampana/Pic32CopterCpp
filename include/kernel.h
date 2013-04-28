@@ -10,6 +10,23 @@
 
 #include "task.h"
 
+class SysTimer {
+ public:
+     static void AddWaitingTask(TaskBase* task2queue, int ms, int us=0);
+     static int GetNow();
+ private:
+ 
+     class QueueItem {
+      public:
+          QueueItem(TaskBase* task2queue) : task2wake(task2queue) {}
+          TaskBase* task2wake;
+     };
+     
+     List queuedtasks;
+   
+};
+
+
 class Kernel {
  public:
 
@@ -17,19 +34,22 @@ class Kernel {
 
      static TaskBase* GetRunningTask();
      static void AddTask(TaskBase* newtask);
- private:
+     static void Reschedule();
+     static void QuantumElapsed();
+
+     static void PutOnWait(TaskBase* task2change);
+     static void PutOnReady(TaskBase* task2change);
+private:
+
      static TaskBase* runningnow;
 
      static List readytasks;
      static List waitingtasks;
 };
 
-
 inline TaskBase* Kernel::GetRunningTask() { return runningnow; }
 
-inline void Kernel::AddTask(TaskBase* newtask) {
-    readytasks.Enqueue(newtask);
-}
+
 
 #endif	/* KERNEL_H */
 

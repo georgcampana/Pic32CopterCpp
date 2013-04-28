@@ -30,6 +30,7 @@ class TaskBase : public MsgPort {
 
     enum TaskStatus{
      TS_NONE = 0,
+     TS_NEW, // must be started
      TS_READY,
      TS_WAITING,
      TS_DONE

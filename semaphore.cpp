@@ -25,7 +25,7 @@ bool Semaphore::Obtain(int maxwaitms) {
                 myself->Wait(semsig, maxwaitms); // scheduler might reschedule
 
         myself->tasksignals.Free(semsig);
-        thistask->RemoveFromList();
+        thistask.RemoveFromList();
 
         if(arrivedsig != 0) { //no timeout
             grantedtask = myself;
