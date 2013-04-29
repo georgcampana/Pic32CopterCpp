@@ -8,7 +8,7 @@
 #include <p32xxxx.h>
 #include <plib.h>
 
-#include "include/digitaliomanager.h"
+#include "digitaliomanager.h"
 
 
 DigitalIO* digitinout_ref;

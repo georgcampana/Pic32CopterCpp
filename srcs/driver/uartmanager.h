@@ -8,7 +8,7 @@
 #ifndef UARTMANAGER_H
 #define	UARTMANAGER_H
 
-#include "system.h"
+#include "../kernel/system.h"
 
 template<int I>
 class CircularBuffer {

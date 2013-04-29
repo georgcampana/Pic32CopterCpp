@@ -5,7 +5,7 @@
  * Created on 22 ottobre 2012, 0.29
  */
 
-#include "include/i2cmanager.h"
+#include "i2cmanager.h"
 
 #include <p32xxxx.h>
 #include <plib.h>

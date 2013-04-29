@@ -5,8 +5,8 @@
  * Created on 28 aprile 2013, 18.53
  */
 
-#include "include/semaphore.h"
-#include "include/kernel.h"
+#include "semaphore.h"
+#include "kernel.h"
 
 // could reschedule the Task
 bool Semaphore::Obtain(int maxwaitms) {

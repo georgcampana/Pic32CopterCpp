@@ -8,7 +8,7 @@
 #ifndef DIGITALIOMANAGER_H
 #define	DIGITALIOMANAGER_H
 
-#include "system.h"
+#include "../kernel/system.h"
 #include "ieventobserver.h"
 //#include <plib.h>
 

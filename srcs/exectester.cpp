@@ -1,6 +1,6 @@
-#include "include/list.h"
-#include "include/task.h"
-#include "include/kernel.h"
+#include "kernel/list.h"
+#include "kernel/task.h"
+#include "kernel/kernel.h"
 
 
 class NamedNode : public Node {

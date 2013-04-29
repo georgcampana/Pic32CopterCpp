@@ -8,7 +8,7 @@
 #ifndef I2CMANAGER_H
 #define	I2CMANAGER_H
 
-#include "system.h"
+#include "../kernel/system.h"
 
 class I2c {
     enum STATUS {

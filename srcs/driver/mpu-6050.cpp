@@ -15,12 +15,12 @@
  * Created on 22 ottobre 2012, 0.29
  */
 
-#include "include/MPU-6050.h"
-#include "include/mpu-6050-regs.h"
+#include "MPU-6050.h"
+#include "mpu-6050-regs.h"
 
 // this header could be expanded here but i prefer to have it separate
 // to have the mainly the code here
-#include "include/mpu-6050-dmpfw.h"
+#include "mpu-6050-dmpfw.h"
 
 
 

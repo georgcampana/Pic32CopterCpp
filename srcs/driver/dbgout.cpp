@@ -5,7 +5,7 @@
  * Created on 22 ottobre 2012, 0.29
  */
 
-#include "include/dbgout.h"
+#include "dbgout.h"
 
 #include <p32xxxx.h>
 #include <plib.h>

@@ -6,13 +6,13 @@
  */
 
 
-#include "include/system.h"
+#include "kernel/system.h"
 
-#include "include/i2cmanager.h"
-#include "include/mpu-6050.h"
-#include "include/uartmanager.h"
-#include "include/digitaliomanager.h"
-#include "include/dbgout.h"
+#include "driver/i2cmanager.h"
+#include "driver/mpu-6050.h"
+#include "driver/uartmanager.h"
+#include "driver/digitaliomanager.h"
+#include "driver/dbgout.h"
 
 #define I2C_CLOCK_FREQ      (100000) // tested to work up to 400KHz
 #define UART_BAUD_RATE      (115200)

@@ -5,7 +5,7 @@
  * Created on 28 aprile 2013, 16.15
  */
 
-#include "include/signal.h"
+#include "signal.h"
 
 
 SignalPool::SIGNAL SignalPool::Alloc() {

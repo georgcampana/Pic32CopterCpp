@@ -5,7 +5,7 @@
  * Created on 28 aprile 2013, 17.32
  */
 
-#include "include/kernel.h"
+#include "kernel.h"
 
 void SysTimer::AddWaitingTask(TaskBase* task2queue, int ms, int us) {
 

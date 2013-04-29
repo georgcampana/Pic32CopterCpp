@@ -5,8 +5,8 @@
  * Created on 28 aprile 2013, 17.36
  */
 
-#include "include/task.h"
-#include "include/kernel.h"
+#include "task.h"
+#include "kernel.h"
 
 TaskBase::TaskBase(char* newstack): execstack(newstack), tasksignals() {
 

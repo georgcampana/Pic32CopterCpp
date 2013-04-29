@@ -10,7 +10,7 @@
  *
  */
 
-#include "include/uartmanager.h"
+#include "../driver/uartmanager.h"
 
 #include <p32xxxx.h>
 #include <plib.h>
