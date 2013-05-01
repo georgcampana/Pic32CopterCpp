@@ -70,7 +70,15 @@ int main(void) {
 
     dbgout << "dbgcounter=" << System::dbgcounter; // << testf;
 
-    testexec();
+    //testexec();
+
+    unsigned int ssstatus = _CP0_GET_SRSCTL();
+    unsigned int procid = _CP0_GET_PRID();
+    unsigned int status = _CP0_GET_STATUS();
+
+    dbgout << "SS Status= " << ssstatus << "\r\n";
+    dbgout << "ProcID" << procid << "\r\n";
+    dbgout << "CPU Status= " << status << "\r\n";
 
     while(1)
     {

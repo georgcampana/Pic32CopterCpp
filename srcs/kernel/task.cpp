@@ -8,7 +8,7 @@
 #include "task.h"
 #include "kernel.h"
 
-TaskBase::TaskBase(char* newstack): execstack(newstack), tasksignals() {
+TaskBase::TaskBase(char* newstack): execstack(newstack), tasksignals(), savedstackpointer(0), status(TS_NEW) {
 
 
 }

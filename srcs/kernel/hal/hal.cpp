@@ -26,7 +26,10 @@ int testMasm(int a, int b) {
    return testAsm(a)+b;
 }
 
+// this runs on a separate stack (interrupts stack)->original Task stack already saved
+char* handleSysTimerINT() {
 
+}
 
 #ifdef	__cplusplus
 }

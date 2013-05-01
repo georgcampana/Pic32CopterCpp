@@ -29,6 +29,7 @@ class TaskBase : public MsgPort {
 
     char* execstack;
     SignalPool tasksignals;
+    char* savedstackpointer;
 
     enum TaskStatus{
      TS_NONE = 0,
