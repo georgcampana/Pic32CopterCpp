@@ -16,6 +16,8 @@ class TaskBase : public MsgPort {
     
     TaskBase(char* taskstack);
 
+    void Signal(SignalPool::SIGNAL sig2notify);
+
     virtual void OnRun();
  protected:
 

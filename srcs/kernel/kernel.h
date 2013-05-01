@@ -8,12 +8,14 @@
 #ifndef KERNEL_H
 #define	KERNEL_H
 
+#include "hal/hal.h"
 #include "task.h"
+
 
 class SysTimer {
  public:
      static void AddWaitingTask(TaskBase* task2queue, int ms, int us=0);
-     static int GetNow();
+     static int GetNowTicks();
  private:
  
      class QueueItem {
@@ -39,6 +41,15 @@ class Kernel {
 
      static void PutOnWait(TaskBase* task2change);
      static void PutOnReady(TaskBase* task2change);
+
+
+     class InterruptCtrl {
+         unsigned int int_status;
+       public:
+           //InterruptCtrl() : int_status(0) {}
+           void Disable() { int_status = HAL::DisableInterrupts(); }
+           void Restore() { HAL::RestoreInterrupts(int_status); }
+     };
 private:
 
      static TaskBase* runningnow;

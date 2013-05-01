@@ -19,10 +19,14 @@ class SignalPool {
     SIGNAL Alloc();
     void Free(SIGNAL sig2free);
     SIGNALMASK CheckAndReset(SIGNALMASK signals2check);
+    SIGNALMASK CheckWaiting() const;
+    void SetWaitingSigs(SIGNALMASK signals2wait);
 
  private:
-    SIGNALMASK signals_alloc;
-    SIGNALMASK signals_set;
+    SIGNALMASK signals_alloc; // allocated signales
+    SIGNALMASK signals_set; // arrived signales
+    SIGNALMASK signals_waitingfor; // waitingfor signals
+
 };
 
 inline SignalPool::SignalPool() : signals_alloc(0), signals_set(0) {}
@@ -39,6 +43,14 @@ inline SignalPool::SIGNALMASK SignalPool::CheckAndReset(SignalPool::SIGNALMASK s
     SIGNALMASK result = (signals_alloc & signals2check) & signals_set;
     signals_set &= ~(signals_alloc & signals2check);
     return result;
+}
+
+inline SignalPool::SIGNALMASK SignalPool::CheckWaiting() const {
+    return (signals_alloc & signals_waitingfor) & signals_set;
+}
+
+inline void SignalPool::SetWaitingSigs(SIGNALMASK signals2wait) {
+    signals_waitingfor = signals2wait;
 }
 
 #endif	/* SIGNAL_H */
