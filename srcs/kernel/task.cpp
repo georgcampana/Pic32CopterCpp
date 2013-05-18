@@ -24,6 +24,17 @@ void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
             // one or more sigs do match and task is waiting for
             // let's put him to the ready tasks
             Kernel::PutOnReady(this);
+            // if we have a new "highest priority" Task then we have to reschedule
+            if(Kernel::RunningIsFirstTask() == false) {
+                // If i'm an interrupt then we defer to the end a reschedule
+                if(Kernel::InterruptRunning()) {
+                    Kernel::SetReschedulePending();
+                }
+                else { // i'm a running Task
+                    Kernel::Reschedule();
+                }
+            }
+
 
         }
 

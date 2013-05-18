@@ -42,6 +42,10 @@ class Kernel {
      static void PutOnWait(TaskBase* task2change);
      static void PutOnReady(TaskBase* task2change);
 
+     static bool RunningIsFirstTask();
+     static bool InterruptRunning();
+     static void SetReschedulePending();
+     static void InterruptEpilogue();
 
      class InterruptCtrl {
          unsigned int int_status;
@@ -56,11 +60,16 @@ private:
 
      static List readytasks;
      static List waitingtasks;
+
+     static bool reschedulepending;
 };
 
 inline TaskBase* Kernel::GetRunningTask() { return runningnow; }
 
-
+inline bool Kernel::RunningIsFirstTask() { return (runningnow == readytasks.GetFirst()); }
+inline bool Kernel::InterruptRunning() { return false ;}
+inline void Kernel::SetReschedulePending() { reschedulepending = true; }
+inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
 
 #endif	/* KERNEL_H */
 

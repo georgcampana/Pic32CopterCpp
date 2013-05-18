@@ -26,10 +26,24 @@ int testMasm(int a, int b) {
    return testAsm(a)+b;
 }
 
+int testMasmDue(int a, int b, int c, int d, int e) {
+   return testAsm(a)+b+c+d+e;
+}
+
+int testCalAsm() {
+    return testMasmDue(11,12,13,14,15);
+}
 // this runs on a separate stack (interrupts stack)->original Task stack already saved
 char* handleSysTimerINT() {
 
 }
+
+void testTaskContext(char** from_context_sp, char* to_context_sp) {
+
+    *from_context_sp =  to_context_sp + 8;
+
+}
+
 
 #ifdef	__cplusplus
 }

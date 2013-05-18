@@ -15,7 +15,7 @@
  * Created on 22 ottobre 2012, 0.29
  */
 
-#include "MPU-6050.h"
+#include "mpu-6050.h"
 #include "mpu-6050-regs.h"
 
 // this header could be expanded here but i prefer to have it separate

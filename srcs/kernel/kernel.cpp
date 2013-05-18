@@ -16,6 +16,8 @@ TaskBase* Kernel::runningnow = 0;
 List Kernel::readytasks;
 List Kernel::waitingtasks;
 
+bool Kernel::reschedulepending = false;
+
 Kernel::Kernel() {
 
 }
@@ -48,7 +50,14 @@ void Kernel::Reschedule() {
 
     if(newtask != currtask) {
         runningnow = newtask;
-        // switchContext(currtask.execstack, newtask.execstack)
+        // defined in HAL
+        if(InterruptRunning()) {
+            // Last action of the interrupt
+            // restoreTaskContext()
+        }
+        else {
+            swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
+        }
     }
     // we exit being another Task
 }

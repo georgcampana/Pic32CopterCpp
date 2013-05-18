@@ -24,6 +24,16 @@ inline unsigned int HAL::DisableInterrupts() { return 0;}
 inline void HAL::RestoreInterrupts(unsigned int oldstatus) {}
 
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+// assembly Task switch function
+extern void swapTaskContext(char** from_context_sp, char* to_context_sp);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* HAL_H */
 
