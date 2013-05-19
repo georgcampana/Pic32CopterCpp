@@ -1,5 +1,5 @@
-
-
+# Georg Campana  Hardware Abstraction Layer
+#
 
 .globl swapTaskContext
 
@@ -9,6 +9,7 @@
 swapTaskContext:
     .set noreorder
     .set nomips16
+    .set noat
 
     # no need to get the right sp since this swapContext can be called from a Task only
     # we start to put the whole gpr on the stack
@@ -21,10 +22,82 @@ swapTaskContext:
 
     addiu $sp, $sp, -120  # we create some space on the stack
     sw $sp, ($a0) # we store the current sp to the current task sp pointer
-    sw $a0, ($sp) # our first arg currtask->savedsppointer  
+    sw $at, ($sp)
+    sw $v0, 4($sp)
+    sw $v1, 8($sp)
+    sw $a0, 12($sp) # our first arg currtask->savedsppointer
+    sw $a1, 16($sp)
+    sw $a2, 20($sp)
+    sw $a3, 24($sp)
+    sw $t0, 28($sp)
+    sw $t1, 32($sp)
+    sw $t2, 36($sp)
+    sw $t3, 40($sp)
+    sw $t4, 44($sp)
+    sw $t5, 48($sp)
+    sw $t6, 52($sp)
+    sw $t7, 56($sp)
+    sw $t8, 60($sp)
+    sw $t9, 64($sp)
+    sw $s0, 68($sp)
+    sw $s1, 72($sp)
+    sw $s2, 76($sp)
+    sw $s3, 80($sp)
+    sw $s4, 84($sp)
+    sw $s5, 88($sp)
+    sw $s6, 92($sp)
+    sw $s7, 96($sp)
+    sw $s8, 100($sp)
+    sw $ra, 104($sp)
+    mfhi $v0
+    sw $v0, 108($sp)
+    mflo $v0
+    sw $v0, 112($sp)
+    #mfc0 $v0, 12 #Status
+    #sw $v0, 116($sp)
+    # ---- OLD -----
 
+    # ---- NEW ------
+    # From here we start to take the gpr we still have the new task sp in a1
+    addiu $sp, $a1, 0
+    #lw $v0, 116($sp)
+    #mtc0 $v0, $12 #Status
+    lw $v0, 112($sp)
+    mtlo $v0
+    lw $v0, 108($sp)
+    mthi $v0
+    lw $ra, 104($sp)
+    lw $s8, 100($sp)
+    lw $s7, 96($sp)
+    lw $s6, 92($sp)
+    lw $s5, 88($sp)
+    lw $s4, 84($sp)
+    lw $s3, 80($sp)
+    lw $s2, 76($sp)
+    lw $s1, 72($sp)
+    lw $s0, 68($sp)
+    lw $t9, 64($sp)
+    lw $t8, 60($sp)
+    lw $t7, 56($sp)
+    lw $t6, 52($sp)
+    lw $t5, 48($sp)
+    lw $t4, 44($sp)
+    lw $t3, 40($sp)
+    lw $t2, 36($sp)
+    lw $t1, 32($sp)
+    lw $t0, 28($sp)
+    lw $a3, 24($sp)
+    lw $a2, 20($sp)
+    lw $a1, 16($sp)
+    lw $a0, 12($sp)
+    lw $v1,  8($sp)
+    lw $v0,  4($sp)
+    lw $at,   ($sp)
 
+    lw $sp, ($a0) # we restore the original sp
 
+    addiu $sp, $sp, 120  # we restore the original sp
+    jr $ra   # we jump back
 
 
 /*
