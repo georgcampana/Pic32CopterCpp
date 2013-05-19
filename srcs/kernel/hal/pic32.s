@@ -12,15 +12,26 @@ swapTaskContext:
 
     # no need to get the right sp since this swapContext can be called from a Task only
     # we start to put the whole gpr on the stack
-    # the allocated space/sequence must be the same as i case of an interrupt
-    # 108 104   100 96  94   92 88 84 80 76 72 68 64 60 56 52 48 44 40 36 32 28 24 20  16    12    8    4     0
-    # epc,status,v0,v1,<pad>,ra,s8,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at,<??>(arga3,arga2,arga1,arga0)
-    # it must be complete because could be restored from an interrupt
-    addiu $sp, $sp, -112  # we create some space on the stack
+    # the allocated space/sequence must be the same as in case of an interrupt
+    # because an int can reschedule the current task
+    # steps: create stack space; save status, save gpr, save orig sp;
+    #        take new task's sp; restore gpr; restore status; remove sp space
+    #  116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    # status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
 
-    mfc0 $k0, $14 #EPC
-    mfc0 $k1, $12 #status
+    addiu $sp, $sp, -120  # we create some space on the stack
+    sw $sp, ($a0) # we store the current sp to the current task sp pointer
+    sw $a0, ($sp) # our first arg currtask->savedsppointer  
+
+
+
+
+
 /*
+    # this is the gpr on the stack after the INT prologue
+    # 108 104   100 96  94   92 88 84 80 76 72 68 64 60 56 52 48 44 40 36 32 28 24 20  16    12    8    4     0
+    # epc,status,lo,hi,<pad>,ra,s8,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at,<??$0>(arga3,arga2,arga1,arga0)
+    # it must be completed with the missing registers because it could be restored from an interrupt
 9D003744  415DE800   RDPGPR SP, SP
 9D003748  401A7000   MFC0 K0, EPC
 9D00374C  401B6000   MFC0 K1, Status
