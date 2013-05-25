@@ -44,6 +44,11 @@ void testTaskContext(char** from_context_sp, char* to_context_sp) {
 
 }
 
+__attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
+
+    
+}
+
 //bool forkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize) {
 //    if((int)stackpointer | stacksize) return true;
 //    return false;

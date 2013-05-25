@@ -1,7 +1,12 @@
 #include "kernel/list.h"
 #include "kernel/task.h"
 #include "kernel/kernel.h"
+#include "kernel/system.h"
 
+#include <p32xxxx.h>
+#include <plib.h>
+
+#include "driver/digitaliomanager.h"
 
 
 class NamedNode : public Node {
@@ -20,11 +25,36 @@ public:
     }
 };
 
+OutputPin testled(IOPORT_D, BIT_1);
+
+class BlinkerTask : public Task<256> {
+    // led present on the Pinguino micro
+
+    void OnRun() {
+        while(1) {
+            testled << true;
+            Kernel::Reschedule();
+            System::dbgcounter++;
+        }
+    }
+
+};
+
+
 class MainTask : public Task<256> {
+    BlinkerTask blinker;
  public:
     void OnRun() {
 
+        Kernel::AddTask(&blinker);
+
         TaskBase* myself = Kernel::GetRunningTask();
+
+        while(1) {
+            testled << false;
+            Kernel::Reschedule();
+            System::dbgcounter--;
+        }
 
     }
 };
