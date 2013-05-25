@@ -40,6 +40,8 @@ extern void testexec();
 
 int main(void) {
 
+    testexec();
+
     //float testf = 5/3;
 
     // Led on the Pingulux micro

@@ -23,6 +23,7 @@ public:
     
     bool IsTail(const Node* node2check) const;
     bool IsHead(const Node* node2check) const;
+    bool IsEmpty() const;
     //virtual ~List();
 private:
 
@@ -36,6 +37,10 @@ inline bool List::IsTail(const Node* node2check) const {
 
 inline bool List::IsHead(const Node* node2check) const {
     return (node2check == &head)? true : false;
+}
+
+inline bool List::IsEmpty() const {
+    return (head.GetNext() == &tail)? true : false;
 }
 
 inline  Node* List::GetFirst() const {

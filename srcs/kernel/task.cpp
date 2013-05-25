@@ -8,7 +8,7 @@
 #include "task.h"
 #include "kernel.h"
 
-TaskBase::TaskBase(char* newstack): execstack(newstack), tasksignals(), savedstackpointer(0), status(TS_NEW) {
+TaskBase::TaskBase(char* newstack, int stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack), stacksize(stackdimension), status(TS_NEW) {
 
 
 }
@@ -34,8 +34,6 @@ void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
                     Kernel::Reschedule();
                 }
             }
-
-
         }
 
     }

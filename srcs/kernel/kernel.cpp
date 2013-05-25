@@ -1,6 +1,6 @@
 /* 
  * File:   kernel.cpp
- * Author: gcamp_000
+ * Author: Georg Campana
  * 
  * Created on 28 aprile 2013, 17.32
  */
@@ -23,8 +23,22 @@ Kernel::Kernel() {
 }
 
 void Kernel::AddTask(TaskBase* newtask) {
+
     newtask->status = TaskBase::TS_NEW;
     readytasks.Enqueue(newtask);
+    
+    TaskBase* forkedtask = newtask;
+    // let's fork here
+    if(forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
+        // this is the new added task running
+        // Note: the original "forkedtask" has been changed to the new one by forkTask
+        forkedtask->OnRun();
+        // The task does nor run anymore: time to kill
+        forkedtask->RemoveFromList();
+        Reschedule();
+    }
+
+    return; // creator exits
 }
 
 void Kernel::PutOnWait(TaskBase* task2change) {
@@ -68,3 +82,22 @@ void Kernel::QuantumElapsed() {
     readytasks.Enqueue(runningnow);
     Reschedule();
 }
+
+
+// this never returns and starts the main task
+void Kernel::startMainTask(TaskBase* firsttask) {
+    firsttask->status = TaskBase::TS_NEW;
+    readytasks.AddAsFirst(firsttask);
+    transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
+
+    firsttask->OnRun();
+
+    // the parent should never die: never exit from OnRun
+    // in case it should happen this is a fair fallback
+    firsttask->RemoveFromList();
+    if(readytasks.IsEmpty() && waitingtasks.IsEmpty()) {
+        while(1);
+    }
+    Reschedule();
+}
+

@@ -30,6 +30,8 @@ extern "C" {
 
 // assembly Task switch function
 extern void swapTaskContext(char** from_context_sp, char* to_context_sp);
+extern bool forkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize);
+extern void transferMainStack(char** context_sp, int stacksize);
 
 #ifdef	__cplusplus
 }

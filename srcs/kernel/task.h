@@ -14,7 +14,7 @@
 class TaskBase : public MsgPort {
  public:
     
-    TaskBase(char* taskstack);
+    TaskBase(char* taskstack, int stackdimension);
 
     void Signal(SignalPool::SIGNAL sig2notify);
 
@@ -30,6 +30,7 @@ class TaskBase : public MsgPort {
     char* execstack;
     SignalPool tasksignals;
     char* savedstackpointer;
+    int stacksize;
 
     enum TaskStatus{
      TS_NONE = 0,
@@ -53,7 +54,7 @@ class Task : public TaskBase {
 };
 
 template <int S>
-inline Task<S>::Task() : TaskBase(stack) {}
+inline Task<S>::Task() : TaskBase(stack, S) {}
 
 #endif	/* TASK_H */
 

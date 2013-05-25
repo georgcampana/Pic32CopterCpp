@@ -3,6 +3,7 @@
 #include "kernel/kernel.h"
 
 
+
 class NamedNode : public Node {
 
     char* name;
@@ -19,7 +20,7 @@ public:
     }
 };
 
-class TestTask : public Task<256> {
+class MainTask : public Task<256> {
  public:
     void OnRun() {
 
@@ -28,7 +29,7 @@ class TestTask : public Task<256> {
     }
 };
 
-TestTask newtask;
+MainTask parenttask;
 
 void testexec() {
 
@@ -42,6 +43,7 @@ void testexec() {
         cursor = (Msg*)cursor->GetNext();
     }
 
-    Kernel::AddTask(&newtask);
+    // this will never come back
+    Kernel::startMainTask(&parenttask);
 
 }

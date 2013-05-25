@@ -1,6 +1,7 @@
 /*
  * File:   mpu-6050.cpp
- *
+ * Author: Georg Campana
+ * 
  * Work based on Jeff Rowberg's <jeff@rowberg.net> i2cdevlib
  * see at https://github.com/jrowberg/i2cdevlib
  *

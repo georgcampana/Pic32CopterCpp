@@ -1,6 +1,6 @@
 /* 
  * File:   kernel.h
- * Author: gcamp_000
+ * Author: Georg Campana
  *
  * Created on 28 aprile 2013, 17.32
  */
@@ -46,6 +46,8 @@ class Kernel {
      static bool InterruptRunning();
      static void SetReschedulePending();
      static void InterruptEpilogue();
+
+     static void startMainTask(TaskBase* firsttask);
 
      class InterruptCtrl {
          unsigned int int_status;

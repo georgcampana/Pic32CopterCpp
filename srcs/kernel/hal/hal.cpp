@@ -44,6 +44,10 @@ void testTaskContext(char** from_context_sp, char* to_context_sp) {
 
 }
 
+//bool forkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize) {
+//    if((int)stackpointer | stacksize) return true;
+//    return false;
+//}
 
 #ifdef	__cplusplus
 }
