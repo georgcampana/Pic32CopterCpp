@@ -94,8 +94,6 @@ swapTaskContext:
     lw $v0,  4($sp)
     lw $at,   ($sp)
 
-    lw $sp, ($a0) # we restore the original sp
-
     addiu $sp, $sp, 120  # we restore the original sp
 
     jr $ra #return from subroutine
@@ -173,9 +171,9 @@ forkTask:
     sw $0, 108($t0)     # hi
     sw $0, 112($t0)     # lo
     mfc0 $t1, $12 #Status
-    sw $t1, 116         # CP0 status
+    sw $t1, 116($t0)         # CP0 status
 
-    sw $t1, ($a2)       # we store the stackpointer in the var location
+    sw $t0, ($a2)       # we store the stackpointer in the var location
 
     add $v0, $0, $0 # result is false for the caller (original task)
     jr $ra #return from subroutine

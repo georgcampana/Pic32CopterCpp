@@ -27,13 +27,13 @@ public:
 
 OutputPin testled(IOPORT_D, BIT_1);
 
-class BlinkerTask : public Task<256> {
+class BlinkerTask : public Task<2048> {
     // led present on the Pinguino micro
 
     void OnRun() {
         while(1) {
             testled << true;
-            Kernel::Reschedule();
+            Kernel::QuantumElapsed();
             System::dbgcounter++;
         }
     }
@@ -41,7 +41,7 @@ class BlinkerTask : public Task<256> {
 };
 
 
-class MainTask : public Task<256> {
+class MainTask : public Task<2048> {
     BlinkerTask blinker;
  public:
     void OnRun() {
@@ -52,7 +52,7 @@ class MainTask : public Task<256> {
 
         while(1) {
             testled << false;
-            Kernel::Reschedule();
+            Kernel::QuantumElapsed();
             System::dbgcounter--;
         }
 

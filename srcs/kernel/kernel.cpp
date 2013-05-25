@@ -88,6 +88,7 @@ void Kernel::QuantumElapsed() {
 void Kernel::startMainTask(TaskBase* firsttask) {
     firsttask->status = TaskBase::TS_NEW;
     readytasks.AddAsFirst(firsttask);
+    runningnow = firsttask;
     transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
 
     firsttask->OnRun();
