@@ -13,6 +13,9 @@
 
 
 class SysTimer {
+
+    static int const TIMESLICE_QUANTUM = 5; // 5ms
+
  public:
 
      SysTimer();
@@ -20,26 +23,26 @@ class SysTimer {
      class QueueItem : public Node {
           TaskBase* task2wake;
           SignalPool::SIGNAL sig2send;
-      public:
-          QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0) {}
+          HAL::TICKS ticks2wait;
+        public:
+          QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0), ticks2wait(0) {}
           QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
-                                            task2wake(task2queue), sig2send(wakeupsig) {}
+                                            task2wake(task2queue), sig2send(wakeupsig), ticks2wait(0) {}
+          
+          void SetTicks2Wait(HAL::TICKS targetticks) {ticks2wait = targetticks;}
+          HAL::TICKS GetTicks2Wait() const { return ticks2wait; }
+
           bool IsDelayItem() { return(sig2send==0);}
      };
-
      
      static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
-     static int GetNowTicks();
-     static int GetTicksPerMS();
-
-
+     static HAL::TICKS GetNowTicks();
      
 private:
  
-     static void setTime2Elapse();
+     static void SetTime2Elapse();
 
      static List queuedtasks;
-   
 };
 
 
@@ -61,7 +64,7 @@ class Kernel {
      static void SetReschedulePending();
      static void InterruptEpilogue();
 
-     static void startMainTask(TaskBase* firsttask);
+     static void StartMainTask(TaskBase* firsttask);
 
      class InterruptCtrl {
          unsigned int int_status;

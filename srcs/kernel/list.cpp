@@ -15,11 +15,8 @@
 void List::Enqueue(Node* newnode) {
     Node* cursor = GetFirst();
     while(IsTail(cursor) == false) {
-        if(newnode->GetPriority() > cursor->GetPriority()) {
-            cursor->AddInFront(newnode);
-            return; // not nice (like a goto) but efficient
-        }
+        if(newnode->GetPriority() > cursor->GetPriority()) { break; }
         cursor = cursor->GetNext();
     }
-    tail.AddInFront(newnode);
+    cursor->AddInFront(newnode);
 }

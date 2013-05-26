@@ -33,7 +33,8 @@ class BlinkerTask : public Task<2048> {
     void OnRun() {
         while(1) {
             testled << true;
-            Delay(3000);
+            //Delay(3000);
+            Kernel::QuantumElapsed();
             System::dbgcounter++;
         }
     }
@@ -77,7 +78,7 @@ void testexec() {
             }
 
             // this will never come back
-            Kernel::startMainTask(&parenttask);
+            Kernel::StartMainTask(&parenttask);
         }
     }
 }

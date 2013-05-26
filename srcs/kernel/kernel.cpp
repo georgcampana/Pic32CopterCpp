@@ -17,6 +17,21 @@ SysTimer::SysTimer() {
 
 void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
 
+    HAL::TICKS targetticks = HAL::GetCurrentTicks() +
+                             HAL::ConvertTime2Ticks(ms, us);
+    item2queue->SetTicks2Wait(targetticks);
+
+    QueueItem* cursor = (QueueItem*)queuedtasks.GetFirst();
+    while(queuedtasks.IsTail(cursor) == false) {
+        if(cursor->GetTicks2Wait() > targetticks) { break; }
+
+        cursor = (QueueItem*)cursor->GetNext();
+    }
+    cursor->AddInFront(item2queue);
+
+    if(queuedtasks.IsHead(cursor)) { // the new item is the first one
+        HAL::SetNextAlarm(targetticks);
+    }
 }
 
 // *********************KERNEL **********************
@@ -40,7 +55,7 @@ void Kernel::AddTask(TaskBase* newtask) {
     
     TaskBase* forkedtask = newtask;
     // let's fork here
-    if(HAL::forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
+    if(forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
         // this is the new added task running
         // Note: the original "forkedtask" has been changed to the new one by forkTask
         forkedtask->OnRun();
@@ -86,7 +101,7 @@ void Kernel::Reschedule() {
             // restoreTaskContext()
         }
         else {
-            HAL::swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
+            swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
         }
     }
     // we exit being another Task
@@ -101,11 +116,11 @@ void Kernel::QuantumElapsed() {
 
 
 // this never returns and starts the main task
-void Kernel::startMainTask(TaskBase* firsttask) {
+void Kernel::StartMainTask(TaskBase* firsttask) {
     firsttask->status = TaskBase::TS_NEW;
     readytasks.AddAsFirst(firsttask);
     runningnow = firsttask;
-    HAL::transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
+    transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
 
     firsttask->OnRun();
 
