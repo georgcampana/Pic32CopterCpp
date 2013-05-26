@@ -50,7 +50,9 @@ void TaskBase::Delay(int waitms) {
     Kernel::InterruptCtrl intsafe;
     intsafe.Disable(); // stop ints
     {
-        SysTimer::AddWaitingTask(this, waitms);
+        SysTimer::QueueItem delaynode(this,waitms); // this stays on the stack until the delay is elapsed
+
+        SysTimer::AddWaitingTask(&delaynode, waitms);
         Kernel::PutOnWait(this);
         Kernel::Reschedule(); // here the task will be stopped -> context switch
     }
@@ -69,10 +71,18 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
         // no matching signals let's add to system timer
         // we register what we are waiting for to get Signal()ed if needed
         tasksignals.SetWaitingSigs(sigs2wait);
-        if(maxms > 0) { SysTimer::AddWaitingTask(this, maxms); }
+
+        SysTimer::QueueItem waititem(this);
+        if(maxms > 0) {
+            SysTimer::AddWaitingTask(&waititem, maxms);
+        }
 
         Kernel::PutOnWait(this);
         Kernel::Reschedule(); // here the task will be stopped -> context switch
+        // we need to remove the timerqueueitem from the SysTimer
+        if(maxms > 0) {
+            //SysTimer::RemWaitingTask(&waititem);
+        }
         resultsigs = tasksignals.CheckAndReset(sigs2wait);
         tasksignals.SetWaitingSigs(0); // wait is over
     }

@@ -19,7 +19,7 @@ class Node {
          NT_DRIVER,
          NT_INTHANDLER,
          NT_TASK,
-         NT_SEMAPHORE
+         NT_SEMAPHORE,
     };
 
 

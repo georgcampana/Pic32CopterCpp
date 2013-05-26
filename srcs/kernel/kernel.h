@@ -14,17 +14,27 @@
 
 class SysTimer {
  public:
-     static void AddWaitingTask(TaskBase* task2queue, int ms, int us=0);
-     static int GetNowTicks();
- private:
- 
-     class QueueItem {
-      public:
-          QueueItem(TaskBase* task2queue) : task2wake(task2queue) {}
-          TaskBase* task2wake;
-     };
+
+     SysTimer();
      
-     List queuedtasks;
+     class QueueItem : public Node {
+          TaskBase* task2wake;
+          SignalPool::SIGNAL sig2send;
+      public:
+          QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0) {}
+          QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
+                                            task2wake(task2queue), sig2send(wakeupsig) {}
+          bool IsDelayItem() { return(sig2send==0);}
+     };
+
+     
+     static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
+     static int GetNowTicks();
+     
+private:
+ 
+
+     static List queuedtasks;
    
 };
 
@@ -56,6 +66,15 @@ class Kernel {
            void Disable() { int_status = HAL::DisableInterrupts(); }
            void Restore() { HAL::RestoreInterrupts(int_status); }
      };
+
+     class SchedulerCtrl {
+         unsigned int sched_status;
+       public:
+           //InterruptCtrl() : int_status(0) {}
+           void Disable() { sched_status = HAL::DisableScheduler(); }
+           void Restore() { HAL::RestoreScheduler(sched_status); }
+     };
+
 private:
 
      static TaskBase* runningnow;

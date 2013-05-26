@@ -7,9 +7,20 @@
 
 #include "kernel.h"
 
-void SysTimer::AddWaitingTask(TaskBase* task2queue, int ms, int us) {
+// ******************* SysTimer *******************
+List SysTimer::queuedtasks;
+
+SysTimer::SysTimer() {
 
 }
+
+
+void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
+
+}
+
+// *********************KERNEL **********************
+
 
 TaskBase* Kernel::runningnow = 0;
 
@@ -29,7 +40,7 @@ void Kernel::AddTask(TaskBase* newtask) {
     
     TaskBase* forkedtask = newtask;
     // let's fork here
-    if(forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
+    if(HAL::forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
         // this is the new added task running
         // Note: the original "forkedtask" has been changed to the new one by forkTask
         forkedtask->OnRun();
@@ -58,6 +69,11 @@ void Kernel::PutOnReady(TaskBase* task2change) {
 }
 
 void Kernel::Reschedule() {
+
+    while(readytasks.IsEmpty()) {
+        // put cpu on wait for the next interrupt
+    }
+
     // take the first ready and execute it
     TaskBase* newtask  = (TaskBase*)readytasks.GetFirst();
     TaskBase* currtask = runningnow;
@@ -70,7 +86,7 @@ void Kernel::Reschedule() {
             // restoreTaskContext()
         }
         else {
-            swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
+            HAL::swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
         }
     }
     // we exit being another Task
@@ -89,7 +105,7 @@ void Kernel::startMainTask(TaskBase* firsttask) {
     firsttask->status = TaskBase::TS_NEW;
     readytasks.AddAsFirst(firsttask);
     runningnow = firsttask;
-    transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
+    HAL::transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
 
     firsttask->OnRun();
 

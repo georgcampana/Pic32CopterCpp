@@ -33,7 +33,7 @@ class BlinkerTask : public Task<2048> {
     void OnRun() {
         while(1) {
             testled << true;
-            Kernel::QuantumElapsed();
+            Delay(3000);
             System::dbgcounter++;
         }
     }
@@ -65,15 +65,19 @@ void testexec() {
 
     Msg testnode("puppa");
     List msglist;
-    msglist.AddAsFirst(&testnode);
-    Msg* cursor = (Msg*)msglist.GetFirst();
 
-    while(msglist.IsTail(cursor) == false) {
-        // do things here
-        cursor = (Msg*)cursor->GetNext();
+    if(msglist.IsEmpty()) { // just to verify tht IsEmpty() works
+        msglist.AddAsFirst(&testnode);
+        if(!msglist.IsEmpty()) { // just to verify tht IsEmpty() works
+            Msg* cursor = (Msg*)msglist.GetFirst();
+
+            while(msglist.IsTail(cursor) == false) {
+                // do things here
+                cursor = (Msg*)cursor->GetNext();
+            }
+
+            // this will never come back
+            Kernel::startMainTask(&parenttask);
+        }
     }
-
-    // this will never come back
-    Kernel::startMainTask(&parenttask);
-
 }
