@@ -30,9 +30,13 @@ class SysTimer {
      
      static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
      static int GetNowTicks();
+     static int GetTicksPerMS();
+
+
      
 private:
  
+     static void setTime2Elapse();
 
      static List queuedtasks;
    
