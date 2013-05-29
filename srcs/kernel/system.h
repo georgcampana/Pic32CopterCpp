@@ -16,7 +16,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-//any c code goes here
+//any C code goes here
 
 #ifdef	__cplusplus
 }

@@ -18,31 +18,33 @@ class SysTimer {
 
  public:
 
-     SysTimer();
+    SysTimer();
      
-     class QueueItem : public Node {
-          TaskBase* task2wake;
-          SignalPool::SIGNAL sig2send;
-          HAL::TICKS ticks2wait;
-        public:
-          QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0), ticks2wait(0) {}
-          QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
-                                            task2wake(task2queue), sig2send(wakeupsig), ticks2wait(0) {}
-          
-          void SetTicks2Wait(HAL::TICKS targetticks) {ticks2wait = targetticks;}
-          HAL::TICKS GetTicks2Wait() const { return ticks2wait; }
+    class QueueItem : public Node {
+        TaskBase* task2wake;
+        SignalPool::SIGNAL sig2send;
+        HAL::TICKS ticks2wait;
+      public:
+        QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0), ticks2wait(0) {}
+        QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
+                                        task2wake(task2queue), sig2send(wakeupsig), ticks2wait(0) {}
 
-          bool IsDelayItem() { return(sig2send==0);}
-     };
+        void SetTicks2Wait(HAL::TICKS targetticks) {ticks2wait = targetticks;}
+        HAL::TICKS GetTicks2Wait() const { return ticks2wait; }
+
+        bool IsDelayItem() { return(sig2send==0);}
+        bool IsTimeSliceItem() { return(task2wake==0); }
+    };
      
-     static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
-     static HAL::TICKS GetNowTicks();
+    static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
+    static HAL::TICKS GetNowTicks();
+    static void Start();
      
 private:
- 
-     static void SetTime2Elapse();
+    static QueueItem timeslice;
+    static void SetTime2Elapse();
 
-     static List queuedtasks;
+    static List queuedtasks;
 };
 
 

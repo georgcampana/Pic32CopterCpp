@@ -40,11 +40,18 @@ public:
 //    static void TransferMainStack(char** context_sp, int stacksize);
 
     static TICKS GetCurrentTicks();
-    static void SetNextAlarm(TICKS almticks);
+    static void SetNextAlarm(TICKS alarmticks);
     static void ResetTickTimer();
     static TICKS ConvertTime2Ticks(int ms, int us=0);
+
+    static void Init();
     
 private:
+
+    static const int MINDELTATICKS = 0; // must be set to real neede code overhead
+
+    static unsigned int lastreadticks;
+    static unsigned int highticks;
 
 };
 
@@ -67,15 +74,35 @@ inline void HAL::RestoreScheduler(unsigned int oldstatus) {RestoreInterrupts(old
 //}
 
 inline HAL::TICKS HAL::GetCurrentTicks() {
-    // TODO: composite with higher long long
-    return ReadCoreTimer();
+    unsigned int newreadticks = ReadCoreTimer();
+    if(newreadticks < lastreadticks) {
+        highticks++; // here we assume that we MUST have an alarm at least every 30 secs
+                     // which should be maxticks in the core timer divided by 2
+    }
+    lastreadticks = newreadticks;
+    return ((TICKS)highticks)<<32 | lastreadticks ;
 }
-inline void HAL::SetNextAlarm(HAL::TICKS almticks) {
-   // UpdateCoreTimer
-}
-inline void HAL::ResetTickTimer() {
 
+inline void HAL::SetNextAlarm(HAL::TICKS alarmticks) {
+
+    TICKS now = GetCurrentTicks();
+    TICKS delta = alarmticks-now;
+
+    if(delta < MINDELTATICKS) {
+        delta = MINDELTATICKS;
+        alarmticks = now + delta;
+    }
+
+    UpdateCoreTimer(alarmticks & 0xffffffff); // the lowerpart
 }
+
+inline void HAL::ResetTickTimer() {
+    OpenCoreTimer(0xffffffff); // this prevent us from getting
+                               // an immediate spurious core timer interrupt
+    lastreadticks = 0;
+    highticks = 0;
+}
+
 inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
 
 }

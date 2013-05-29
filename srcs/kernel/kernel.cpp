@@ -8,7 +8,9 @@
 #include "kernel.h"
 
 // ******************* SysTimer *******************
+SysTimer::QueueItem SysTimer::timeslice(0);
 List SysTimer::queuedtasks;
+
 
 SysTimer::SysTimer() {
 
@@ -32,6 +34,10 @@ void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
     if(queuedtasks.IsHead(cursor)) { // the new item is the first one
         HAL::SetNextAlarm(targetticks);
     }
+}
+
+void SysTimer::Start() {
+    AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
 }
 
 // *********************KERNEL **********************
