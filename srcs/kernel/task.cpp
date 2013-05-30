@@ -19,7 +19,9 @@ void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
     // stop ints if not already stopped
     Kernel::InterruptCtrl intsafe;
     intsafe.Disable(); // stop ints
-    {   // Note: if the task is already ready then CheckWaitings returns 0
+    {   // we set the signal
+        tasksignals.Set(sig2notify);
+        // Note: if the task is already ready then CheckWaitings returns 0
         if(tasksignals.CheckWaiting()) {
             // one or more sigs do match and task is waiting for
             // let's put him to the ready tasks
@@ -37,7 +39,7 @@ void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
         }
 
     }
-    intsafe.Restore(); // restore ints
+    intsafe.Restore(); // restore int status
 }
 
 void TaskBase::OnRun() {
@@ -47,16 +49,7 @@ void TaskBase::OnRun() {
 }
 
 void TaskBase::Delay(int waitms) {
-    Kernel::InterruptCtrl intsafe;
-    intsafe.Disable(); // stop ints
-    {
-        SysTimer::QueueItem delaynode(this,waitms); // this stays on the stack until the delay is elapsed
-
-        SysTimer::AddWaitingTask(&delaynode, waitms);
-        Kernel::PutOnWait(this);
-        Kernel::Reschedule(); // here the task will be stopped -> context switch
-    }
-    intsafe.Restore(); // restore ints
+    Wait(0,waitms);
 }
 
 SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxms) {
@@ -72,7 +65,7 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
         // we register what we are waiting for to get Signal()ed if needed
         tasksignals.SetWaitingSigs(sigs2wait);
 
-        SysTimer::QueueItem waititem(this);
+        SysTimer::QueueItem waititem(this); // this must stay in the Reschedule scope
         if(maxms > 0) {
             SysTimer::AddWaitingTask(&waititem, maxms);
         }

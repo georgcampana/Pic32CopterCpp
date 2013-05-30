@@ -9,7 +9,7 @@
 
 
 SignalPool::SIGNAL SignalPool::Alloc() {
-    SIGNAL newalloc = 1;
+    SIGNAL newalloc = FIRSTFREE_SIG;
     while(newalloc & signals_alloc) { newalloc <<= 1; }
     signals_alloc |= newalloc;
     return newalloc; // returns 0 in case of no more available signal bits

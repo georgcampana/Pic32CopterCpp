@@ -15,12 +15,15 @@ class SignalPool {
      
     SignalPool();
  
-    void Set(int sigbit);
+    void Set(SIGNAL sigbit);
     SIGNAL Alloc();
     void Free(SIGNAL sig2free);
     SIGNALMASK CheckAndReset(SIGNALMASK signals2check);
     SIGNALMASK CheckWaiting() const;
     void SetWaitingSigs(SIGNALMASK signals2wait);
+
+    static const SIGNAL SYSTIMER_SIG  = 0x00000001; // preallocated signal for the Systimer
+    static const SIGNAL FIRSTFREE_SIG = 0x00000002; // first user available signal
 
  private:
     SIGNALMASK signals_alloc; // allocated signales
@@ -29,9 +32,9 @@ class SignalPool {
 
 };
 
-inline SignalPool::SignalPool() : signals_alloc(0), signals_set(0) {}
+inline SignalPool::SignalPool() : signals_alloc(SYSTIMER_SIG), signals_set(0) {}
 
-inline void SignalPool::Set(int sigbit) { signals_set |= sigbit; }
+inline void SignalPool::Set(SIGNAL sigbit) { signals_set |= sigbit; }
 
 
 inline void SignalPool::Free(SignalPool::SIGNAL sig2free) {
