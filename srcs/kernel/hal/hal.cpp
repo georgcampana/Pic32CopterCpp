@@ -9,6 +9,7 @@
 
 unsigned int HAL::lastreadticks = 0;
 unsigned int HAL::highticks = 0;
+HAL::TimerAlarm* HAL::inthandler = 0;
 
 void HAL::Init() {
 
@@ -30,10 +31,8 @@ extern "C" {
 
 // this runs on a separate stack (interrupts stack)->original Task stack already saved
 char* handleSysTimerINT() {
-
+    /*if()*/
 }
-
-
 
 __attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
 

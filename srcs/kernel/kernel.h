@@ -32,6 +32,8 @@ class SysTimer {
         void SetTicks2Wait(HAL::TICKS targetticks) {ticks2wait = targetticks;}
         HAL::TICKS GetTicks2Wait() const { return ticks2wait; }
 
+        void SignalTask() { if(sig2send) task2wake->Signal(sig2send);};
+
         bool IsDelayItem() { return(sig2send==0);}
         bool IsTimeSliceItem() { return(task2wake==0); }
     };
@@ -41,6 +43,10 @@ class SysTimer {
     static void Start();
      
 private:
+    static class Alarm : public HAL::TimerAlarm {
+        bool HandleAlarm();
+    } alarmhandler;
+    
     static QueueItem timeslice;
     static void SetTime2Elapse();
 

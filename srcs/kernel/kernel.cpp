@@ -10,7 +10,7 @@
 // ******************* SysTimer *******************
 SysTimer::QueueItem SysTimer::timeslice(0);
 List SysTimer::queuedtasks;
-
+SysTimer::Alarm SysTimer::alarmhandler;
 
 SysTimer::SysTimer() {
 
@@ -37,7 +37,36 @@ void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
 }
 
 void SysTimer::Start() {
+    HAL::SetAlarmHandler(&alarmhandler); // this is wher we will get the alarms
+
     AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
+}
+
+bool SysTimer::Alarm::HandleAlarm() {
+    while(!queuedtasks.IsEmpty()) {
+        HAL::TICKS now = HAL::GetCurrentTicks();
+        QueueItem* first = (QueueItem*)queuedtasks.GetFirst();
+        HAL::TICKS waitingfor = first->GetTicks2Wait();
+
+        if(now > waitingfor) { // time has passed we remove it and signal the task accordingly
+            first->RemoveFromList();
+            if(first->IsDelayItem()) {
+
+            }
+            else if(first->IsTimeSliceItem()) {
+                // normal elapsed timeslice. we reschedule the task
+                Kernel::QuantumElapsed();
+            }
+            else { // a task that is waiting for a timed signal
+
+            }
+        }
+        else {
+            HAL::SetNextAlarm(waitingfor);
+            break;
+        }
+    }
+    return true;
 }
 
 // *********************KERNEL **********************

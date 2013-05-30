@@ -27,6 +27,11 @@ extern void transferMainStack(char** context_sp, int stacksize);
 class HAL {
 public:
     typedef long long TICKS; // 64 bit counter for the ticks (should last for 7000 years)
+    
+    class TimerAlarm {
+        virtual bool HandleAlarm() { return true; };
+    };
+
 
     static unsigned int DisableInterrupts();
     static void RestoreInterrupts(unsigned int oldstatus);
@@ -45,6 +50,7 @@ public:
     static TICKS ConvertTime2Ticks(int ms, int us=0);
 
     static void Init();
+    static void SetAlarmHandler(TimerAlarm* handler);
     
 private:
 
@@ -52,6 +58,7 @@ private:
 
     static unsigned int lastreadticks;
     static unsigned int highticks;
+    static TimerAlarm* inthandler;
 
 };
 
@@ -107,5 +114,8 @@ inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
 
 }
 
+inline void HAL::SetAlarmHandler(HAL::TimerAlarm* handler) {
+    inthandler = handler;
+}
 #endif	/* HAL_H */
 
