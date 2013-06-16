@@ -29,6 +29,7 @@ public:
     typedef long long TICKS; // 64 bit counter for the ticks (should last for 7000 years)
     
     class TimerAlarm {
+     public:
         virtual bool HandleAlarm() { return true; };
     };
 
@@ -51,9 +52,10 @@ public:
 
     static void Init();
     static void SetAlarmHandler(TimerAlarm* handler);
-    
-private:
+    static TimerAlarm* GetAlarmHandler();
 
+    static void NothingToDo();
+private:
     static const int MINDELTATICKS = 0; // must be set to real neede code overhead
 
     static unsigned int lastreadticks;
@@ -117,5 +119,14 @@ inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
 inline void HAL::SetAlarmHandler(HAL::TimerAlarm* handler) {
     inthandler = handler;
 }
+
+inline HAL::TimerAlarm* HAL::GetAlarmHandler() {
+    return inthandler;
+}
+
+inline void HAL::NothingToDo() {
+    
+}
+
 #endif	/* HAL_H */
 

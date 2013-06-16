@@ -34,7 +34,6 @@ class SysTimer {
 
         void SignalTask() { if(sig2send) task2wake->Signal(sig2send);};
 
-        bool IsDelayItem() { return(sig2send==0);}
         bool IsTimeSliceItem() { return(task2wake==0); }
     };
      

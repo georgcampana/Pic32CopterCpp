@@ -50,15 +50,13 @@ bool SysTimer::Alarm::HandleAlarm() {
 
         if(now > waitingfor) { // time has passed we remove it and signal the task accordingly
             first->RemoveFromList();
-            if(first->IsDelayItem()) {
-
-            }
-            else if(first->IsTimeSliceItem()) {
+            if(first->IsTimeSliceItem()) {
                 // normal elapsed timeslice. we reschedule the task
+                AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // t  his re-appends the timeslice alarm
                 Kernel::QuantumElapsed();
             }
             else { // a task that is waiting for a timed signal
-
+                first->SignalTask();
             }
         }
         else {
@@ -122,6 +120,7 @@ void Kernel::Reschedule() {
 
     while(readytasks.IsEmpty()) {
         // put cpu on wait for the next interrupt
+        HAL::NothingToDo();
     }
 
     // take the first ready and execute it

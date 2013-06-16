@@ -30,8 +30,9 @@ extern "C" {
 
 
 // this runs on a separate stack (interrupts stack)->original Task stack already saved
-char* handleSysTimerINT() {
+void handleSysTimerINT() {
     /*if()*/
+    HAL::GetAlarmHandler()->HandleAlarm();
 }
 
 __attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
