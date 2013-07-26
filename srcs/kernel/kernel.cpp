@@ -52,7 +52,7 @@ bool SysTimer::Alarm::HandleAlarm() {
             first->RemoveFromList();
             if(first->IsTimeSliceItem()) {
                 // normal elapsed timeslice. we reschedule the task
-                AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // t  his re-appends the timeslice alarm
+                AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this re-appends the timeslice alarm
                 Kernel::QuantumElapsed();
             }
             else { // a task that is waiting for a timed signal
@@ -131,14 +131,14 @@ void Kernel::Reschedule() {
         runningnow = newtask;
         // defined in HAL
         if(InterruptRunning()) {
-            // Last action of the interrupt
+            // Last action of the interrupt (NOTE: the old task is already archived on its stack)
             // restoreTaskContext()
         }
         else {
             swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
         }
     }
-    // we exit being another Task
+    // we exit being potentially another Task
 }
 
 // should be called by a service interrupt only (SysTimer)

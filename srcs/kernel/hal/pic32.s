@@ -185,7 +185,7 @@ forkTask:
 * arg0=$a0 = char** stackpointer
 * arg1=$a1 = stacksize
 *
-*
+* Note: can be called from user-code only (not from an interrupt)
 */
 .ent transferMainStack
 transferMainStack:
@@ -213,6 +213,53 @@ transferMainStack:
     jr $ra #return from subroutine
     nop
 .end transferMainStack
+
+
+/* PIC32 CoreTimer interrupt (vector0)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for intrrupts
+* (see "interruptstack" in the sbss section).
+*/
+
+.section .vector_0,code
+   j      handleCoreTimer
+   nop
+
+
+.section .text,code
+.ent handleCoreTimer
+handleCoreTimer:
+    .set noreorder
+    .set nomips16
+    .set noat
+
+   # if the previos context was an interrupt then we simply execute the interrupt (reg safe)
+   # otherwise we save the context switch the sp to the interrupt reserved stack
+
+   mfc0 $k0, $12          /* read STATUS register */
+   lui  $k1, 7
+   srl  $k1, $k1, 6       /* prepare mask to extract IDL from status */
+   and  $k1, $k0, $k1
+   bne  $k1, $0, hCTnestedInt
+    /* we come IDL = 0 which means "normal user level" we save the reg-file and switch */
+   rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
+
+
+   lw $k0,%gp_rel(interruptstack)($gp)
+
+ hCTnestedInt:
+
+
+
+
+
+
+.end handleCoreTimer
+
+
+
+
 
 /*
 .section .vector_0,code
@@ -258,4 +305,12 @@ transferMainStack:
 9D0037C0  AFA30060   SW V1, 96(SP)
 9D0037C4  03A0F021   ADDU S8, SP, ZERO
 */
+
+.section	.sbss,bss
+.globl	interruptstack
+	.align	2
+	.type	interruptstack, @object
+	.size	interruptstack, 4
+interruptstack:
+	.space	4
 

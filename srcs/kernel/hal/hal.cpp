@@ -35,10 +35,10 @@ void handleSysTimerINT() {
     HAL::GetAlarmHandler()->HandleAlarm();
 }
 
-__attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
-
-    
-}
+//__attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
+//
+//
+//}
 
 
 #ifdef	__cplusplus
