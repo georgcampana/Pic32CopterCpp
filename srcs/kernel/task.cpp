@@ -71,6 +71,8 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
         }
 
         Kernel::PutOnWait(this);
+        Kernel::SetReschedulePending();
+
         Kernel::Reschedule(); // here the task will be stopped -> context switch
         // we need to remove the timerqueueitem from the SysTimer
         if(maxms > 0) {

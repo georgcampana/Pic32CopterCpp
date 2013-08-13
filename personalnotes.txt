@@ -1,0 +1,396 @@
+
+Idea mutlitasking c++ per Pic32
+
+Nodo è la classe base per quasi tutto
+il main non viene toccato dallo user finale ma fa parte del framework.
+
+Il setup di device drivers necessari si trova in due file separati:
+deviceconfig.cpp e deviceconfig.h
+
+In questi file l'utente mette i device di cui ha bisogno e commenta/decommenta quelli di base
+
+
+il file main fa il setup di base e aggiunge poi la classe marcata come MainTask
+nell'oggetto scheduler istanziato.
+
+L'utente deve quindi:
+
+aggiustare deviceconfig.cpp e deviceconfig.h secondo il proprio setup hw
+estendere una classe di nome MainTask che verrà aggiunta allo scheduler ed eseguita
+per prima.
+
+In MainTask lo user può (se vuole) aggiungere altri Task allo scheduler.
+
+Oggetti esterni accessibili da tutti i task:
+dbgout
+scheduler
+
+
+Esempio di MainTask:
+
+class RTSensorTask : public TimedTask {
+    int OnScheduled() {
+
+
+
+    }
+
+
+}
+
+
+class MainTask : public Task {
+
+    int OnRun() {
+        dbgout << "started !" << eodl;
+        scheduler.addTimedTask(sensortask, 50);
+
+
+
+    }
+
+
+}
+
+
+
+////////   29 Aprile 2013
+
+
+organizzazione struttura directory
+
+
+/kernel (.h e .cpp del kernel)
+/kernel/hal  (roba cpu/platform specific .h e .cpp)
+/driver (.h e .cpp dei device driver)
+/  (main.cpp config.h config.cpp maintask.cpp)
+
+
+TaskBase::Signal() può arrivare da: 
+- un task che gira e che manda un signal a un altro taks
+- un interrupt che segnala una certa condizione
+
+Un rescheduling può essere trigerato da:
+- un task che va in wait
+- un interrupt di timeslice che fa prendere il prossimo task ready (ferma il running dove capita)
+- un interrupt che sveglia un task in waiting che riceve i segnali
+- un Task che manda un signal a un altro task che diventa ready e più importante.
+
+Un task può perdere l'esecuzione:
+a) in qualsiasi punto in caso di reschedule causa timeslice scaduto->rimane READY
+b) in qualsiasi punto causa interrupt che signal() su altro task ready con pri + alta -> rimane READY
+c) su un proprio Wait non soddisfatto subito -> va in WAITING
+d) su un proprio Signal() su un altro task che diventa ready con pri uguale o maggiore
+
+Un task può prendere l'esecuzione:
+a) in qualsiasi punto cause timeslice che rida il run al task
+b) dopo un wait che è soddisfatto causa Signal() da un interrupt
+c) dopo un wait che è soddisfatto causa Signal() da un altro task
+
+
+
+primitive assembler necessarie:
+
+gestione Interrupt systimer
+
+gestione Interrupt N
+    SP dovrebbe essere già ok (SP del shadow register) altrimenti prendi sp per int
+    salva i registers sullo stack del processo messo on hold
+    salva l'sp del task messo in attesa in una locazione conosciuta dentro la class Task
+    <da qui int può usare tutti i registri a proprio piacimento>
+        chiamare il gestore dell'interrupt i c/c++
+        <può avere reschedulato mediate Signal()>
+        il gestore dell'interrupt deve ritornare l'sp salvato in Kernel::runningnow->savedstackpointer
+    vengono ripristinati tutti i registri salvati sullo stack del nuovo running
+    Eret
+
+swapTaskContext(&savedfromsp, savedtosp )
+
+Utilizzo RAM
+
+per task almeno 512bytes di stack (1KB è + realistico)
+per wifi almeno 4KB
+per interrupts almeno 1KB
+per gestione kernel ca. 512bytes
+per seriale ca 768bytes
+
+Esempio
+
+wifi: 4KB
+2 *seriale = 1,5KB
+dim fisse (kernel, ints etc) = 2KB
+6 Task * 2KB l'uno = 12KB
+Totale: ca. 24KB
+
+
+
+Algoritmo SysTimer per Pic32
+
+il kernel tiene valori di ticks a 64bit che una funzione di hal converte in ticks
+
+
+parte da zero ed è un uint a 32 bit
+
+Hal tiene un uint che contiene il corrente HITICK (i 32 bit superiori ovvero MSB)
+che parte da 0 ovviamente.
+
+prende il prossimo valore di attesa e lo confronta  con il corrente HITICK | CoreTimer
+se il delta è negativo o sotto il minimo (overhead di settaggio e handlin g dell'interrupt)
+allora il delta viene messo al minimo
+se il delta tra NextTarget e CurrentHITICK|CoreTimer è maggiore di 32 secondi, c'è un errore da panico.
+se il delta non fa fare l'overflow allora si setta il compare e basta (flag a false).
+se il delta comporta l'overflow allora si setta un flag speciale che indica che HITICK va incrementato
+al prossimo int.
+
+All'interrupt viene presa la prima entry dalla lista ed eseguita l'action da fare.
+Se il flag era settato allora si incrementa anche HITICK.
+
+Lettura del current tick.
+Si controlla se il ticks è inferiore alla parte ticks di lastreadticks.
+Se si allora si incrementa HITICK di lastreadticks e si mette il flag a false
+
+
+Scelta stack interrupt:
+
+le opzioni:
+
+1) sullo stack del task correntemente in esecuzione
+2) sullo stack del maintask nella sua classe Task
+3) sullo stack del maintask nella zona alta di default
+4) in un stack riservato agli interrupt
+5) sulo stack di un task specificato
+
+Variabili di considerazioni:
+    consumo globale di mem da allocare
+    overvhead (num di istruzioni da eseguire)
+
+SCELTO PER ORA:  4) uno stack a parte per i soli interrupt
+
+  
+Algoritmo SysTicker (prologue e epilogue)
+
+
+Abbiamo 2 casi che portano al cambio di contesto:
+
+- da task a task: in caso di wait oppure di signal.
+    Viene messo tutto sullo stack ma non il pc che viene ripreso  com ra al restore.
+- interrupt di systimer che deve andare al prossimo task ready
+    lo stack deve essere messo in modo da essere ripristinato anche dal restore del task 2 task
+
+Traccia del codice interrupt:
+
+check se il contesto precedente era un interrupt o no
+se era un interrupt (level>0) allora salva i registri (ridotto)
+se era un task allora:
+    salva i registri sullo stack del task (da spiegare meglio)
+    prende il pointer SP per gli interrupt
+    esegue QuantumElapsed che chiama il Reschedule()
+    Reschedule() chiama restoreTask() che è in assembler
+    restoreTask dovrebbe:
+        prendere l'SP del task nuovo
+        fare il restore dei registri
+        settare l'EPC
+        chiamare ERET
+
+
+18/07/2013  Ho deciso, devo cambiare il trasf di swapstack usando un exception software.
+facilita enormemente il dover avere stack salvati omogeneii
+va messo "SYSCALL" dentro swapTaskContext.
+cosi salviamo anche l'EPC facendo lo stesso negli altri interrupt (SYSTIMER)
+
+
+22/07/2013
+da capire se Reschedule deve essere chiamato da dentro l'interrupt (vero o syscall che sia)
+o se è Reschedule che genera invece il syscall. La preferita sarebbe la prima
+ma è + difficle gestire il caso di "reschedule sul solito task".
+
+Simulazione in caso di SYSCALL e SYSTIMER
+
+SYSCALL DentroTask(Signal, Wait, AddTask, StartMainThread)  Interrupt(Signal)
+SYSTIMER qualsiasi punto DentroTask o Interrupt
+
+Esempio SYSCALL da dentro Task::Wait()
+Wait()
+    Reschedule()
+        SYSCALL
+            archive stack on sptask1
+            restore stack from sptask2
+
+Esempio SYSTIMER
+Task1...<any point>
+    archive stack on sptask1
+        Reschedule()
+    restore stack on sptask2
+
+Esempio Interrupt che fa Signal su task2
+Task1..<any point>
+    archive stack on sptask1
+        <Interrupt handler>
+            Task2::Signal()
+                Set reschedule pending
+        <exit int handler>
+        if(pending)
+            Reschedule()
+        get runningnow::sp
+    restore sptask
+
+Va reso + elegante e coerente.
+
+
+24/07/2013
+
+Dopo un ragionamento fatto ieri ho scoperto che Wait() e Signal() disabilitano gli INTerrupt
+ma poi fanno un reschedule (task2task oppure restore in caso di int running)
+
+La cosa è delicata:  se in Wait() aspetto un certo tempo per esempio lo scheduler
+mi mette via per prendere il prossimo task MA gli int rimangono disabilitati--> NON VA BENE
+
+La stessa cosa succede in caso di signal da un task1 a un task2
+
+Idee per risolverlo:
+
+In wait e signal mettere lo reschedule pending ed eseguirlo quando gli int sono ripristinati.
+
+Cosa potrebbe succedere con questa soluzione:
+    task1 entra in wait() e chiede uno rescheduling
+    durante la disabilitazione degli int nel wait arriva un int
+    wait() riabilita gli int
+    parte subito lo interrupt pending che va a fare un signal proprio sul task1
+    riesce dall'interrupt
+    check di reschedule da pending-->viene eseguito
+
+
+Individuato 4 casi di reschedule()
+
+1) RUNNING esegue un Wait() bloccante. RUNNING --> WAITING. Il prossimo READY viene preso e messo a RUNNING.
+2) RUNNING esegue un Signal() su un Wait con priority >= della corrente. RUNNING viene messo in READY
+3) RUNNING viene interrotto e messo a READY per timeslice è presente un altro READY-->RUNNING.
+4) RUNNING viene interrotto da un INT che fa un Signal() su un WAIT con pri >= corrente. RUNNING-->READY. e WAITING->RUNNING
+
+
+Passi per i 4 casi:
+1)
+    Wait()
+        DisableInt
+            <no matching signal>
+            <there is another ready task>
+
+
+
+
+
+
+
+
+Codice assembler corrente di task swapping:
+
+create stack space;
+save status,
+save gpr,
+save orig sp;
+take new task's sp;
+restore gpr;
+restore status; (restores also all INT flags, like IE, ERL, EXL etc)
+remove sp space
+
+116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+
+/*************************/
+
+Nuovo codice di swap (per il caso di Running::Signal() -> Waiting o Running:.Wait()  )
+
+120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+
+(NOTA: INTs sono spenti)
+
+setta sp1 e sp2 in a0 e a1
+SYSCALL   (IE=0, ERL=0, EXL=1) Cause:SYSCALL
+<salta a vettore>
+<vettore: jump a codice in "text">
+riprendi sp del precedente shadow GPR
+create stack space;
+save Orig PC (EPC)
+save (maybe adjusted) status
+save gpr,
+save orig sp;
+take new task's sp;
+restore gpr;
+restore status; (restores also all INT flags, like IE, ERL, EXL etc)
+restore PC (EPC) to jump back to the right pos
+remove sp space
+ERET  (mette EXL=0 in status)
+<salto al PC dopo il SYSCALL o precendente INT>
+
+/*********************************/
+
+Nuovo Codice di Interrupt
+
+(INTs sono accesi o spenti)
+<salta a vettore Int>
+<vettore: jump a codice in "text">
+riprendi sp del precedente shadow GPR
+create stack space;
+save Orig PC (EPC)
+save (maybe adjusted) status
+save gpr,
+if FIRSTINT == 0
+    save orig sp --> asm declared ram location (ORIGSP)
+    point sp to beginning (actually the end) of the INT stack area
+    FIRSTINT == 1
+[enable nesting INTs by setting EXL=0]
+
+<exe INT code>
+    [nested int code]
+<INT code returns>
+
+Set DI ZERO  (IE=0 prevents further INTS)
+
+
+newtasksp = RescheduleIfNeeded(ORIGSP)
+    newtasksp = Kernel::RescheduleIfNeeded(ORIGSP)
+
+restore gpr;
+restore EPC;
+remove stack space
+restore status
+write sp in previous gpr (symmetric)
+ERET
+
+/*********************************/
+
+Nuovo Codice di TimeSlice
+
+(INTs sono accesi o spenti)
+<salta a vettore INT timer0>
+<vettore: jump a codice in "text">
+riprendi sp del precedente shadow GPR
+create stack space;
+save Orig PC (EPC)
+save (maybe adjusted) status
+save gpr,
+
+if firstint == 0
+    save orig sp --> asm declared ram location (ORIGSP)
+    point sp to beginning (actually the end) of the INT stack area
+    firstint == 1
+[enable nesting INTs by setting EXL=0]
+
+<exe INT code>
+    [nested int code]
+<INT code returns>
+
+Set DI ZERO  (IE=0 prevents further INTS)
+
+
+newtasksp = QuantumElapsed(ORIGSP)
+    newtasksp = Kernel::QuantumElapsed(ORIGSP)
+
+restore gpr;
+restore EPC;
+remove stack space
+restore status
+write sp in previous gpr (symmetric)
+ERET
+

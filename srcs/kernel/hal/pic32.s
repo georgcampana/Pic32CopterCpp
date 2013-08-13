@@ -3,6 +3,11 @@
 
 .globl swapTaskContext, forkTask, transferMainStack
 
+.section .vector_0,code
+   j      handleSysCall
+   nop
+
+
 .text
 # must be called with Interrupts already switched off
 .ent swapTaskContext
@@ -12,14 +17,20 @@ swapTaskContext:
     .set noat
 
    /* no need to get the right sp since this swapContext can be called from a Task only
-    * we start to put the whole gpr on the stack
-    * the allocated space/sequence must be the same as in case of an interrupt
-    * because an int can reschedule the current task
+    * we start to call the SYS CALL isntruction to force a software exceptio and capture the EPC
+    * so that we theh save the gpr, the allocated space/sequence must be the same as in case of an interrupt
+    * because an int could reschedule the current task
     * steps: create stack space; save status, save gpr, save orig sp;
     *        take new task's sp; restore gpr; restore status; remove sp space
-    *  116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    * status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    *  120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    *  epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     */
+
+    syscall /* causes a soft exception that ends  */
+
+handleSysCall:
+
+
     addiu $sp, $sp, -120  # we create some space on the stack
     sw $sp, ($a0) # we store the current sp to the current task sp pointer
     sw $at, ($sp)
@@ -314,3 +325,6 @@ handleCoreTimer:
 interruptstack:
 	.space	4
 
+/* this is to hold the Original StackPointer when entering the SYS CALL */
+ORIGSP:
+	.space	4

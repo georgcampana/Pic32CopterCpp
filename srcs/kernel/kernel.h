@@ -70,6 +70,7 @@ class Kernel {
      static bool InterruptRunning();
      static void SetReschedulePending();
      static void InterruptEpilogue();
+     static void RecheduleIfPending();
 
      static void StartMainTask(TaskBase* firsttask);
 
@@ -102,9 +103,10 @@ private:
 inline TaskBase* Kernel::GetRunningTask() { return runningnow; }
 
 inline bool Kernel::RunningIsFirstTask() { return (runningnow == readytasks.GetFirst()); }
-inline bool Kernel::InterruptRunning() { return false ;}
+inline bool Kernel::InterruptRunning() { return HAL::InterruptRunning() ;}
 inline void Kernel::SetReschedulePending() { reschedulepending = true; }
 inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
+inline void Kernel::RecheduleIfPending() {if(reschedulepending) Reschedule(); }
 
 #endif	/* KERNEL_H */
 

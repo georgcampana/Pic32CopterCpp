@@ -11,6 +11,11 @@ unsigned int HAL::lastreadticks = 0;
 unsigned int HAL::highticks = 0;
 HAL::TimerAlarm* HAL::inthandler = 0;
 
+bool InterruptRunning() {
+    return false;
+};
+
+
 void HAL::Init() {
 
     ResetTickTimer();

@@ -19,6 +19,8 @@ extern "C" {
 extern void swapTaskContext(char** from_context_sp, char* to_context_sp);
 extern bool forkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize);
 extern void transferMainStack(char** context_sp, int stacksize);
+extern bool InterruptRunning();
+
 
 #ifdef	__cplusplus
 }
@@ -33,17 +35,12 @@ public:
         virtual bool HandleAlarm() { return true; };
     };
 
-
+    static bool InterruptRunning();
     static unsigned int DisableInterrupts();
     static void RestoreInterrupts(unsigned int oldstatus);
 
     static unsigned int DisableScheduler();
     static void RestoreScheduler(unsigned int oldstatus);
-
-// commented out because kernel MUST call the asm call directly to avoid another subroutine level
-//    static void SwapTaskContext(char** from_context_sp, char* to_context_sp);
-//    static bool ForkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize);
-//    static void TransferMainStack(char** context_sp, int stacksize);
 
     static TICKS GetCurrentTicks();
     static void SetNextAlarm(TICKS alarmticks);
@@ -64,6 +61,7 @@ private:
 
 };
 
+inline bool HAL::InterruptRunning() { return ::InterruptRunning;}
 
 inline unsigned int HAL::DisableInterrupts() { return 0;}
 inline void HAL::RestoreInterrupts(unsigned int oldstatus) {}
@@ -125,7 +123,10 @@ inline HAL::TimerAlarm* HAL::GetAlarmHandler() {
 }
 
 inline void HAL::NothingToDo() {
-    
+    while(1);
+    // must be replaced by something like
+    //_wait(); // in the pic32.s
+
 }
 
 #endif	/* HAL_H */
