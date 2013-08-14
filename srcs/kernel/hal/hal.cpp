@@ -19,8 +19,12 @@ void HAL::Init() {
 
     ResetTickTimer();
 
+    // set up the core timer interrupt with a prioirty of 1 and zero sub-priority
+    mConfigIntCoreTimer((CT_INT_ON | CT_INT_PRIOR_1 | CT_INT_SUB_PRIOR_0));
+    mEnableIntCoreTimer();
+    mCTClearIntFlag();
+
     // we set the stack pointer
-    // TODO: the notion that it grows down is pic32 specific and should be moved into pic32.s
     interruptstack = intstack + INTERRUPTSTACKSIZE; // because it grows downwards
 
     // let's init the timer and interrupts
@@ -29,6 +33,7 @@ void HAL::Init() {
     // enable interrupts
     INTEnableInterrupts();
 }
+
 
 #ifdef	__cplusplus
 extern "C" {
@@ -40,16 +45,23 @@ extern "C" {
 void handleSysTimerINT() {
     /*if()*/
     HAL::GetAlarmHandler()->HandleAlarm();
+
+    mCTClearIntFlag();
 }
 
 char* RescheduleIfNeeded(char* lastsp) {
     return HAL::GetRescheduleHandler()->RescheduleIfNeeded(lastsp);
 }
 
-
+//void __ISR(_CORE_TIMER_VECTOR, ipl1) myISR(void)
+//{
+//        int coretimer = ReadCoreTimer();
+//        coretimer++;
+//}
 //__attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
 //
-//
+//        int coretimer = ReadCoreTimer();
+//        coretimer++;
 //}
 
 

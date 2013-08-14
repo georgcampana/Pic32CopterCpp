@@ -245,7 +245,6 @@ transferMainStack:
    j      handleCoreTimer
    nop
 
-
 .section .text,code
 .ent handleCoreTimer
 handleCoreTimer:

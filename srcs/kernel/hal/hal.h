@@ -115,7 +115,11 @@ inline void HAL::SetNextAlarm(HAL::TICKS alarmticks) {
         alarmticks = now + delta;
     }
 
-    UpdateCoreTimer(alarmticks & 0xffffffff); // the lowerpart
+    unsigned int newcompare = alarmticks & 0xffffffff;
+    
+    asm volatile("mtc0   %0,$11" : "+r"(newcompare));
+    // commented out and done manually because it already sums with the current counter
+    //UpdateCoreTimer(alarmticks & 0xffffffff); // the lowerpart
 }
 
 inline void HAL::ResetTickTimer() {

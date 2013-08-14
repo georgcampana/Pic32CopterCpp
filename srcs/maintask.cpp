@@ -42,8 +42,11 @@ void MainTask::OnRun() {
 
     while(1) {
         testled << false;
+        
         //Delay(3000);
         System::dbgcounter--;
+        int coretimer = ReadCoreTimer();
+        System::dbgcounter = coretimer;
     }
 
 }

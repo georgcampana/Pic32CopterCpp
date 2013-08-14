@@ -24,7 +24,7 @@ int main(void) {
     SysTimer::Start();
 
     // This will never come back
-    Kernel::StartMainTask(&parenttask);
+    Kernel::InitAndStartMainTask(&parenttask);
 
     return 0;
 }

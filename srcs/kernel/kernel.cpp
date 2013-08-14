@@ -31,7 +31,7 @@ void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
     }
     cursor->AddInFront(item2queue);
 
-    if(queuedtasks.GetFirst() == cursor) { // the new item is the first one
+    if(queuedtasks.GetFirst() == item2queue) { // the new item is the first one
         HAL::SetNextAlarm(targetticks);
     }
 }
@@ -78,9 +78,9 @@ List Kernel::waitingtasks;
 bool Kernel::reschedulepending = false;
 Kernel::Epilogue Kernel::reschedulehandler;
 
-
+// no one calls this :( since it is just an abstract container for static stuff
 Kernel::Kernel() {
-    HAL::SetRescheduleHandler(&reschedulehandler);
+
 }
 
 void Kernel::AddTask(TaskBase* newtask) {
@@ -161,7 +161,9 @@ char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
 }
 
 // this never returns and starts the main task
-void Kernel::StartMainTask(TaskBase* firsttask) {
+void Kernel::InitAndStartMainTask(TaskBase* firsttask) {
+
+    HAL::SetRescheduleHandler(&reschedulehandler);
 
     firsttask->status = TaskBase::TS_NEW;
     readytasks.AddAsFirst(firsttask);

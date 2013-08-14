@@ -43,6 +43,7 @@ class SysTimer {
      
 private:
     static class Alarm : public HAL::TimerAlarm {
+      public:
         bool HandleAlarm();
     } alarmhandler;
     
@@ -72,9 +73,10 @@ class Kernel {
      static void InterruptEpilogue();
      static void RecheduleIfPending();
 
-     static void StartMainTask(TaskBase* firsttask);
+     static void InitAndStartMainTask(TaskBase* firsttask);
      
      static class Epilogue : public HAL::IntEpilogue {
+      public:
         char* RescheduleIfNeeded(char* lastsp);
      } reschedulehandler;
 
