@@ -1,15 +1,11 @@
 # Georg Campana  Hardware Abstraction Layer
 #
 
-.globl swapTaskContext, forkTask, transferMainStack
-
-.section .vector_0,code
-   j      handleSysCall
-   nop
+.globl swapTaskContext, forkTask, transferMainStack, getInterruptLevel
 
 
 .text
-# must be called with Interrupts already switched off
+# must be called with Interrupts already switched off & never from an exception
 .ent swapTaskContext
 swapTaskContext:
     .set noreorder
@@ -26,12 +22,19 @@ swapTaskContext:
     *  epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     */
 
-    syscall /* causes a soft exception that ends  */
+    #syscall /* causes a soft exception that ends  */
+    # we simulate a systemcall here
+    mfc0 $k0, $12  # CP0 STATUS register
+    ori $k0, $k0, 2 # Set EXL bit = 1 (we simulate an exception)
+    mtc0 $k0, $12
 
-handleSysCall:
+    mtc0 $ra, $14  # we set the ra into E-PC so that it used to return with ERET
 
+    /* from here we pretend to be system code: EXL is 1 and ints are disabled*/
 
-    addiu $sp, $sp, -120  # we create some space on the stack
+    addiu $sp, $sp, -128  # we create some space on the stack
+                          # (could be 124 but must be 8 bytes aligned)
+
     sw $sp, ($a0) # we store the current sp to the current task sp pointer
     sw $at, ($sp)
     sw $v0, 4($sp)
@@ -64,15 +67,20 @@ handleSysCall:
     sw $v0, 108($sp)
     mflo $v0
     sw $v0, 112($sp)
-    #mfc0 $v0, 12 #Status
-    #sw $v0, 116($sp)
+    mfc0 $v0, $12 #Status
+    sw $v0, 116($sp)
+    sw $ra, 120($sp)  # this is the future EPC
     # ---- OLD -----
 
     # ---- NEW ------
     # From here we start to take the gpr we still have the new task sp in a1
     addiu $sp, $a1, 0
-    #lw $v0, 116($sp)
-    #mtc0 $v0, $12 #Status
+
+    lw $v0, 120($sp)
+    mtc0 $v0, $14 # new EPC
+    lw $v0, 116($sp) # new STATUS
+    ori $v0, $v0, 2  # must ensure that we stay with EXL enabled exception condition
+    mtc0 $v0, $12 # set CP0 Status
     lw $v0, 112($sp)
     mtlo $v0
     lw $v0, 108($sp)
@@ -105,9 +113,9 @@ handleSysCall:
     lw $v0,  4($sp)
     lw $at,   ($sp)
 
-    addiu $sp, $sp, 120  # we restore the original sp
+    addiu $sp, $sp, 128  # we restore the original sp
 
-    jr $ra #return from subroutine
+    eret  # back to the caller or orginal program counter
     nop
 .end swapTaskContext
 
@@ -245,32 +253,146 @@ handleCoreTimer:
     .set nomips16
     .set noat
 
-   # if the previos context was an interrupt then we simply execute the interrupt (reg safe)
+   # if the previous context was an interrupt then we simply execute the interrupt (reg safe)
    # otherwise we save the context switch the sp to the interrupt reserved stack
 
-   mfc0 $k0, $12          /* read STATUS register */
-   lui  $k1, 7
-   srl  $k1, $k1, 6       /* prepare mask to extract IDL from status */
-   and  $k1, $k0, $k1
-   bne  $k1, $0, hCTnestedInt
+    mfc0 $k0, $12          /* read STATUS register */
+    lui  $k1, 7
+    srl  $k1, $k1, 6       /* prepare mask to extract IDL from status */
+    and  $k1, $k0, $k1
+    bne  $k1, $0, _hCTnestedInt
     /* we come IDL = 0 which means "normal user level" we save the reg-file and switch */
-   rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
+    rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
+
+    addiu $sp, $sp, -128  # we create some space on the stack
+                          # (could be 124 but must be 8 bytes aligned)
+
+    sw $sp, %gp_rel(ORIGSP)($gp)
+    sw $at, ($sp)
+    sw $v0, 4($sp)
+    sw $v1, 8($sp)
+    sw $a0, 12($sp)
+    sw $a1, 16($sp)
+    sw $a2, 20($sp)
+    sw $a3, 24($sp)
+    sw $t0, 28($sp)
+    sw $t1, 32($sp)
+    sw $t2, 36($sp)
+    sw $t3, 40($sp)
+    sw $t4, 44($sp)
+    sw $t5, 48($sp)
+    sw $t6, 52($sp)
+    sw $t7, 56($sp)
+    sw $t8, 60($sp)
+    sw $t9, 64($sp)
+    sw $s0, 68($sp)
+    sw $s1, 72($sp)
+    sw $s2, 76($sp)
+    sw $s3, 80($sp)
+    sw $s4, 84($sp)
+    sw $s5, 88($sp)
+    sw $s6, 92($sp)
+    sw $s7, 96($sp)
+    sw $s8, 100($sp)
+    sw $ra, 104($sp)
+    mfhi $v0
+    sw $v0, 108($sp)
+    mflo $v0
+    sw $v0, 112($sp)
+    mfc0 $v0, $12 #Status
+    sw $v0, 116($sp)
+    sw $ra, 120($sp)  # this is the future EPC
+
+   /* let's set the new Interrupt level */
+    ins	$k0, $zero, 1, 15 # this enables nested interrupts since EXL (and ERL are set t0 0)
+    ori	$k0, $k0, 0x400   # 0x400 -> level = 1 0x1800 --> level = 6
+
+    mtc0 $k0, $12 # from here on nested INTS are enabled
+
+    lw $sp,%gp_rel(interruptstack)($gp)
+
+    addiu $sp, $sp, -16 # probably not needed (area for the called func to store a0-a3)
+    jal handleSysTimerINT # call into the c code
+    nop
+    addiu $sp, $sp, 16  # see above
+
+    di  # disable int--> disable nested interrupts
+
+    /* now we try to get the  stackpointer of the next task to execute */
+    lw $a0, %gp_rel(ORIGSP)($gp)
+    jal RescheduleIfNeeded
+    nop
+    /* we have in $v0 the stack pointer of the next task */
+    addiu $sp, $v0, 0
+
+    /* start to restore */
+    lw $v0, 120($sp)
+    mtc0 $v0, $14 # new EPC
+    lw $v0, 116($sp) # new STATUS
+    ori $v0, $v0, 2  # must ensure that we stay with EXL enabled exception condition
+    mtc0 $v0, $12 # set CP0 Status
+    lw $v0, 112($sp)
+    mtlo $v0
+    lw $v0, 108($sp)
+    mthi $v0
+    lw $ra, 104($sp)
+    lw $s8, 100($sp)
+    lw $s7, 96($sp)
+    lw $s6, 92($sp)
+    lw $s5, 88($sp)
+    lw $s4, 84($sp)
+    lw $s3, 80($sp)
+    lw $s2, 76($sp)
+    lw $s1, 72($sp)
+    lw $s0, 68($sp)
+    lw $t9, 64($sp)
+    lw $t8, 60($sp)
+    lw $t7, 56($sp)
+    lw $t6, 52($sp)
+    lw $t5, 48($sp)
+    lw $t4, 44($sp)
+    lw $t3, 40($sp)
+    lw $t2, 36($sp)
+    lw $t1, 32($sp)
+    lw $t0, 28($sp)
+    lw $a3, 24($sp)
+    lw $a2, 20($sp)
+    lw $a1, 16($sp)
+    lw $a0, 12($sp)
+    lw $v1,  8($sp)
+    lw $v0,  4($sp)
+    lw $at,   ($sp)
+
+    addiu $sp, $sp, 128  # we restore the original sp
+
+    eret  # back to the caller or orginal program counter
+    nop
+
+ _hCTnestedInt:
 
 
-   lw $k0,%gp_rel(interruptstack)($gp)
-
- hCTnestedInt:
-
-
-
+# TODO: nested timeslice (should be simpler)
 
 
 
 .end handleCoreTimer
 
+.ent getInterruptLevel
+getInterruptLevel:
+    .set noreorder
+    .set nomips16
+    .set noat
 
+    mfc0 $t0, $12          /* read STATUS register */
+    lui  $v0, 7
+    srl  $v0, $v0, 6       /* prepare mask to extract IDL from status */
+    and  $v0, $t0, $v0     /* v0 contains the IPL now */
+    srl  $v0, 10           /* bits 0 aligned */
 
+    jr $ra
+    nop
 
+.end getInterruptLevel
 
 /*
 .section .vector_0,code

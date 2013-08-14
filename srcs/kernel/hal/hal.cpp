@@ -10,16 +10,18 @@
 unsigned int HAL::lastreadticks = 0;
 unsigned int HAL::highticks = 0;
 HAL::TimerAlarm* HAL::inthandler = 0;
+HAL::IntEpilogue* HAL::reschedhandler = 0;
+char  HAL::intstack[INTERRUPTSTACKSIZE];
 
-bool InterruptRunning() {
-    return false;
-};
-
+extern char* interruptstack; // edfined in the assembler file
 
 void HAL::Init() {
 
     ResetTickTimer();
 
+    // we set the stack pointer
+    // TODO: the notion that it grows down is pic32 specific and should be moved into pic32.s
+    interruptstack = intstack + INTERRUPTSTACKSIZE; // because it grows downwards
 
     // let's init the timer and interrupts
     // configure for multi-vectored mode
@@ -39,6 +41,11 @@ void handleSysTimerINT() {
     /*if()*/
     HAL::GetAlarmHandler()->HandleAlarm();
 }
+
+char* RescheduleIfNeeded(char* lastsp) {
+    return HAL::GetRescheduleHandler()->RescheduleIfNeeded(lastsp);
+}
+
 
 //__attribute__((vector(_CORE_TIMER_VECTOR), nomips16)) void myISR() {
 //

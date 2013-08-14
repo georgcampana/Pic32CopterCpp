@@ -31,7 +31,7 @@ void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
     }
     cursor->AddInFront(item2queue);
 
-    if(queuedtasks.IsHead(cursor)) { // the new item is the first one
+    if(queuedtasks.GetFirst() == cursor) { // the new item is the first one
         HAL::SetNextAlarm(targetticks);
     }
 }
@@ -76,9 +76,11 @@ List Kernel::readytasks;
 List Kernel::waitingtasks;
 
 bool Kernel::reschedulepending = false;
+Kernel::Epilogue Kernel::reschedulehandler;
+
 
 Kernel::Kernel() {
-
+    HAL::SetRescheduleHandler(&reschedulehandler);
 }
 
 void Kernel::AddTask(TaskBase* newtask) {
@@ -145,12 +147,22 @@ void Kernel::Reschedule() {
 void Kernel::QuantumElapsed() {
     runningnow->RemoveFromList();
     readytasks.Enqueue(runningnow);
-    Reschedule();
 }
 
+// called by the Hal Interrupt epilogue to see if a reschedule is needed
+// returns the pointer of the saved sp for the task t activate/execute
+char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
+
+    if(reschedulepending) {
+        Reschedule();
+        return getCurrentSavedSP();
+    }
+    return lastsp;
+}
 
 // this never returns and starts the main task
 void Kernel::StartMainTask(TaskBase* firsttask) {
+
     firsttask->status = TaskBase::TS_NEW;
     readytasks.AddAsFirst(firsttask);
     runningnow = firsttask;

@@ -19,12 +19,16 @@ extern "C" {
 extern void swapTaskContext(char** from_context_sp, char* to_context_sp);
 extern bool forkTask(void** ptaskpointer,void* taskpointer, char** stackpointer, int stacksize);
 extern void transferMainStack(char** context_sp, int stacksize);
-extern bool InterruptRunning();
+// other asm functions
+extern int getInterruptLevel();
 
 
 #ifdef	__cplusplus
 }
 #endif
+
+// TODO: should be moved in a common config file (system.h or a config.h)
+#define INTERRUPTSTACKSIZE  1024
 
 class HAL {
 public:
@@ -33,6 +37,11 @@ public:
     class TimerAlarm {
      public:
         virtual bool HandleAlarm() { return true; };
+    };
+
+    class IntEpilogue {
+      public:
+        virtual char* RescheduleIfNeeded(char* lastsp) { return lastsp; };
     };
 
     static bool InterruptRunning();
@@ -51,17 +60,23 @@ public:
     static void SetAlarmHandler(TimerAlarm* handler);
     static TimerAlarm* GetAlarmHandler();
 
+    static void SetRescheduleHandler(IntEpilogue* handler);
+    static IntEpilogue* GetRescheduleHandler();
+
     static void NothingToDo();
 private:
+
+    static char intstack[INTERRUPTSTACKSIZE];
+
     static const int MINDELTATICKS = 0; // must be set to real neede code overhead
 
     static unsigned int lastreadticks;
     static unsigned int highticks;
     static TimerAlarm* inthandler;
-
+    static IntEpilogue* reschedhandler;
 };
 
-inline bool HAL::InterruptRunning() { return ::InterruptRunning;}
+inline bool HAL::InterruptRunning() { return ::getInterruptLevel();}
 
 inline unsigned int HAL::DisableInterrupts() { return 0;}
 inline void HAL::RestoreInterrupts(unsigned int oldstatus) {}
@@ -120,6 +135,14 @@ inline void HAL::SetAlarmHandler(HAL::TimerAlarm* handler) {
 
 inline HAL::TimerAlarm* HAL::GetAlarmHandler() {
     return inthandler;
+}
+
+inline void HAL::SetRescheduleHandler(HAL::IntEpilogue* handler) {
+    reschedhandler = handler;
+}
+
+inline HAL::IntEpilogue* HAL::GetRescheduleHandler() {
+    return reschedhandler;
 }
 
 inline void HAL::NothingToDo() {

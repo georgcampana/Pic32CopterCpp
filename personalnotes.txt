@@ -303,7 +303,7 @@ Nuovo codice di swap (per il caso di Running::Signal() -> Waiting o Running:.Wai
 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
 epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
 
-(NOTA: INTs sono spenti)
+(NOTA: INTs sono e devono essere spenti)
 
 setta sp1 e sp2 in a0 e a1
 SYSCALL   (IE=0, ERL=0, EXL=1) Cause:SYSCALL
@@ -384,8 +384,8 @@ if firstint == 0
 Set DI ZERO  (IE=0 prevents further INTS)
 
 
-newtasksp = QuantumElapsed(ORIGSP)
-    newtasksp = Kernel::QuantumElapsed(ORIGSP)
+newtasksp = RescheduleIfNeeded(ORIGSP)
+    newtasksp = Kernel::RescheduleIfNeeded(ORIGSP)
 
 restore gpr;
 restore EPC;
@@ -394,3 +394,19 @@ restore status
 write sp in previous gpr (symmetric)
 ERET
 
+12 August 2013
+
+SYSCALL è una eccezione che genera una "general exception"
+questa è gestita da _general_exception_context dentro general_exception.S
+
+_general_exception_context poi chiama _general_exception_handler che non fa niente
+ed è marcato com "weak" quindi rimpiazzabile dall'utente.
+
+Cerco di evitare l'uso di SYSCALL per non dover rimpiazzare il _general_exception_context
+
+Prima prova ha dato esito buono: messo a 1 EXL, settato EPC e fatto un ERET
+E' tornato correttamente all'indirizzo giusto
+
+routine di swap fatta e da provare
+
+prossima è il timeslice

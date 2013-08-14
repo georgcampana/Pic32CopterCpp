@@ -11,7 +11,7 @@
 #include "kernel/task.h"
 
 
-// this is the entry point for the user application and taks
+// this is the entry point for the user application and tasks
 // there must be exactely one MainTask named parenttask
 class MainTask : public Task<2048> {
 

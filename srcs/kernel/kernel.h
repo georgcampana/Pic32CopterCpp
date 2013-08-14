@@ -73,6 +73,10 @@ class Kernel {
      static void RecheduleIfPending();
 
      static void StartMainTask(TaskBase* firsttask);
+     
+     static class Epilogue : public HAL::IntEpilogue {
+        char* RescheduleIfNeeded(char* lastsp);
+     } reschedulehandler;
 
      class InterruptCtrl {
          unsigned int int_status;
@@ -90,7 +94,9 @@ class Kernel {
            void Restore() { HAL::RestoreScheduler(sched_status); }
      };
 
+
 private:
+     static char* getCurrentSavedSP();
 
      static TaskBase* runningnow;
 
@@ -98,6 +104,7 @@ private:
      static List waitingtasks;
 
      static bool reschedulepending;
+
 };
 
 inline TaskBase* Kernel::GetRunningTask() { return runningnow; }
@@ -107,6 +114,8 @@ inline bool Kernel::InterruptRunning() { return HAL::InterruptRunning() ;}
 inline void Kernel::SetReschedulePending() { reschedulepending = true; }
 inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
 inline void Kernel::RecheduleIfPending() {if(reschedulepending) Reschedule(); }
+
+inline char* Kernel::getCurrentSavedSP() { return runningnow->savedstackpointer; }
 
 #endif	/* KERNEL_H */
 

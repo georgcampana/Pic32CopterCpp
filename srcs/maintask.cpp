@@ -24,7 +24,6 @@ class BlinkerTask : public Task<2048> {
         while(1) {
             testled << true;
             //Delay(3000);
-            Kernel::QuantumElapsed();
             System::dbgcounter++;
         }
     }
@@ -44,7 +43,6 @@ void MainTask::OnRun() {
     while(1) {
         testled << false;
         //Delay(3000);
-        Kernel::QuantumElapsed();
         System::dbgcounter--;
     }
 
