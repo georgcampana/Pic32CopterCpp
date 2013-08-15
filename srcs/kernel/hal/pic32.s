@@ -138,8 +138,8 @@ forkTask:
 
     sw $a0, ($sp)   #save the current arg0 pointer to taskpointer
     sw $a1, 4($sp)  #save arg1 taskpointer
-    sw $a2, 4($sp)  #save arg2 pointer to the new stackpointer
-    sw $a3, 4($sp)  #save arg3 stacksize
+    sw $a2, 8($sp)  #save arg2 pointer to the new stackpointer
+    sw $a3, 12($sp) #save arg3 stacksize
     lw $t0, ($a2)   # $t0 is our newtask stack pointer
     add $t0, $t0, $a3  #in mips the stack grows downwards so we start from the top
 
@@ -156,9 +156,9 @@ forkTask:
     sw $a1, 0($a0) #this is the pointer to the new task, should be already copied above
 
     #time to init the stack for the reschedule
-    #  116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    # status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
-    addiu $t0, $t0, -120  # we create some space on the stack
+    #  120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    # epc, status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    addiu $t0, $t0, -128  # we create some space on the stack (124 rounded up)
     sw $0, ($t0)        # at
     addiu $v0, $0, 1
     sw $v0, 4($t0)      # v0
@@ -191,6 +191,7 @@ forkTask:
     sw $0, 112($t0)     # lo
     mfc0 $t1, $12 #Status
     sw $t1, 116($t0)         # CP0 status
+    sw $ra, 120($t0)         # return address
 
     sw $t0, ($a2)       # we store the stackpointer in the var location
 
@@ -260,6 +261,7 @@ handleCoreTimer:
     srl  $k1, $k1, 6       /* prepare mask to extract IDL from status */
     and  $k1, $k0, $k1
     bne  $k1, $0, _hCTnestedInt
+    nop
     /* we come IDL = 0 which means "normal user level" we save the reg-file and switch */
     rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
 
@@ -319,8 +321,11 @@ handleCoreTimer:
 
     /* now we try to get the  stackpointer of the next task to execute */
     lw $a0, %gp_rel(ORIGSP)($gp)
+    addiu $sp, $sp, -16 # (area for the called func to store a0-a3)
     jal RescheduleIfNeeded
     nop
+    addiu $sp, $sp, 16 #  could be avoided because we replace sp in the next instruction
+
     /* we have in $v0 the stack pointer of the next task */
     addiu $sp, $v0, 0
 
@@ -363,6 +368,7 @@ handleCoreTimer:
     lw $at,   ($sp)
 
     addiu $sp, $sp, 128  # we restore the original sp
+    wrpgpr $sp, $sp
 
     eret  # back to the caller or orginal program counter
     nop

@@ -13,25 +13,23 @@ HAL::TimerAlarm* HAL::inthandler = 0;
 HAL::IntEpilogue* HAL::reschedhandler = 0;
 char  HAL::intstack[INTERRUPTSTACKSIZE];
 
-extern char* interruptstack; // edfined in the assembler file
+extern char* interruptstack; // defined in the assembler file
 
 void HAL::Init() {
+    // let's init the timer and interrupts
 
     ResetTickTimer();
 
     // set up the core timer interrupt with a prioirty of 1 and zero sub-priority
     mConfigIntCoreTimer((CT_INT_ON | CT_INT_PRIOR_1 | CT_INT_SUB_PRIOR_0));
-    mEnableIntCoreTimer();
-    mCTClearIntFlag();
-
+    // The Core timer should halt when we are halted at a debug breakpoint.
+    _CP0_BIC_DEBUG(_CP0_DEBUG_COUNTDM_MASK);
     // we set the stack pointer
     interruptstack = intstack + INTERRUPTSTACKSIZE; // because it grows downwards
 
-    // let's init the timer and interrupts
-    // configure for multi-vectored mode
-    INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
-    // enable interrupts
-    INTEnableInterrupts();
+    // enable multi-vector interrupts
+    INTEnableSystemMultiVectoredInt();
+
 }
 
 

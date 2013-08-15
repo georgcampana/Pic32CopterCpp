@@ -8,8 +8,7 @@
 #ifndef HAL_H
 #define	HAL_H
 
-#include <p32xxxx.h>
-#include <plib.h>
+#include "./../system.h" // TODO: should be more generic
 
 #ifdef	__cplusplus
 extern "C" {
@@ -68,7 +67,7 @@ private:
 
     static char intstack[INTERRUPTSTACKSIZE];
 
-    static const int MINDELTATICKS = 0; // must be set to real neede code overhead
+    static const int MINDELTATICKS = 500; // must be set to real needed code overhead
 
     static unsigned int lastreadticks;
     static unsigned int highticks;
@@ -112,14 +111,10 @@ inline void HAL::SetNextAlarm(HAL::TICKS alarmticks) {
 
     if(delta < MINDELTATICKS) {
         delta = MINDELTATICKS;
-        alarmticks = now + delta;
     }
 
-    unsigned int newcompare = alarmticks & 0xffffffff;
-    
-    asm volatile("mtc0   %0,$11" : "+r"(newcompare));
-    // commented out and done manually because it already sums with the current counter
-    //UpdateCoreTimer(alarmticks & 0xffffffff); // the lowerpart
+    // NOTE: UpdateCoreTimer takes the current counter and sums (automatic module) the period
+    UpdateCoreTimer(delta); 
 }
 
 inline void HAL::ResetTickTimer() {
@@ -129,8 +124,11 @@ inline void HAL::ResetTickTimer() {
     highticks = 0;
 }
 
-inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
+#define TICKS_PER_MS    (SYS_CLOCK / 2 / 1000)
+#define TICKS_PER_US    (SYS_CLOCK / 2 / 1000000)
 
+inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
+    return HAL::TICKS ((ms*TICKS_PER_MS) + (us*TICKS_PER_US));
 }
 
 inline void HAL::SetAlarmHandler(HAL::TimerAlarm* handler) {

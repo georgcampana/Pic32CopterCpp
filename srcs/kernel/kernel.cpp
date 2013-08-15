@@ -94,7 +94,7 @@ void Kernel::AddTask(TaskBase* newtask) {
         // this is the new added task running
         // Note: the original "forkedtask" has been changed to the new one by forkTask
         forkedtask->OnRun();
-        // The task does nor run anymore: time to kill
+        // The task does not run anymore: time to kill
         forkedtask->RemoveFromList();
         Reschedule();
     }
@@ -134,7 +134,7 @@ void Kernel::Reschedule() {
         // defined in HAL
         if(InterruptRunning()) {
             // Last action of the interrupt (NOTE: the old task is already archived on its stack)
-            // restoreTaskContext()
+            // epilogue will restore the new "runningnow"
         }
         else {
             swapTaskContext(&currtask->savedstackpointer, newtask->savedstackpointer);
@@ -147,6 +147,7 @@ void Kernel::Reschedule() {
 void Kernel::QuantumElapsed() {
     runningnow->RemoveFromList();
     readytasks.Enqueue(runningnow);
+    SetReschedulePending();
 }
 
 // called by the Hal Interrupt epilogue to see if a reschedule is needed
