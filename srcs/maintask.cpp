@@ -43,13 +43,9 @@ void MainTask::OnRun() {
     while(1) {
         testled << false;
 
-        unsigned int cause = 0;
-        asm volatile("mfc0   %0, $13" : "=r"(cause));
         //Delay(3000);
         System::dbgcounter--;
-        int coretimer = ReadCoreTimer();
-        System::dbgcounter = coretimer;
-        System::dbgcounter = cause;
+
     }
 
 }

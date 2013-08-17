@@ -14,7 +14,7 @@
 
 class SysTimer {
 
-    static int const TIMESLICE_QUANTUM = 5000; // 5ms
+    static int const TIMESLICE_QUANTUM = 125; // ms
 
  public:
 
@@ -99,6 +99,7 @@ class Kernel {
 
 private:
      static char* getCurrentSavedSP();
+     static void setCurrentSavedSP(char* stackpointer);
 
      static TaskBase* runningnow;
 
@@ -118,6 +119,7 @@ inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
 inline void Kernel::RecheduleIfPending() {if(reschedulepending) Reschedule(); }
 
 inline char* Kernel::getCurrentSavedSP() { return runningnow->savedstackpointer; }
+inline void Kernel::setCurrentSavedSP(char* stackpointer) {  runningnow->savedstackpointer = stackpointer; }
 
 #endif	/* KERNEL_H */
 

@@ -268,7 +268,6 @@ handleCoreTimer:
     addiu $sp, $sp, -128  # we create some space on the stack
                           # (could be 124 but must be 8 bytes aligned)
 
-    sw $sp, %gp_rel(ORIGSP)($gp)
     sw $at, ($sp)
     sw $v0, 4($sp)
     sw $v1, 8($sp)
@@ -300,8 +299,9 @@ handleCoreTimer:
     sw $v0, 108($sp)
     mflo $v0
     sw $v0, 112($sp)
-    mfc0 $v0, $12 #Status
-    sw $v0, 116($sp)
+    #mfc0 $v0, $12 #Status
+    #sw $v0, 116($sp)
+    sw $k0, 116($sp) # original status after entering the INT (EXL = 1 and IDL=ontouched)
     sw $ra, 120($sp)  # this is the future EPC
 
    /* let's set the new Interrupt level */
@@ -309,6 +309,8 @@ handleCoreTimer:
     ori	$k0, $k0, 0x400   # 0x400 -> level = 1 0x1800 --> level = 6
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
+
+    sw $sp, %gp_rel(ORIGSP)($gp) # we persist the sp of the current loosing-cpu task
 
     lw $sp,%gp_rel(interruptstack)($gp)
 

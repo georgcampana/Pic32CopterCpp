@@ -155,6 +155,7 @@ void Kernel::QuantumElapsed() {
 char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
 
     if(reschedulepending) {
+        setCurrentSavedSP(lastsp);
         Reschedule();
         return getCurrentSavedSP();
     }
