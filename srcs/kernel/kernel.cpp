@@ -89,7 +89,7 @@ void Kernel::AddTask(TaskBase* newtask) {
     readytasks.Enqueue(newtask);
     
     TaskBase* forkedtask = newtask;
-    // let's fork here
+    // let's fork here (we pass the oriinal forkedtask and the address to be sure we have the right address)
     if(forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
         // this is the new added task running
         // Note: the original "forkedtask" has been changed to the new one by forkTask
@@ -155,6 +155,7 @@ void Kernel::QuantumElapsed() {
 char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
 
     if(reschedulepending) {
+        reschedulepending = false;
         setCurrentSavedSP(lastsp);
         Reschedule();
         return getCurrentSavedSP();

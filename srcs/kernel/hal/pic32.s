@@ -18,8 +18,8 @@ swapTaskContext:
     * because an int could reschedule the current task
     * steps: create stack space; save status, save gpr, save orig sp;
     *        take new task's sp; restore gpr; restore status; remove sp space
-    *  120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    *  epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    *  124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    *  fp,  epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     */
 
     #syscall /* causes a soft exception that ends  */
@@ -33,7 +33,6 @@ swapTaskContext:
     /* from here we pretend to be system code: EXL is 1 and ints are disabled*/
 
     addiu $sp, $sp, -128  # we create some space on the stack
-                          # (could be 124 but must be 8 bytes aligned)
 
     sw $sp, ($a0) # we store the current sp to the current task sp pointer
     sw $at, ($sp)
@@ -156,9 +155,9 @@ forkTask:
     sw $a1, 0($a0) #this is the pointer to the new task, should be already copied above
 
     #time to init the stack for the reschedule
-    #  120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    # epc, status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
-    addiu $t0, $t0, -128  # we create some space on the stack (124 rounded up)
+    # 124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    # fp,  epc, status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    addiu $t0, $t0, -128  # we create some space on the stack 
     sw $0, ($t0)        # at
     addiu $v0, $0, 1
     sw $v0, 4($t0)      # v0
@@ -192,6 +191,7 @@ forkTask:
     mfc0 $t1, $12 #Status
     sw $t1, 116($t0)         # CP0 status
     sw $ra, 120($t0)         # return address
+    sw $fp, 124($t0)         # this might be used by the interrupted task
 
     sw $t0, ($a2)       # we store the stackpointer in the var location
 
@@ -263,11 +263,12 @@ handleCoreTimer:
     bne  $k1, $0, _hCTnestedInt
     nop
     /* we come IDL = 0 which means "normal user level" we save the reg-file and switch */
-    rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
+    #rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
 
     addiu $sp, $sp, -128  # we create some space on the stack
-                          # (could be 124 but must be 8 bytes aligned)
-
+    sw $sp, %gp_rel(ORIGSP)($gp) # we persist the sp of the currently loosing-cpu task
+                    
+    /* TODO: rearrange the order to minimize disabled ints */
     sw $at, ($sp)
     sw $v0, 4($sp)
     sw $v1, 8($sp)
@@ -302,7 +303,9 @@ handleCoreTimer:
     #mfc0 $v0, $12 #Status
     #sw $v0, 116($sp)
     sw $k0, 116($sp) # original status after entering the INT (EXL = 1 and IDL=ontouched)
-    sw $ra, 120($sp)  # this is the future EPC
+    mfc0 $v0, $14 # EPC
+    sw $v0, 120($sp)  # this is the future EPC
+    sw $fp, 124($sp)  # this might be used by the interrupted task
 
    /* let's set the new Interrupt level */
     ins	$k0, $zero, 1, 15 # this enables nested interrupts since EXL (and ERL are set t0 0)
@@ -310,7 +313,6 @@ handleCoreTimer:
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
 
-    sw $sp, %gp_rel(ORIGSP)($gp) # we persist the sp of the current loosing-cpu task
 
     lw $sp,%gp_rel(interruptstack)($gp)
 
@@ -319,7 +321,8 @@ handleCoreTimer:
     nop
     addiu $sp, $sp, 16  # see above
 
-    di  # disable int--> disable nested interrupts
+    di $zero # disable int--> disable nested interrupts
+    ehb
 
     /* now we try to get the  stackpointer of the next task to execute */
     lw $a0, %gp_rel(ORIGSP)($gp)
@@ -332,6 +335,7 @@ handleCoreTimer:
     addiu $sp, $v0, 0
 
     /* start to restore */
+    lw $fp, 124($sp)
     lw $v0, 120($sp)
     mtc0 $v0, $14 # new EPC
     lw $v0, 116($sp) # new STATUS
@@ -370,13 +374,13 @@ handleCoreTimer:
     lw $at,   ($sp)
 
     addiu $sp, $sp, 128  # we restore the original sp
-    wrpgpr $sp, $sp
+    #wrpgpr $sp, $sp
 
     eret  # back to the caller or orginal program counter
     nop
 
  _hCTnestedInt:
-
+    sdbbp 0
 
 # TODO: nested timeslice (should be simpler)
 

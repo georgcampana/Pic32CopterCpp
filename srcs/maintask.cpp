@@ -30,6 +30,17 @@ class BlinkerTask : public Task<2048> {
 
 } blinker;
 
+class BlinkerTask2 : public Task<2048> {
+
+    void OnRun() {
+        while(1) {
+            testled << true;
+            //Delay(3000);
+            System::dbgcounter++;
+        }
+    }
+
+} blinker2;
 
 
 
@@ -39,6 +50,7 @@ void MainTask::OnRun() {
 
 
     Kernel::AddTask(&blinker);
+    Kernel::AddTask(&blinker2);
 
     while(1) {
         testled << false;

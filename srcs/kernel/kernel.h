@@ -14,7 +14,7 @@
 
 class SysTimer {
 
-    static int const TIMESLICE_QUANTUM = 125; // ms
+    static int const TIMESLICE_QUANTUM = 5; // ms
 
  public:
 

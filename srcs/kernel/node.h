@@ -50,6 +50,8 @@ inline int Node::GetPriority() const { return priority;}
 inline void Node::RemoveFromList() {
     if(next)next->prev = prev;
     if(prev)prev->next = next;
+    //TODO: next lines for debug, could be removed
+    next=prev=0;
 }
 
 inline void Node::Append(Node* newnode) {
