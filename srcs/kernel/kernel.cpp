@@ -88,11 +88,11 @@ void Kernel::AddTask(TaskBase* newtask) {
     newtask->status = TaskBase::TS_NEW;
     readytasks.Enqueue(newtask);
     
-    TaskBase* forkedtask = newtask;
-    // let's fork here (we pass the oriinal forkedtask and the address to be sure we have the right address)
-    if(forkTask((void**)&forkedtask, (void*)forkedtask, &forkedtask->savedstackpointer, forkedtask->stacksize ) == true) {
+    TaskBase* forkedtask = 0;
+    // let's fork here we get the new forkedtask returned
+    if(forkedtask = (TaskBase*)forkTask((void*)newtask, &newtask->savedstackpointer, newtask->stacksize )) {
         // this is the new added task running
-        // Note: the original "forkedtask" has been changed to the new one by forkTask
+        // Note: "forkedtask" has been changed to the new one by forkTask
         forkedtask->OnRun();
         // The task does not run anymore: time to kill
         forkedtask->RemoveFromList();

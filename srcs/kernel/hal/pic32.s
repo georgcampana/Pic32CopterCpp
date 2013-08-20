@@ -135,14 +135,14 @@ forkTask:
     .set nomips16
     .set noat
 
-    sw $a0, ($sp)   #save the current arg0 pointer to taskpointer
-    sw $a1, 4($sp)  #save arg1 taskpointer
-    sw $a2, 8($sp)  #save arg2 pointer to the new stackpointer
-    sw $a3, 12($sp) #save arg3 stacksize
-    lw $t0, ($a2)   # $t0 is our newtask stack pointer
-    add $t0, $t0, $a3  #in mips the stack grows downwards so we start from the top
+#    sw $a0, 4($sp)  #save arg0 taskpointer
+#    sw $a1, 8($sp)  #save arg1 pointer to the new stackpointer
+#    sw $a2, 12($sp) #save arg2 stacksize
 
-    addiu $t0, $t0, -32 # space for the arg0-arg3 list and to copy 4 more words
+    lw $t0, ($a1)   # $t0 is our newtask stack pointer
+    add $t0, $t0, $a2  #in mips the stack grows downwards so we start from the top
+
+    addiu $t0, $t0, -32 # arg0-arg3 list plus  4 more words of the original stack (includes "forkedtask")
     lw $t1, 16($sp)
     sw $t1, 16($t0)
     lw $t1, 20($sp)
@@ -152,14 +152,13 @@ forkTask:
     lw $t1, 28($sp)
     sw $t1, 28($t0)  # we copy the local part of the callers stack
 
-    sw $a1, 0($a0) #this is the pointer to the new task, should be already copied above
 
     #time to init the stack for the reschedule
     # 124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    # fp,  epc, status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    # fp,  epc, status,lo ,hi, ra, s8,s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     addiu $t0, $t0, -128  # we create some space on the stack 
     sw $0, ($t0)        # at
-    addiu $v0, $0, 1
+    addiu $v0, $a0, 0   # v0 = return value = pointer to forkedtask
     sw $v0, 4($t0)      # v0
     sw $0,  8($t0)      # v1
     sw $a0,12($t0)      # a0
@@ -193,7 +192,7 @@ forkTask:
     sw $ra, 120($t0)         # return address
     sw $fp, 124($t0)         # this might be used by the interrupted task
 
-    sw $t0, ($a2)       # we store the stackpointer in the var location
+    sw $t0, ($a1)       # we store the stackpointer in the var location
 
     add $v0, $0, $0 # result is false for the caller (original task)
     jr $ra #return from subroutine
