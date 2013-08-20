@@ -20,10 +20,15 @@ OutputPin testled(IOPORT_D, BIT_1);
 
 class BlinkerTask : public Task<2048> {
 
+public:
+    BlinkerTask() {
+        priority = TSPRI_NORMAL;
+    }
+
     void OnRun() {
         while(1) {
             testled << true;
-            //Delay(3000);
+            Delay(100);
             System::dbgcounter++;
         }
     }
@@ -31,13 +36,20 @@ class BlinkerTask : public Task<2048> {
 } blinker;
 
 class BlinkerTask2 : public Task<2048> {
-
+public:
+    BlinkerTask2() {
+        priority = TSPRI_NORMAL;
+    }
     void OnRun() {
-        while(1) {
+        //while(1) {
             testled << true;
-            //Delay(3000);
+            Delay(80);
             System::dbgcounter++;
-        }
+            Delay(80);
+            System::dbgcounter++;
+            Delay(80);
+            System::dbgcounter++;
+        //}
     }
 
 } blinker2;
@@ -47,7 +59,7 @@ class BlinkerTask3 : public Task<2048> {
     void OnRun() {
         while(1) {
             testled << false;
-            //Delay(3000);
+            Delay(120);
             System::dbgcounter++;
         }
     }
@@ -60,7 +72,6 @@ class BlinkerTask3 : public Task<2048> {
 
 void MainTask::OnRun() {
 
-
     Kernel::AddTask(&blinker);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
@@ -68,7 +79,7 @@ void MainTask::OnRun() {
     while(1) {
         testled << false;
 
-        //Delay(3000);
+        Delay(130);
         System::dbgcounter--;
 
     }

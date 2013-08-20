@@ -411,6 +411,18 @@ routine di swap fatta e da provare
 
 prossima è il timeslice: ok funziona
 
-da rivedere forkTask:
+da rivedere forkTask: ok fixed
+
+
+Next tests:
+
+Delay()  sembra ok
+High/Low pri task sembra ok
+Bug when a task finishes: must investigated.
+
+
+
+
+
 
 

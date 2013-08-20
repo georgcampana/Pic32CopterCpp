@@ -37,7 +37,7 @@ void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
 }
 
 void SysTimer::Start() {
-    HAL::SetAlarmHandler(&alarmhandler); // this is wher we will get the alarms
+    HAL::SetAlarmHandler(&alarmhandler); // this is where we will get the alarms
 
     AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
 }
@@ -51,7 +51,7 @@ bool SysTimer::Alarm::HandleAlarm() {
         if(now > waitingfor) { // time has passed we remove it and signal the task accordingly
             first->RemoveFromList();
             if(first->IsTimeSliceItem()) {
-                // normal elapsed timeslice. we reschedule the task
+                // normal elapsed timeslice. we reschedule the queueitem
                 AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this re-appends the timeslice alarm
                 Kernel::QuantumElapsed();
             }
@@ -85,7 +85,7 @@ Kernel::Kernel() {
 
 void Kernel::AddTask(TaskBase* newtask) {
 
-    newtask->status = TaskBase::TS_NEW;
+    newtask->status = TaskBase::TS_READY; // was NEW
     readytasks.Enqueue(newtask);
     
     TaskBase* forkedtask = 0;
@@ -94,9 +94,15 @@ void Kernel::AddTask(TaskBase* newtask) {
         // this is the new added task running
         // Note: "forkedtask" has been changed to the new one by forkTask
         forkedtask->OnRun();
+        
         // The task does not run anymore: time to kill
-        forkedtask->RemoveFromList();
-        Reschedule();
+        Kernel::InterruptCtrl intsafe;
+        intsafe.Disable(); // stop ints
+        {
+            forkedtask->RemoveFromList();
+            Reschedule();
+        }
+        intsafe.Restore();
     }
 
     return; // creator exits
@@ -119,11 +125,6 @@ void Kernel::PutOnReady(TaskBase* task2change) {
 }
 
 void Kernel::Reschedule() {
-
-    while(readytasks.IsEmpty()) {
-        // put cpu on wait for the next interrupt
-        HAL::NothingToDo();
-    }
 
     // take the first ready and execute it
     TaskBase* newtask  = (TaskBase*)readytasks.GetFirst();
@@ -163,16 +164,29 @@ char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
     return lastsp;
 }
 
+//TODO: check how much stack we really need for the idle task
+class SysIdleTask : public Task<256> {
+
+public:
+    SysIdleTask() { priority = Task::TSPRI_IDLE;}
+    void OnRun() {
+        HAL::NothingToDo();
+    }
+
+} idletask;
+
+
 // this never returns and starts the main task
 void Kernel::InitAndStartMainTask(TaskBase* firsttask) {
 
     HAL::SetRescheduleHandler(&reschedulehandler);
 
-    firsttask->status = TaskBase::TS_NEW;
+    firsttask->status = TaskBase::TS_READY;
     readytasks.AddAsFirst(firsttask);
     runningnow = firsttask;
     transferMainStack(&firsttask->savedstackpointer, firsttask->stacksize);
 
+    AddTask(&idletask);
     firsttask->OnRun();
 
     // the parent should never die: never exit from OnRun

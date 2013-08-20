@@ -77,8 +77,8 @@ private:
 
 inline bool HAL::InterruptRunning() { return ::getInterruptLevel();}
 
-inline unsigned int HAL::DisableInterrupts() { return 0;}
-inline void HAL::RestoreInterrupts(unsigned int oldstatus) {}
+inline unsigned int HAL::DisableInterrupts() { return ::INTDisableInterrupts();}
+inline void HAL::RestoreInterrupts(unsigned int oldstatus) {::INTRestoreInterrupts(oldstatus);}
 
 inline unsigned int HAL::DisableScheduler() { return DisableInterrupts();}
 inline void HAL::RestoreScheduler(unsigned int oldstatus) {RestoreInterrupts(oldstatus);}
@@ -148,10 +148,10 @@ inline HAL::IntEpilogue* HAL::GetRescheduleHandler() {
 }
 
 inline void HAL::NothingToDo() {
-    while(1);
-    // must be replaced by something like
-    //_wait(); // in the pic32.s
-
+    while(1){
+        // TODO: seems that wait is blocking everything must be tuned better
+        //_wait();
+    }
 }
 
 #endif	/* HAL_H */

@@ -67,6 +67,7 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
 
         SysTimer::QueueItem waititem(this); // this must stay in the Reschedule scope
         if(maxms > 0) {
+            tasksignals.SetWaitingSigs(SignalPool::SYSTIMER_SIG);
             SysTimer::AddWaitingTask(&waititem, maxms);
         }
 
@@ -74,12 +75,12 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
         Kernel::SetReschedulePending();
 
         Kernel::Reschedule(); // here the task will be stopped -> context switch
-        // we need to remove the timerqueueitem from the SysTimer
-        if(maxms > 0) {
-            //SysTimer::RemWaitingTask(&waititem);
-        }
+        // no need to remove the timerqueueitem (get removed by the AlarmHandler)
+        
+        
         resultsigs = tasksignals.CheckAndReset(sigs2wait);
         tasksignals.SetWaitingSigs(0); // wait is over
+
     }
 
     // restore ints

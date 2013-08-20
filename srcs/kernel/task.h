@@ -39,6 +39,17 @@ class TaskBase : public MsgPort {
      TS_WAITING,
      TS_DONE
     } status;
+    
+    enum TaskPri {
+        TSPRI_XHIGH = 10,
+        TSPRI_HIGH = 5,
+        TSPRI_NORMAL = 0,
+        TSPRI_LOW = -5,
+        TSPRI_XLOW = -10,
+        
+        TSPRI_IDLE = -127, // pri is an int but i prefer to fit in a char
+    };
+
 };
 
 

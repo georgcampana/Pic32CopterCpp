@@ -25,7 +25,7 @@ class SysTimer {
         SignalPool::SIGNAL sig2send;
         HAL::TICKS ticks2wait;
       public:
-        QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(0), ticks2wait(0) {}
+        QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(SignalPool::SYSTIMER_SIG), ticks2wait(0) {}
         QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
                                         task2wake(task2queue), sig2send(wakeupsig), ticks2wait(0) {}
 
