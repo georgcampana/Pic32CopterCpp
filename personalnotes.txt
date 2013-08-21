@@ -419,6 +419,8 @@ Next tests:
 Delay()  sembra ok
 High/Low pri task sembra ok
 Bug when a task finishes: must investigated.
+task ending fixed: OK
+wait and signal cross tasks with global allocated signal
 
 
 

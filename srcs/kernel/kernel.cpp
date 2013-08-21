@@ -78,6 +78,17 @@ List Kernel::waitingtasks;
 bool Kernel::reschedulepending = false;
 Kernel::Epilogue Kernel::reschedulehandler;
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+void exe_forkedtask(void* newtask) {
+    Kernel::ExecuteNewTask((TaskBase*)newtask);
+};
+#ifdef	__cplusplus
+}
+#endif
+
+
 // no one calls this :( since it is just an abstract container for static stuff
 Kernel::Kernel() {
 
@@ -88,24 +99,25 @@ void Kernel::AddTask(TaskBase* newtask) {
     newtask->status = TaskBase::TS_READY; // was NEW
     readytasks.Enqueue(newtask);
     
-    TaskBase* forkedtask = 0;
-    // let's fork here we get the new forkedtask returned
-    if(forkedtask = (TaskBase*)forkTask((void*)newtask, &newtask->savedstackpointer, newtask->stacksize )) {
-        // this is the new added task running
-        // Note: "forkedtask" has been changed to the new one by forkTask
-        forkedtask->OnRun();
-        
-        // The task does not run anymore: time to kill
-        Kernel::InterruptCtrl intsafe;
-        intsafe.Disable(); // stop ints
-        {
-            forkedtask->RemoveFromList();
-            Reschedule();
-        }
-        intsafe.Restore();
-    }
 
-    return; // creator exits
+    // let's fork here we get the new forkedtask returned
+    forkTask((void*)newtask, &newtask->savedstackpointer, newtask->stacksize, &exe_forkedtask);
+
+}
+
+void Kernel::ExecuteNewTask(TaskBase* forkedtask) {
+
+    forkedtask->OnRun();
+
+    // The task does not run anymore: time to kill
+    Kernel::InterruptCtrl intsafe;
+    intsafe.Disable(); // stop ints
+    {
+        forkedtask->RemoveFromList();
+        forkedtask->status = TaskBase::TS_DONE;
+        Kernel::Reschedule();
+    }
+    intsafe.Restore(); // will never be executed--> reschedule jumps to another task
 }
 
 void Kernel::PutOnWait(TaskBase* task2change) {
@@ -192,9 +204,7 @@ void Kernel::InitAndStartMainTask(TaskBase* firsttask) {
     // the parent should never die: never exit from OnRun
     // in case it should happen this is a fair fallback
     firsttask->RemoveFromList();
-    if(readytasks.IsEmpty() && waitingtasks.IsEmpty()) {
-        while(1);
-    }
-    Reschedule();
+
+    Reschedule(); // we stay with the idle task
 }
 

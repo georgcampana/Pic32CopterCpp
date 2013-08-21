@@ -61,6 +61,8 @@ class Kernel {
 
      static TaskBase* GetRunningTask();
      static void AddTask(TaskBase* newtask);
+     static void ExecuteNewTask(TaskBase* newtask);
+
      static void Reschedule();
      static void QuantumElapsed();
 

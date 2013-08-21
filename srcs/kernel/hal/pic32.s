@@ -135,23 +135,15 @@ forkTask:
     .set nomips16
     .set noat
 
-#    sw $a0, 4($sp)  #save arg0 taskpointer
-#    sw $a1, 8($sp)  #save arg1 pointer to the new stackpointer
-#    sw $a2, 12($sp) #save arg2 stacksize
+# arg0 taskpointer
+# arg1 pointer to the new stackpointer
+# arg2 stacksize
+# arg3 pointer to execfunction
 
     lw $t0, ($a1)   # $t0 is our newtask stack pointer
     add $t0, $t0, $a2  #in mips the stack grows downwards so we start from the top
 
-    addiu $t0, $t0, -32 # arg0-arg3 list plus  4 more words of the original stack (includes "forkedtask")
-    lw $t1, 16($sp)
-    sw $t1, 16($t0)
-    lw $t1, 20($sp)
-    sw $t1, 20($t0)
-    lw $t1, 24($sp)
-    sw $t1, 24($t0)
-    lw $t1, 28($sp)
-    sw $t1, 28($t0)  # we copy the local part of the callers stack
-
+    addiu $t0, $t0, -16 # arg0-arg3 list
 
     #time to init the stack for the reschedule
     # 124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
@@ -184,12 +176,12 @@ forkTask:
     sw $s6,92($t0)      # s6
     sw $s7,96($t0)      # s7
     sw $s8,100($t0)     # s8
-    sw $ra,104($t0)     # ra return address is the same address inherited from the creator
+    sw $ra,104($t0)     # return address (should never be necesary since we just started a new task)
     sw $0, 108($t0)     # hi
     sw $0, 112($t0)     # lo
     mfc0 $t1, $12 #Status
     sw $t1, 116($t0)         # CP0 status
-    sw $ra, 120($t0)         # return address
+    sw $a3, 120($t0)         #
     sw $fp, 124($t0)         # this might be used by the interrupted task
 
     sw $t0, ($a1)       # we store the stackpointer in the var location
