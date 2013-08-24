@@ -29,12 +29,14 @@ public:
         wakeupsignal = tasksignals.Alloc();
     }
     void OnRun() {
+        SignalPool::SIGNALMASK receivedsigs;
         //while(1) {
-            Wait(wakeupsignal);
+            receivedsigs = Wait(wakeupsignal,120); // waits
             testled << true;
             Delay(80);
             System::dbgcounter++;
             Delay(80);
+            receivedsigs = Wait(wakeupsignal); // continues
             System::dbgcounter++;
             Delay(80);
             System::dbgcounter++;

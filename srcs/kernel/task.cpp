@@ -69,10 +69,10 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
         // we register what we are waiting for to get Signal()ed if needed
         tasksignals.SetWaitingSigs(sigs2wait);
 
-        SysTimer::QueueItem waititem(this); // this must stay in the Reschedule scope
+        SysTimer::AlarmItem waititem(this); // this must stay in the Reschedule scope
         if(maxms > 0) {
             tasksignals.SetWaitingSigs(SignalPool::SYSTIMER_SIG);
-            SysTimer::AddWaitingTask(&waititem, maxms);
+            SysTimer::AddAlarm(&waititem, maxms);
         }
 
         Kernel::PutOnWait(this);
@@ -84,8 +84,7 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
             if(tasksignals.CheckAndReset(SignalPool::SYSTIMER_SIG) == 0) {
                 // we run because of an arrived signal not because of the expired timeout
                 // so we have to remove the pending alarm queueitem
-                waititem.RemoveFromList();
-                // TODO: the timer should be reset: must be incapsulated in systimer/hal
+                SysTimer::CancelAlarm(&waititem);
             }
         }
         

@@ -8,51 +8,66 @@
 #include "kernel.h"
 
 // ******************* SysTimer *******************
-SysTimer::QueueItem SysTimer::timeslice(0);
-List SysTimer::queuedtasks;
+SysTimer::AlarmItem SysTimer::timeslice(0);
+List SysTimer::queuedalarms;
 SysTimer::Alarm SysTimer::alarmhandler;
 
 SysTimer::SysTimer() {
 
 }
 
-
-void SysTimer::AddWaitingTask(QueueItem* item2queue, int ms, int us) {
+// NOTE: there is no arbitration on the list
+void SysTimer::AddAlarm(AlarmItem* item2queue, int ms, int us) {
 
     HAL::TICKS targetticks = HAL::GetCurrentTicks() +
                              HAL::ConvertTime2Ticks(ms, us);
     item2queue->SetTicks2Wait(targetticks);
 
-    QueueItem* cursor = (QueueItem*)queuedtasks.GetFirst();
-    while(queuedtasks.IsTail(cursor) == false) {
+    AlarmItem* cursor = (AlarmItem*)queuedalarms.GetFirst();
+    while(queuedalarms.IsTail(cursor) == false) {
         if(cursor->GetTicks2Wait() > targetticks) { break; }
 
-        cursor = (QueueItem*)cursor->GetNext();
+        cursor = (AlarmItem*)cursor->GetNext();
     }
     cursor->AddInFront(item2queue);
 
-    if(queuedtasks.GetFirst() == item2queue) { // the new item is the first one
+    if(queuedalarms.GetFirst() == item2queue) { // the new item is the first one
         HAL::SetNextAlarm(targetticks);
     }
+}
+
+// NOTE: there is no arbitration on the list
+void SysTimer::CancelAlarm(AlarmItem* item2cancel) {
+    if(queuedalarms.GetFirst() == item2cancel) { // the item is the first one
+        AlarmItem* nextalarm = (AlarmItem*)item2cancel->GetNext();
+        if(queuedalarms.IsTail(nextalarm)) {
+            HAL::SetNextAlarm(0); // no alarm item to set: strange
+        }
+        else {
+            HAL::SetNextAlarm(nextalarm->GetTicks2Wait()); //
+        }
+    }
+    
+    item2cancel->RemoveFromList();
 }
 
 void SysTimer::Start() {
     HAL::SetAlarmHandler(&alarmhandler); // this is where we will get the alarms
 
-    AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
+    AddAlarm(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
 }
 
 bool SysTimer::Alarm::HandleAlarm() {
-    while(!queuedtasks.IsEmpty()) {
+    while(!queuedalarms.IsEmpty()) {
         HAL::TICKS now = HAL::GetCurrentTicks();
-        QueueItem* first = (QueueItem*)queuedtasks.GetFirst();
+        AlarmItem* first = (AlarmItem*)queuedalarms.GetFirst();
         HAL::TICKS waitingfor = first->GetTicks2Wait();
 
         if(now > waitingfor) { // time has passed we remove it and signal the task accordingly
             first->RemoveFromList();
-            if(first->IsTimeSliceItem()) {
+            if(first->IsTimeSliceAlarm()) {
                 // normal elapsed timeslice. we reschedule the queueitem
-                AddWaitingTask(&timeslice,TIMESLICE_QUANTUM); // this re-appends the timeslice alarm
+                AddAlarm(&timeslice,TIMESLICE_QUANTUM); // this re-appends the timeslice alarm
                 Kernel::QuantumElapsed();
             }
             else { // a task that is waiting for a timed signal

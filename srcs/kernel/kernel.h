@@ -20,13 +20,13 @@ class SysTimer {
 
     SysTimer();
      
-    class QueueItem : public Node {
+    class AlarmItem : public Node {
         TaskBase* task2wake;
         SignalPool::SIGNAL sig2send;
         HAL::TICKS ticks2wait;
       public:
-        QueueItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(SignalPool::SYSTIMER_SIG), ticks2wait(0) {}
-        QueueItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
+        AlarmItem(TaskBase* task2queue) : task2wake(task2queue), sig2send(SignalPool::SYSTIMER_SIG), ticks2wait(0) {}
+        AlarmItem(TaskBase* task2queue, SignalPool::SIGNAL wakeupsig) :
                                         task2wake(task2queue), sig2send(wakeupsig), ticks2wait(0) {}
 
         void SetTicks2Wait(HAL::TICKS targetticks) {ticks2wait = targetticks;}
@@ -34,10 +34,11 @@ class SysTimer {
 
         void SignalTask() { if(sig2send) task2wake->Signal(sig2send);};
 
-        bool IsTimeSliceItem() { return(task2wake==0); }
+        bool IsTimeSliceAlarm() { return(task2wake==0); }
     };
      
-    static void AddWaitingTask(QueueItem* item2queue, int ms, int us=0);
+    static void AddAlarm(AlarmItem* item2queue, int ms, int us=0);
+    static void CancelAlarm(AlarmItem* item2cancel);
     static HAL::TICKS GetNowTicks();
     static void Start();
      
@@ -47,10 +48,10 @@ private:
         bool HandleAlarm();
     } alarmhandler;
     
-    static QueueItem timeslice;
+    static AlarmItem timeslice;
     static void SetTime2Elapse();
 
-    static List queuedtasks;
+    static List queuedalarms;
 };
 
 
