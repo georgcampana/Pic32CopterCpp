@@ -110,11 +110,12 @@ inline void HAL::SetNextAlarm(HAL::TICKS alarmticks) {
     TICKS delta = alarmticks-now;
 
     if(delta < MINDELTATICKS) {
-        delta = MINDELTATICKS;
+        alarmticks += (MINDELTATICKS-delta);
     }
 
-    // NOTE: UpdateCoreTimer takes the current counter and sums (automatic module) the period
-    UpdateCoreTimer(delta); 
+    // NOTE: UpdateCoreTimer is not suitable because it sums the value to the old in compare
+    // set up the period in the compare reg
+    asm volatile("mtc0   %0,$11" : "+r"(alarmticks));
 }
 
 inline void HAL::ResetTickTimer() {

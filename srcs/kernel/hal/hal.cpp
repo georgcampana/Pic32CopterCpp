@@ -37,8 +37,6 @@ void HAL::Init() {
 extern "C" {
 #endif
 
-
-
 // this runs on a separate stack (interrupts stack)->original Task stack already saved
 void handleSysTimerINT() {
     /*if()*/

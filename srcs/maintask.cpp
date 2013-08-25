@@ -58,7 +58,7 @@ public:
     void OnRun() {
         while(1) {
             testled << true;
-            Delay(100);
+            Delay(1000);
             blinker1.Signal(wakeupsignal);
             System::dbgcounter++;
             fakecounter+=100;
@@ -72,7 +72,7 @@ class BlinkerTask3 : public Task<2048> {
     void OnRun() {
         while(1) {
             testled << false;
-            Delay(120);
+            Delay(1200);
             System::dbgcounter++;
         }
     }

@@ -71,7 +71,7 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
 
         SysTimer::AlarmItem waititem(this); // this must stay in the Reschedule scope
         if(maxms > 0) {
-            tasksignals.SetWaitingSigs(SignalPool::SYSTIMER_SIG);
+            tasksignals.SetWaitingSigs(sigs2wait | SignalPool::SYSTIMER_SIG);
             SysTimer::AddAlarm(&waititem, maxms);
         }
 
