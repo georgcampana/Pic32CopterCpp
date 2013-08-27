@@ -17,8 +17,8 @@ TaskBase::TaskBase(char* newstack, int stackdimension): execstack(newstack), tas
 // it might cause a reschedule
 void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
     // stop ints if not already stopped
-    Kernel::InterruptCtrl intsafe;
-    intsafe.Disable(); // stop ints
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected(); // stop ints
     {   // we set the signal
         tasksignals.Set(sig2notify);
         // Note: if the task is already ready (got another signal) then CheckWaitings returns 0
@@ -43,7 +43,7 @@ void TaskBase::Signal(SignalPool::SIGNAL sig2notify) {
         }
 
     }
-    intsafe.Restore(); // restore int status
+    ossafe.Exit(); // restore int status
 }
 
 void TaskBase::OnRun() {
@@ -58,8 +58,8 @@ void TaskBase::Delay(int waitms) {
 
 SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxms) {
     // stop ints
-    Kernel::InterruptCtrl intsafe;
-    intsafe.Disable();
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected();
 
     // check if signals match already, otherise reschedule
     SignalPool::SIGNALMASK resultsigs = tasksignals.CheckAndReset(sigs2wait);
@@ -94,7 +94,7 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxm
     }
 
     // restore ints
-    intsafe.Restore();
+    ossafe.Exit();
 
     return resultsigs;
 }

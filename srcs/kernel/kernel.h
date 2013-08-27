@@ -94,9 +94,9 @@ class Kernel {
      class SchedulerCtrl {
          unsigned int sched_status;
        public:
-           //InterruptCtrl() : int_status(0) {}
-           void Disable() { sched_status = HAL::DisableScheduler(); }
-           void Restore() { HAL::RestoreScheduler(sched_status); }
+           //SchedulerCtrl() : sched_status(0) {}
+           void EnterProtected() { sched_status = HAL::DisableScheduler(); }
+           void Exit() { HAL::RestoreScheduler(sched_status); }
      };
 
 

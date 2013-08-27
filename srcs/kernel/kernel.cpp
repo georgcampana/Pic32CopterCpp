@@ -125,14 +125,14 @@ void Kernel::ExecuteNewTask(TaskBase* forkedtask) {
     forkedtask->OnRun();
 
     // The task does not run anymore: time to kill
-    Kernel::InterruptCtrl intsafe;
-    intsafe.Disable(); // stop ints
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected();
     {
         forkedtask->RemoveFromList();
         forkedtask->status = TaskBase::TS_DONE;
         Kernel::Reschedule();
     }
-    intsafe.Restore(); // will never be executed--> reschedule jumps to another task
+    ossafe.Exit(); // will never be executed--> reschedule jumps to another task
 }
 
 void Kernel::PutOnWait(TaskBase* task2change) {

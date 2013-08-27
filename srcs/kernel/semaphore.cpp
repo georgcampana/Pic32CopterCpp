@@ -10,7 +10,10 @@
 
 // could reschedule the Task
 bool Semaphore::Obtain(int maxwaitms) {
-    // stop ints
+
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected();
+
     
     TaskBase* myself = Kernel::GetRunningTask();
     // if sempahore is free grant immediately
@@ -33,7 +36,7 @@ bool Semaphore::Obtain(int maxwaitms) {
         }
     }
 
-    // restore ints
+    ossafe.Exit();
 
     return (grantedtask == Kernel::GetRunningTask());
 }
