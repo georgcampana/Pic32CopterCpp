@@ -43,5 +43,14 @@ bool Semaphore::Obtain(int maxwaitms) {
 
 // could reschedule the Task
 void Semaphore::Release() {
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected();
 
+    grantedtask = 0;
+    if(!taskqueue.IsEmpty()) {
+        WaitingTask* nextinqueue = (WaitingTask*)taskqueue.GetFirst();
+        nextinqueue->SignalAvailability(); // can potentially reschedule
+    }
+
+    ossafe.Exit();
 }
