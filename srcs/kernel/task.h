@@ -22,6 +22,7 @@ class TaskBase : public MsgPort {
  protected:
 
     friend class Semaphore;
+    friend class MsgPort;
     friend class Kernel;
 
     SignalPool::SIGNALMASK Wait(SignalPool::SIGNALMASK sigs2wait, int maxms=-1 );

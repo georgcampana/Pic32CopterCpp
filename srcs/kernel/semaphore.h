@@ -1,6 +1,6 @@
 /* 
  * File:   semaphore.h
- * Author: gcamp_000
+ * Author: Georg Campana
  *
  * Created on 28 aprile 2013, 18.53
  */
@@ -13,7 +13,7 @@
 class Semaphore : Node {
 public:
 
-    bool Obtain(int maxwaitms = 0);
+    bool Obtain(int maxwaitms = -1);
     bool TryObtain();
     void Release();
 private:

@@ -1,6 +1,6 @@
 /* 
  * File:   message.h
- * Author: gcamp_000
+ * Author: Georg Campana
  *
  * Created on 28 aprile 2013, 16.55
  */
@@ -18,11 +18,24 @@ class Message : public Node {
     Message(void* data, int len, MsgPort* reply_port = 0);
     Message(int data, MsgPort* reply_port = 0);
     Message(unsigned int data, MsgPort* reply_port = 0);
+
+    unsigned int GetUIntPayload() const;
+    int GetIntPayload() const;
+    void* GetPayload() const;
+    int GetDatalen() const;
+    bool IsReplyRequested() const;
+
+    void Reply(int result = 0);
+    int GetReplyResult() const;
+
+
+    friend class MsgPort;
  private:
     union {
         void* dataptr;
         int dataint;
-        unsigned int datauint;       
+        unsigned int datauint;
+        int replyresult;
     } payload;
     int datalen;
     MsgPort* replyport;
@@ -30,7 +43,8 @@ class Message : public Node {
         MS_NONE = 0,
         MS_POSTED,
         MS_RETRIEVED,
-        MS_REPLIED
+        MS_REPLIED,
+        MS_REPLYRETRIEVED
     } status;
     
     enum MsgType {
@@ -56,6 +70,15 @@ inline Message::Message(unsigned int data, MsgPort* reply_port) : Node(NT_MSG), 
     datalen = sizeof(unsigned int);
     if(reply_port) { type=MT_REPLYREQUESTED; }
 }
+
+inline unsigned int Message::GetUIntPayload() const { return payload.datauint; }
+
+inline int Message::GetIntPayload() const { return payload.dataint; }
+inline void* Message::GetPayload() const { return payload.dataptr; }
+inline int Message::GetDatalen() const { return datalen; }
+inline bool Message::IsReplyRequested() const { return(type == MT_REPLYREQUESTED); }
+
+inline int Message::GetReplyResult() const { return payload.replyresult; }
 
 #endif	/* MESSAGE_H */
 

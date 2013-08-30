@@ -11,11 +11,11 @@
 // could reschedule the Task
 bool Semaphore::Obtain(int maxwaitms) {
 
+    TaskBase* myself = Kernel::GetRunningTask();
+
     Kernel::SchedulerCtrl ossafe;
     ossafe.EnterProtected();
 
-    
-    TaskBase* myself = Kernel::GetRunningTask();
     // if sempahore is free grant immediately
     if(grantedtask == 0) {
         grantedtask = myself;
@@ -34,6 +34,23 @@ bool Semaphore::Obtain(int maxwaitms) {
         if(arrivedsig != 0) { //no timeout
             grantedtask = myself;
         }
+    }
+
+    ossafe.Exit();
+
+    return (grantedtask == Kernel::GetRunningTask());
+}
+
+bool Semaphore::TryObtain() {
+
+    TaskBase* myself = Kernel::GetRunningTask();
+
+    Kernel::SchedulerCtrl ossafe;
+    ossafe.EnterProtected();
+
+    // if sempahore is free grant immediately
+    if(grantedtask == 0) {
+        grantedtask = myself;
     }
 
     ossafe.Exit();

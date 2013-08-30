@@ -1,6 +1,6 @@
 /* 
  * File:   msgport.h
- * Author: gcamp_000
+ * Author: Georg Campana
  *
  * Created on 28 aprile 2013, 16.50
  */
@@ -18,9 +18,12 @@ class MsgPort : public Node {
  public:
 
      MsgPort();
-     Message* GetMsg(int waitms=-1);
+     MsgPort(TaskBase* receivertask, SignalPool::SIGNAL sig2use);
+
+     Message* GetMsg(int waitms = -1);
      void Post(Message* newmsg);
 
+     void SetTargetTask(TaskBase* receivertask, SignalPool::SIGNAL sig2use);
  private:
      List messages;
      TaskBase* task2notify;
@@ -29,6 +32,16 @@ class MsgPort : public Node {
 
 inline MsgPort::MsgPort() : Node(NT_MSGPORT), task2notify(0), tasksignal(0) {
 
+}
+
+inline MsgPort::MsgPort(TaskBase* receivertask, SignalPool::SIGNAL sig2use) :
+                            Node(NT_MSGPORT), task2notify(receivertask), tasksignal(sig2use) {
+
+}
+
+inline void MsgPort::SetTargetTask(TaskBase* receivertask, SignalPool::SIGNAL sig2use) {
+    task2notify = receivertask;
+    tasksignal = sig2use;
 }
 
 

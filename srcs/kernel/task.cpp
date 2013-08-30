@@ -10,6 +10,7 @@
 
 TaskBase::TaskBase(char* newstack, int stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack), stacksize(stackdimension), status(TS_NEW) {
 
+    SetTargetTask(this,tasksignals.Alloc()); // init of the msgport
 
 }
 

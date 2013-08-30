@@ -11,14 +11,13 @@
 
 #include "driver/digitaliomanager.h"
 #include "kernel/semaphore.h"
+#include "kernel/message.h"
 
 
 MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-
-SignalPool::SIGNAL wakeupsignal;
 
 
 class ProtectedResource : public Semaphore {
@@ -30,32 +29,15 @@ public:
 } testsemaphore;
 
 
-class BlinkerTask2 : public Task<2048> {
+class OutRunningTask : public Task<2048> {
+
 public:
-    BlinkerTask2() {
+    OutRunningTask() {
         priority = TSPRI_NORMAL;
-        wakeupsignal = tasksignals.Alloc();
     }
     void OnRun() {
-        SignalPool::SIGNALMASK receivedsigs;
-        //while(1) {
-            Delay(120);
-            bool gotit = testsemaphore.Obtain(30);
-            if(gotit) {
-                Delay(120);
-                testsemaphore.Release();
-            }
-            receivedsigs = Wait(wakeupsignal,120); // waits
-            testled << true;
-            Delay(80);
-            System::dbgcounter++;
-            Delay(80);
-            receivedsigs = Wait(wakeupsignal); // continues
-            System::dbgcounter++;
-            Delay(80);
-            System::dbgcounter++;
+        Delay(2000);
 
-        //}
     }
 
 } outrunning;
@@ -71,28 +53,46 @@ public:
 
     void OnRun()  {
         while(1) {
-            bool gotit = testsemaphore.Obtain(2000);
-            if(gotit) {
-                Delay(1200);
-                testsemaphore.Release();
+            if(Message* received = GetMsg()) {
+                int data = received->GetIntPayload();
+                data++;
+                if(received->IsReplyRequested()) {
+                    received->Reply();
+                }
+
             }
-            testled << true;
-            Delay(1000);
-            outrunning.Signal(wakeupsignal);
-            System::dbgcounter++;
-            fakecounter+=100;
         }
     }
 
 } blinker2;
 
 class BlinkerTask3 : public Task<2048> {
+    
+    Message testmsg;
+
+public:
+
+
+
+    BlinkerTask3() :  testmsg(0xee,this) {
+
+    }
+
+
 
     void OnRun() {
         while(1) {
             testled << false;
             Delay(1200);
-            System::dbgcounter++;
+            blinker2.Post(&testmsg);
+
+            // wait for reply
+            Message* reply = GetMsg();
+            if(reply->GetReplyResult() != 0) {
+                // it's not ok
+                // let's panic
+                Delay(120000);
+            }
         }
     }
 
