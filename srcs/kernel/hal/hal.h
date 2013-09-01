@@ -21,6 +21,8 @@ extern void transferMainStack(char** context_sp, int stacksize);
 // other asm functions
 extern int getInterruptLevel();
 
+extern int atomicInc(int* val2inc);
+extern int atomicDec(int* val2dec);
 
 #ifdef	__cplusplus
 }
@@ -44,16 +46,16 @@ public:
     };
 
     static bool InterruptRunning();
-    static unsigned int DisableInterrupts();
-    static void RestoreInterrupts(unsigned int oldstatus);
+    static UInt32 DisableInterrupts();
+    static void RestoreInterrupts(UInt32 oldstatus);
 
-    static unsigned int DisableScheduler();
-    static void RestoreScheduler(unsigned int oldstatus);
+    static UInt32 DisableScheduler();
+    static void RestoreScheduler(UInt32 oldstatus);
 
     static TICKS GetCurrentTicks();
     static void SetNextAlarm(TICKS alarmticks);
     static void ResetTickTimer();
-    static TICKS ConvertTime2Ticks(int ms, int us=0);
+    static TICKS ConvertTime2Ticks(UInt32 ms, UInt32 us=0);
 
     static void Init();
     static void SetAlarmHandler(TimerAlarm* handler);
@@ -62,26 +64,29 @@ public:
     static void SetRescheduleHandler(IntEpilogue* handler);
     static IntEpilogue* GetRescheduleHandler();
 
+    static Int32 AtomicInc(Int32* val2inc);
+    static Int32 AtomicDec(Int32* val2dec);
+
     static void NothingToDo();
 private:
 
     static char intstack[INTERRUPTSTACKSIZE];
 
-    static const int MINDELTATICKS = 500; // must be set to real needed code overhead
+    static const UInt32 MINDELTATICKS = 500; // must be set to real needed code overhead
 
-    static unsigned int lastreadticks;
-    static unsigned int highticks;
+    static UInt32 lastreadticks;
+    static UInt32 highticks;
     static TimerAlarm* inthandler;
     static IntEpilogue* reschedhandler;
 };
 
 inline bool HAL::InterruptRunning() { return ::getInterruptLevel();}
 
-inline unsigned int HAL::DisableInterrupts() { return ::INTDisableInterrupts();}
-inline void HAL::RestoreInterrupts(unsigned int oldstatus) {::INTRestoreInterrupts(oldstatus);}
+inline UInt32 HAL::DisableInterrupts() { return ::INTDisableInterrupts();}
+inline void HAL::RestoreInterrupts(UInt32 oldstatus) {::INTRestoreInterrupts(oldstatus);}
 
-inline unsigned int HAL::DisableScheduler() { return DisableInterrupts();}
-inline void HAL::RestoreScheduler(unsigned int oldstatus) {RestoreInterrupts(oldstatus);}
+inline UInt32 HAL::DisableScheduler() { return DisableInterrupts();}
+inline void HAL::RestoreScheduler(UInt32 oldstatus) {RestoreInterrupts(oldstatus);}
 
 // commented out because kernel MUST call the asm call directly to avoid another subroutine level
 //inline void HAL::SwapTaskContext(char** from_context_sp, char* to_context_sp) {
@@ -95,7 +100,7 @@ inline void HAL::RestoreScheduler(unsigned int oldstatus) {RestoreInterrupts(old
 //}
 
 inline HAL::TICKS HAL::GetCurrentTicks() {
-    unsigned int newreadticks = ReadCoreTimer();
+    UInt32 newreadticks = ReadCoreTimer();
     if(newreadticks < lastreadticks) {
         highticks++; // here we assume that we MUST have an alarm at least every 30 secs
                      // which should be maxticks in the core timer divided by 2
@@ -128,7 +133,7 @@ inline void HAL::ResetTickTimer() {
 #define TICKS_PER_MS    (SYS_CLOCK / 2 / 1000)
 #define TICKS_PER_US    (SYS_CLOCK / 2 / 1000000)
 
-inline HAL::TICKS HAL::ConvertTime2Ticks(int ms, int us) {
+inline HAL::TICKS HAL::ConvertTime2Ticks(UInt32 ms, UInt32 us) {
     return HAL::TICKS ((ms*TICKS_PER_MS) + (us*TICKS_PER_US));
 }
 
@@ -146,6 +151,14 @@ inline void HAL::SetRescheduleHandler(HAL::IntEpilogue* handler) {
 
 inline HAL::IntEpilogue* HAL::GetRescheduleHandler() {
     return reschedhandler;
+}
+
+inline Int32 HAL::AtomicInc(Int32* val2inc) {
+::atomicInc((int*)val2inc);
+}
+
+inline Int32 HAL::AtomicDec(Int32* val2dec) {
+::atomicDec((int*)val2dec);
 }
 
 inline void HAL::NothingToDo() {

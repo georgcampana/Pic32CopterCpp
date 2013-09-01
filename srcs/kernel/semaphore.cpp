@@ -9,7 +9,7 @@
 #include "kernel.h"
 
 // could reschedule the Task
-bool Semaphore::Obtain(int maxwaitms) {
+bool Semaphore::Obtain(Int32 maxwaitms) {
 
     TaskBase* myself = Kernel::GetRunningTask();
 

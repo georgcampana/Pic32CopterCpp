@@ -17,7 +17,7 @@ SysTimer::SysTimer() {
 }
 
 // NOTE: there is no arbitration on the list
-void SysTimer::AddAlarm(AlarmItem* item2queue, int ms, int us) {
+void SysTimer::AddAlarm(AlarmItem* item2queue, Int32 ms, Int32 us) {
 
     HAL::TICKS targetticks = HAL::GetCurrentTicks() +
                              HAL::ConvertTime2Ticks(ms, us);

@@ -14,7 +14,7 @@
 class TaskBase : public MsgPort {
  public:
     
-    TaskBase(char* taskstack, int stackdimension);
+    TaskBase(char* taskstack, Int32 stackdimension);
 
     void Signal(SignalPool::SIGNAL sig2notify);
 
@@ -25,13 +25,13 @@ class TaskBase : public MsgPort {
     friend class MsgPort;
     friend class Kernel;
 
-    SignalPool::SIGNALMASK Wait(SignalPool::SIGNALMASK sigs2wait, int maxms=-1 );
-    void Delay(int waitms);
+    SignalPool::SIGNALMASK Wait(SignalPool::SIGNALMASK sigs2wait, Int32 maxms=-1 );
+    void Delay(Int32 waitms);
 
     char* execstack;
     SignalPool tasksignals;
     char* savedstackpointer;
-    int stacksize;
+    Int32 stacksize;
 
     enum TaskStatus{
      TS_NONE = 0,
@@ -55,7 +55,7 @@ class TaskBase : public MsgPort {
 
 
 
-template <int S>
+template <Int32 S>
 class Task : public TaskBase {
  public:
      Task();
@@ -65,7 +65,7 @@ class Task : public TaskBase {
 
 };
 
-template <int S>
+template <Int32 S>
 inline Task<S>::Task() : TaskBase(stack, S) {}
 
 #endif	/* TASK_H */

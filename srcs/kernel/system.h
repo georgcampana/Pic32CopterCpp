@@ -8,6 +8,7 @@
 #ifndef SYSTEM_H
 #define	SYSTEM_H
 
+#include "basetypes.h"
 
 #include <p32xxxx.h>
 #include <plib.h>
@@ -33,8 +34,7 @@ extern "C" {
 class System {
 
 public:
-    static void DelayMS(UINT16 ms2delay);
-    static int dbgcounter;
+    static Int32 dbgcounter;
 
 
 

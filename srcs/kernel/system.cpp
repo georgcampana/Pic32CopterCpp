@@ -39,22 +39,4 @@
 
 
 
-
- void System::DelayMS(UINT16 ms2delay) {
-
-
-     unsigned int int_status;
-     while( ms2delay-- )
-     {
-         int_status = INTDisableInterrupts();
-         OpenCoreTimer(GetSystemClock() / 2000);
-         INTRestoreInterrupts(int_status);
-         mCTClearIntFlag();
-         while( !mCTGetIntFlag() );
-     }
-     mCTClearIntFlag();
-
-
-}
-
-int System::dbgcounter = 0;
+Int32 System::dbgcounter = 0;

@@ -8,7 +8,7 @@
 #include "task.h"
 #include "kernel.h"
 
-TaskBase::TaskBase(char* newstack, int stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack), stacksize(stackdimension), status(TS_NEW) {
+TaskBase::TaskBase(char* newstack, Int32 stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack), stacksize(stackdimension), status(TS_NEW) {
 
     SetTargetTask(this,tasksignals.Alloc()); // init of the msgport
 
@@ -53,11 +53,11 @@ void TaskBase::OnRun() {
 
 }
 
-void TaskBase::Delay(int waitms) {
+void TaskBase::Delay(Int32 waitms) {
     Wait(0,waitms);
 }
 
-SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, int maxms) {
+SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, Int32 maxms) {
     // stop ints
     Kernel::SchedulerCtrl ossafe;
     ossafe.EnterProtected();

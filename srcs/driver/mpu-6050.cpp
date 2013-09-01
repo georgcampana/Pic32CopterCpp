@@ -39,7 +39,7 @@ bool MPU_6050::Init() {
     //reset the device
     i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_PWR_MGMT_1, BIT_PWR_MGMT_1_DEVICE_RESET);
     // we should wait a while here (50 ms should be enough)
-    System::DelayMS(50);
+    //System::DelayMS(50);
 
     // more check code power mngmt1 should be 0x40 after a reset (sleep enabled)
     UINT8 powermngmt1;
@@ -105,7 +105,7 @@ bool MPU_6050::Init() {
         // reset i2c master interface
         user_ctrl |= BIT_USER_CTRL_I2C_MST_RESET;
         i2cerror = i2cmanager.WriteByteToReg(i2caddr, MPU6050_RA_USER_CTRL, user_ctrl);
-        System::DelayMS(20);
+        //System::DelayMS(20);
     }
 
     // write DMP firmware into the bank mem

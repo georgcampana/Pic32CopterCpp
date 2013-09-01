@@ -97,7 +97,7 @@ private:
     BusError getErrorType();
     UINT16 getRemainingBytes();
 
-    bool isBusy();
+    bool isBusy() const;
     bool StartReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest, EventListener* listener=NULL);
     bool StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value, EventListener* listener=NULL);
 
@@ -111,7 +111,7 @@ private:
     bool WriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const UINT8* values);
 };
 
-inline bool I2c::isBusy() {  return (currentstatus > BUS_IDLE)? true:false; }
+inline bool I2c::isBusy() const {  return (currentstatus > BUS_IDLE)? true:false; }
 inline void I2c::setBusError(BusError type){
     buserror = true;
     errortype = type;

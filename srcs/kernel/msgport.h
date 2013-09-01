@@ -20,7 +20,7 @@ class MsgPort : public Node {
      MsgPort();
      MsgPort(TaskBase* receivertask, SignalPool::SIGNAL sig2use);
 
-     Message* GetMsg(int waitms = -1);
+     Message* GetMsg(Int32 waitms = -1);
      void Post(Message* newmsg);
 
      void SetTargetTask(TaskBase* receivertask, SignalPool::SIGNAL sig2use);

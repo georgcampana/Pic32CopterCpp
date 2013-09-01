@@ -6,7 +6,6 @@
  */
 
 #include "list.h"
-#include "system.h"
 
 
 // put in front of the first node with a lower priority

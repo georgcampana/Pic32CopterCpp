@@ -14,11 +14,11 @@
 
 class InputPin {
     const IoPortId pinport;
-    const int pinno;
+    const Int32 pinno;
     bool lastset;
 
 public:
-    InputPin(IoPortId port, int pin);
+    InputPin(IoPortId port, Int32 pin);
     bool get() const;
     InputPin& operator >> (bool& result);
 };
@@ -28,7 +28,7 @@ typedef class PinChangeHandler* PinChangeHandlerPtr;
 
 class PinChangeHandler {
     const InputPin& inpin;
-    const int cnotifypin;
+    const Int32 cnotifypin;
     const IEventObserverPrt pinobserver;
     friend class DigitalIO;
     bool laststatus;
@@ -44,7 +44,7 @@ public:
         PUD_DOWN
     };
 
-    PinChangeHandler(   InputPin& pinport, int cnpin,
+    PinChangeHandler(   InputPin& pinport, Int32 cnpin,
                         PullUpDown pullmode=PUD_NONE,
                         IEventObserverPrt observer=0  );
 
@@ -73,11 +73,11 @@ public:
 // OutputPin
 class OutputPin {
     const IoPortId pinport;
-    const int pinno;
+    const Int32 pinno;
     bool lastset;
 
 public:
-    OutputPin(IoPortId port, int pin, bool opendrain=false);
+    OutputPin(IoPortId port, Int32 pin, bool opendrain=false);
     void operator << (bool newstatus) ;
     bool set(bool newstatus);
     bool toggle();

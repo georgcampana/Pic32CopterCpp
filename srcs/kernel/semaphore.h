@@ -13,7 +13,7 @@
 class Semaphore : Node {
 public:
 
-    bool Obtain(int maxwaitms = -1);
+    bool Obtain(Int32 maxwaitms = -1);
     bool TryObtain();
     void Release();
 private:

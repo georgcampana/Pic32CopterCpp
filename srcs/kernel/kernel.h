@@ -14,7 +14,7 @@
 
 class SysTimer {
 
-    static int const TIMESLICE_QUANTUM = 5; // ms
+    static Int32 const TIMESLICE_QUANTUM = 5; // ms
 
  public:
 
@@ -34,10 +34,10 @@ class SysTimer {
 
         void SignalTask() { if(sig2send) task2wake->Signal(sig2send);};
 
-        bool IsTimeSliceAlarm() { return(task2wake==0); }
+        bool IsTimeSliceAlarm() const { return(task2wake==0); }
     };
      
-    static void AddAlarm(AlarmItem* item2queue, int ms, int us=0);
+    static void AddAlarm(AlarmItem* item2queue, Int32 ms, Int32 us=0);
     static void CancelAlarm(AlarmItem* item2cancel);
     static HAL::TICKS GetNowTicks();
     static void Start();
@@ -80,11 +80,11 @@ class Kernel {
      
      static class Epilogue : public HAL::IntEpilogue {
       public:
-        char* RescheduleIfNeeded(char* lastsp);
+        char* RescheduleIfNeeded(Char* lastsp);
      } reschedulehandler;
 
      class InterruptCtrl {
-         unsigned int int_status;
+         UInt32 int_status;
        public:
            //InterruptCtrl() : int_status(0) {}
            void Disable() { int_status = HAL::DisableInterrupts(); }
@@ -92,7 +92,7 @@ class Kernel {
      };
 
      class SchedulerCtrl {
-         unsigned int sched_status;
+         UInt32 sched_status;
        public:
            //SchedulerCtrl() : sched_status(0) {}
            void EnterProtected() { sched_status = HAL::DisableScheduler(); }
@@ -101,8 +101,8 @@ class Kernel {
 
 
 private:
-     static char* getCurrentSavedSP();
-     static void setCurrentSavedSP(char* stackpointer);
+     static Char* getCurrentSavedSP();
+     static void setCurrentSavedSP(Char* stackpointer);
 
      static TaskBase* runningnow;
 
@@ -121,8 +121,8 @@ inline void Kernel::SetReschedulePending() { reschedulepending = true; }
 inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
 inline void Kernel::RecheduleIfPending() {if(reschedulepending) Reschedule(); }
 
-inline char* Kernel::getCurrentSavedSP() { return runningnow->savedstackpointer; }
-inline void Kernel::setCurrentSavedSP(char* stackpointer) {  runningnow->savedstackpointer = stackpointer; }
+inline Char* Kernel::getCurrentSavedSP() { return runningnow->savedstackpointer; }
+inline void Kernel::setCurrentSavedSP(Char* stackpointer) {  runningnow->savedstackpointer = stackpointer; }
 
 #endif	/* KERNEL_H */
 

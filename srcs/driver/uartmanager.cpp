@@ -10,7 +10,7 @@
  *
  */
 
-#include "../driver/uartmanager.h"
+#include "uartmanager.h"
 
 #include <p32xxxx.h>
 #include <plib.h>
@@ -36,7 +36,7 @@ void __ISR(_UART_2_VECTOR, ipl5) Uart2InterruptServiceRoutine(void){
 }
 #endif
 
-UartManager::UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud) : localecho(false), module(mod) {
+UartManager::UartManager(UART_MODULE mod, UINT32 baud) : localecho(false), module(mod) {
 
     if(mod == UART1 ) {
         uart1_ref = this;
@@ -53,7 +53,7 @@ UartManager::UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud) : loca
 
     UARTSetLineControl(module, (UART_LINE_CONTROL_MODE)(UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1));
 
-    UARTSetDataRate(module, perif_freq, baud) ;
+    UARTSetDataRate(module, GetPeripheralClock(), baud) ;
 
     UARTEnable(module, (UART_ENABLE_MODE)UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
     
@@ -61,15 +61,11 @@ UartManager::UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud) : loca
 }
 
 void UartManager::clearRxBuffer() {
-    unsigned int int_status = INTDisableInterrupts();
     rxbuffer.reset();
-    INTRestoreInterrupts(int_status);
 }
 
 void UartManager::clearTxBuffer() {
-    unsigned int int_status = INTDisableInterrupts();
     txbuffer.reset();
-    INTRestoreInterrupts(int_status);
 }
 
 UINT16 UartManager::write(const char* string2write) {
@@ -77,21 +73,18 @@ UINT16 UartManager::write(const char* string2write) {
     if(string2write==NULL || *string2write == 0x00) return 0;
 
     UINT16 transferred = 0;
-    
-    unsigned int int_status = INTDisableInterrupts();
-    {
-        for(const char* cntptr = string2write; *cntptr!=NULL; cntptr++) {
-            if(txbuffer.putChar(*cntptr) == false) {
-                break;
-            }
-            transferred++;
-        }
 
-        if(transferred) {
-            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+    for(const char* cntptr = string2write; *cntptr!=NULL; cntptr++) {
+        if(txbuffer.putChar(*cntptr) == false) {
+            break;
         }
+        transferred++;
     }
-    INTRestoreInterrupts(int_status);    
+
+    if(transferred) {
+        INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+    }
+
     
     return transferred;
 }
@@ -99,30 +92,21 @@ UINT16 UartManager::write(const char* string2write) {
 bool UartManager::write(char chart2write) {
     bool success = false;
     if(chart2write != 0x00) {
-        unsigned int int_status = INTDisableInterrupts();
-        {
-            success =  txbuffer.putChar(chart2write);
-            if(success) {
-                INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
-            }
+        success =  txbuffer.putChar(chart2write);
+        if(success) {
+            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
         }
-        INTRestoreInterrupts(int_status);
     }
     return success;
 }
 
-UINT16 UartManager::countRxChars() {
+UINT16 UartManager::countRxChars() const {
     return rxbuffer.getDataLen();
 }
 
 INT16 UartManager::getChar(){
     INT16 readchar = -1;
-    unsigned int int_status = INTDisableInterrupts();
-    {
-        readchar = rxbuffer.getChar();
-    }
-    INTRestoreInterrupts(int_status);
-
+    readchar = rxbuffer.getChar();
     return readchar;
 }
 
@@ -133,18 +117,15 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
 
     UINT16 nrreadchars = 0;
 
-    unsigned int int_status = INTDisableInterrupts();
-    {
-        while(maxlen--) {
-            INT16 readchar = rxbuffer.getChar();
-            if(readchar == -1) break;
-            if(readchar == '\r') break;
-            if(readchar == '\n') { maxlen++; continue; }
-            *dest++ = (BYTE) readchar;
-            nrreadchars++;
-        }
+    while(maxlen--) {
+        INT16 readchar = rxbuffer.getChar();
+        if(readchar == -1) break;
+        if(readchar == '\r') break;
+        if(readchar == '\n') { maxlen++; continue; }
+        *dest++ = (BYTE) readchar;
+        nrreadchars++;
     }
-    INTRestoreInterrupts(int_status);
+
     *dest++ = NULL;
 
     return nrreadchars;
@@ -187,7 +168,7 @@ void UartManager::handleInterrupt() {
     //TX interrupt
     if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_TX(module)) )
     {
-       int sent = 0;
+       Int32 sent = 0;
        // Anything to send ?
        if(txbuffer.getDataLen() >0) { 
           // I should have some free bytes in  the TX FIFO buffer
@@ -198,7 +179,9 @@ void UartManager::handleInterrupt() {
                    INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
                    break;
                }
+               Int32 intstatus = INTDisableInterrupts(); // due to know silicon issue in PIC32
                UARTSendDataByte(module,(BYTE)nextchar);
+               INTRestoreInterrupts(intstatus);
                sent++;
            }
        }

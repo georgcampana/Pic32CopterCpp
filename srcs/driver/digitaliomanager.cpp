@@ -45,7 +45,7 @@ void DigitalIO::handleInterrupt() {
    mCNClearIntFlag();
 }
 
-InputPin::InputPin(IoPortId port, int pin) : pinport(port), pinno(pin) {
+InputPin::InputPin(IoPortId port, Int32 pin) : pinport(port), pinno(pin) {
     PORTSetPinsDigitalIn(pinport, pinno);
 }
 
@@ -60,11 +60,11 @@ InputPin& InputPin::operator >> (bool& result) {
 
 
 PinChangeHandler::PinChangeHandler(
-                        InputPin& pinport, int cnpin,
+                        InputPin& pinport, Int32 cnpin,
                         PullUpDown pullmode,
                         IEventObserver* observer) : inpin(pinport), cnotifypin(cnpin), pinobserver(observer) {
 
-    int pullup = 0;
+    Int32 pullup = 0;
     if(pullmode == PUD_UP) {
         pullup = cnpin; // the enable bit seems to be the same used for the pullup enabling
     }
@@ -123,7 +123,7 @@ void DigitalIO::addPinChangeHandler(PinChangeHandlerPtr changehandler) {
 }
 
 // generic pin interface
-OutputPin::OutputPin(IoPortId port, int pin, bool opendrain) : pinno(pin), pinport(port) {
+OutputPin::OutputPin(IoPortId port, Int32 pin, bool opendrain) : pinno(pin), pinport(port) {
     PORTSetPinsDigitalOut(pinport,pinno);
     PORTClearBits(pinport, pinno);
 }

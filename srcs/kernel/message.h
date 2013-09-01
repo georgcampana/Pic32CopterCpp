@@ -15,29 +15,30 @@ class MsgPort;
 class Message : public Node {
  public:
     
-    Message(void* data, int len, MsgPort* reply_port = 0);
+    Message(void* data, Int32 len, MsgPort* reply_port = 0);
+    Message(Int32 data, MsgPort* reply_port = 0);
+    Message(UInt32 data, MsgPort* reply_port = 0);
     Message(int data, MsgPort* reply_port = 0);
-    Message(unsigned int data, MsgPort* reply_port = 0);
 
-    unsigned int GetUIntPayload() const;
-    int GetIntPayload() const;
+    UInt32 GetUIntPayload() const;
+    Int32 GetIntPayload() const;
     void* GetPayload() const;
-    int GetDatalen() const;
+    Int32 GetDatalen() const;
     bool IsReplyRequested() const;
 
-    void Reply(int result = 0);
-    int GetReplyResult() const;
+    void Reply(Int32 result = 0);
+    Int32 GetReplyResult() const;
 
 
     friend class MsgPort;
  private:
     union {
         void* dataptr;
-        int dataint;
-        unsigned int datauint;
-        int replyresult;
+        Int32 dataint;
+        UInt32 datauint;
+        Int32 replyresult;
     } payload;
-    int datalen;
+    Int32 datalen;
     MsgPort* replyport;
     enum MsgStatus {
         MS_NONE = 0,
@@ -53,32 +54,34 @@ class Message : public Node {
     } type;
 };
 
-inline Message::Message(void* data, int len, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
+inline Message::Message(void* data, Int32 len, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
     this->payload.dataptr = data;
     datalen = len;
     if(reply_port) { type=MT_REPLYREQUESTED; }
 }
 
-inline Message::Message(int data, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
+inline Message::Message(Int32 data, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
     this->payload.dataint = data;
-    datalen = sizeof(int);
+    datalen = sizeof(Int32);
     if(reply_port) { type=MT_REPLYREQUESTED; }
 }
 
-inline Message::Message(unsigned int data, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
+inline Message::Message(int data, MsgPort* reply_port) { Message((Int32) data, reply_port); }
+
+inline Message::Message(UInt32 data, MsgPort* reply_port) : Node(NT_MSG), status(MS_NONE),type(MT_SIMPLE), replyport(reply_port) {
     this->payload.datauint = data;
-    datalen = sizeof(unsigned int);
+    datalen = sizeof(UInt32);
     if(reply_port) { type=MT_REPLYREQUESTED; }
 }
 
-inline unsigned int Message::GetUIntPayload() const { return payload.datauint; }
+inline UInt32 Message::GetUIntPayload() const { return payload.datauint; }
 
-inline int Message::GetIntPayload() const { return payload.dataint; }
+inline Int32 Message::GetIntPayload() const { return payload.dataint; }
 inline void* Message::GetPayload() const { return payload.dataptr; }
-inline int Message::GetDatalen() const { return datalen; }
+inline Int32 Message::GetDatalen() const { return datalen; }
 inline bool Message::IsReplyRequested() const { return(type == MT_REPLYREQUESTED); }
 
-inline int Message::GetReplyResult() const { return payload.replyresult; }
+inline Int32 Message::GetReplyResult() const { return payload.replyresult; }
 
 #endif	/* MESSAGE_H */
 

@@ -10,7 +10,7 @@
 #include "kernel.h"
 
 
-Message* MsgPort::GetMsg(int waitms) {
+Message* MsgPort::GetMsg(Int32 waitms) {
 
     Message* msg2return = 0;
     Kernel::SchedulerCtrl safecode;

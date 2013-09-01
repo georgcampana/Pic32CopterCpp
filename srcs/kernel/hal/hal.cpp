@@ -7,8 +7,8 @@
 
 #include "hal.h"
 
-unsigned int HAL::lastreadticks = 0;
-unsigned int HAL::highticks = 0;
+UInt32 HAL::lastreadticks = 0;
+UInt32 HAL::highticks = 0;
 HAL::TimerAlarm* HAL::inthandler = 0;
 HAL::IntEpilogue* HAL::reschedhandler = 0;
 char  HAL::intstack[INTERRUPTSTACKSIZE];

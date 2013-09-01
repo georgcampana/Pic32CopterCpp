@@ -9,91 +9,36 @@
 #define	UARTMANAGER_H
 
 #include "../kernel/system.h"
+#include "../kernel/device.h"
+#include "../kernel/safecircularbuffer.h"
 
-template<int I>
-class CircularBuffer {
-    UINT8 buffer[I];
-
-    UINT8 *wrptr;
-    UINT8 *rdptr;
-    UINT16 datalen;
-
-public:
-    CircularBuffer();
-    
-    bool putChar(char chartoput);
-    INT16 getChar();
-    void reset();
-    UINT16 getDataLen();
-};
-
-template<int I>
-inline CircularBuffer<I>::CircularBuffer() {
-    reset();
-}
-
-template<int I>
-inline bool CircularBuffer<I>::putChar(char char2put) {
-    if(datalen == I) { // buffer is full
-        return false;
-    }
-
-    *wrptr++ = char2put;
-    datalen++;
-    if(wrptr == &buffer[I]) wrptr = buffer;
-    return true;
-}
-
-template<int I>
-inline INT16 CircularBuffer<I>::getChar() {
-
-    if(datalen > 0) {
-        UINT8 char2return = *rdptr++;
-        datalen--;
-        if(rdptr == &buffer[I]) rdptr = buffer;
-        return char2return;
-    }
-
-    return -1;
-}
-
-template<int I>
-inline void CircularBuffer<I>::reset() {
-    wrptr = rdptr = buffer;
-    datalen = 0;
-}
-
-template<int I>
-inline UINT16 CircularBuffer<I>::getDataLen() {
-    return datalen;
-}
 
 #define UART_TX_BUFFER_LEN  256
 #define UART_RX_BUFFER_LEN  64
 
 
-class UartManager {
+class UartManager : public CharStreamDevice {
 
-    CircularBuffer<UART_TX_BUFFER_LEN> txbuffer;
-    CircularBuffer<UART_RX_BUFFER_LEN> rxbuffer;
+    SafeCircularBuffer<UART_TX_BUFFER_LEN> txbuffer;
+    SafeCircularBuffer<UART_RX_BUFFER_LEN> rxbuffer;
 
     const UART_MODULE module;
 
     bool localecho;
 public:
-    UartManager(UART_MODULE mod, UINT32 perif_freq, UINT32 baud = 115000);
+    UartManager(UART_MODULE mod, UInt32 baud = 115000);
 
     void handleInterrupt();
     void clearRxBuffer();
     void clearTxBuffer();
 
-    UINT16 write(const char* string2write);
-    bool write(char chart2write);
+    UInt16 write(const Char* string2write);
+    bool write(Char chart2write);
 
-    UINT16 countRxChars();
-    INT16 getChar();
+    UInt16 countRxChars() const;
+    Int16 getChar();
 
-    UINT16 readLine(UINT8* dest, UINT16 maxlen);
+    UInt16 readLine(UInt8* dest, UInt16 maxlen);
 
     void setLocalEcho(bool newstate);
 protected:

@@ -8,10 +8,12 @@
 #ifndef SIGNAL_H
 #define	SIGNAL_H
 
+#include "basetypes.h"
+
 class SignalPool {
  public: 
-    typedef unsigned int SIGNAL;
-    typedef unsigned int SIGNALMASK;
+    typedef UInt32 SIGNAL;
+    typedef UInt32 SIGNALMASK;
      
     SignalPool();
  
