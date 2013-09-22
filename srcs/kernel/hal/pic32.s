@@ -304,7 +304,7 @@ handleCoreTimer:
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
 
-
+    /*-BEGIN------- actual INT code to handle -------*/
     lw $sp,%gp_rel(interruptstack)($gp)
 
     addiu $sp, $sp, -16 # probably not needed (area for the called func to store a0-a3)
@@ -314,6 +314,7 @@ handleCoreTimer:
 
     di $zero # disable int--> disable nested interrupts
     ehb
+    /*-END------- actual INT code to handle -------*/
 
     /* now we try to get the  stackpointer of the next task to execute */
     lw $a0, %gp_rel(ORIGSP)($gp)
