@@ -5,6 +5,9 @@
 
 
 .text
+
+
+
 # must be called with Interrupts already switched off & never from an exception
 .ent swapTaskContext
 swapTaskContext:
@@ -226,24 +229,8 @@ transferMainStack:
 .end transferMainStack
 
 
-/* PIC32 CoreTimer interrupt (vector0)
-* This is the prologue + epilogue for the pre-empting interrupt routine which is
-* present in the Hal module
-* We have a pointer to the stack reserved for intrrupts
-* (see "interruptstack" in the sbss section).
-*/
-
-.section .vector_0,code
-   j      handleCoreTimer
-   nop
-
-.section .text,code
-.ent handleCoreTimer
-handleCoreTimer:
-    .set noreorder
-    .set nomips16
-    .set noat
-
+#macro IntPrologue
+.macro IntPrologue intlevel=0x400
    # if the previous context was an interrupt then we simply execute the interrupt (reg safe)
    # otherwise we save the context switch the sp to the interrupt reserved stack
 
@@ -258,7 +245,7 @@ handleCoreTimer:
 
     addiu $sp, $sp, -128  # we create some space on the stack
     sw $sp, %gp_rel(ORIGSP)($gp) # we persist the sp of the currently loosing-cpu task
-                    
+
     /* TODO: rearrange the order to minimize disabled ints */
     sw $at, ($sp)
     sw $v0, 4($sp)
@@ -300,15 +287,43 @@ handleCoreTimer:
 
    /* let's set the new Interrupt level */
     ins	$k0, $zero, 1, 15 # this enables nested interrupts since EXL (and ERL are set t0 0)
-    ori	$k0, $k0, 0x400   # 0x400 -> level = 1 0x1800 --> level = 6
+    ori	$k0, $k0, \intlevel   # 0x400 -> level = 1 0x1800 --> level = 6
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
 
 
     lw $sp,%gp_rel(interruptstack)($gp)
 
+
+.endm
+
+
+
+
+
+/* PIC32 CoreTimer interrupt (vector0)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for intrrupts
+* (see "interruptstack" in the sbss section).
+*/
+
+.section .vector_0,code
+   j      handleCoreTimer
+   nop
+
+.section .text,code
+.ent handleCoreTimer
+handleCoreTimer:
+    .set noreorder
+    .set nomips16
+    .set noat
+    
+    /* 0x400 = level 1 */
+    IntPrologue intlevel=0x400
+
     addiu $sp, $sp, -16 # probably not needed (area for the called func to store a0-a3)
-    jal handleSysTimerINT # call into the c code
+    jal handleSysTimerINT # call into t he c code
     nop
     addiu $sp, $sp, 16  # see above
 
