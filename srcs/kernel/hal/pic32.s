@@ -291,45 +291,13 @@ transferMainStack:
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
 
-    /*-BEGIN------- actual INT code to handle -------*/
     lw $sp,%gp_rel(interruptstack)($gp)
-
-
 .endm
 
-
-
-
-
-/* PIC32 CoreTimer interrupt (vector0)
-* This is the prologue + epilogue for the pre-empting interrupt routine which is
-* present in the Hal module
-* We have a pointer to the stack reserved for intrrupts
-* (see "interruptstack" in the sbss section).
-*/
-
-.section .vector_0,code
-   j      handleCoreTimer
-   nop
-
-.section .text,code
-.ent handleCoreTimer
-handleCoreTimer:
-    .set noreorder
-    .set nomips16
-    .set noat
-    
-    /* 0x400 = level 1 */
-    IntPrologue intlevel=0x400
-
-    addiu $sp, $sp, -16 # probably not needed (area for the called func to store a0-a3)
-    jal handleSysTimerINT # call into t he c code
-    nop
-    addiu $sp, $sp, 16  # see above
-
+#macro IntEpilogue
+.macro IntEpilogue
     di $zero # disable int--> disable nested interrupts
     ehb
-    /*-END------- actual INT code to handle -------*/
 
     /* now we try to get the  stackpointer of the next task to execute */
     lw $a0, %gp_rel(ORIGSP)($gp)
@@ -386,11 +354,44 @@ handleCoreTimer:
     eret  # back to the caller or orginal program counter
     nop
 
+.endm
+
+
+
+/* PIC32 CoreTimer interrupt (vector0)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for intrrupts
+* (see "interruptstack" in the sbss section).
+*/
+
+.section .vector_0,code
+   j      handleCoreTimer
+   nop
+
+.section .text,code
+.ent handleCoreTimer
+handleCoreTimer:
+    .set noreorder
+    .set nomips16
+    .set noat
+    
+    /* 0x400 = level 1 */
+    IntPrologue intlevel=0x400
+
+    /*-BEGIN------- actual INT code to handle -------*/
+    addiu $sp, $sp, -16 # probably not needed (area for the called func to store a0-a3)
+    jal handleSysTimerINT # call into t he c code
+    nop
+    addiu $sp, $sp, 16  # see above
+    /*-END------- actual INT code to handle -------*/
+
+    IntEpilogue
+
  _hCTnestedInt:
     sdbbp 0
 
 # TODO: nested timeslice (should be simpler)
-
 
 
 .end handleCoreTimer
