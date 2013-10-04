@@ -24,11 +24,15 @@ UartManager* uart2_ref;
 extern "C" {
 #endif
 
-void __ISR(_UART_1_VECTOR, ipl5) Uart1InterruptServiceRoutine(void){
+void
+__ISR(_UART_1_VECTOR, ipl5)
+Uart1InterruptServiceRoutine(void){
     uart1_ref->handleInterrupt();
 }
 
-void __ISR(_UART_2_VECTOR, ipl5) Uart2InterruptServiceRoutine(void){
+void
+__ISR(_UART_2_VECTOR, ipl5)
+Uart2InterruptServiceRoutine(void){
     uart2_ref->handleInterrupt();
 }
 
