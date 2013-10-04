@@ -20,9 +20,9 @@ MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-//UartManager dbgserial(UART1,9600);
+UartManager dbgserial(UART1,9600);
 
-//OutStream dbgout(dbgserial);
+OutStream dbgout(dbgserial);
 
 class ProtectedResource : public Semaphore {
     Int32 counter;
@@ -86,7 +86,7 @@ public:
 
 void MainTask::OnRun() {
 
-    //dbgout << "Helloworld\r\n" ;
+    dbgout << "Helloworld\r\n" ;
     
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
