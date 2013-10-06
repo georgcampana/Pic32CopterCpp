@@ -58,6 +58,7 @@ public:
     void OnRun()  {
         while(1) {
             testled << true;
+            //dbgout << "Led on\r\n" ;
             Delay(1200);
         }
     }
@@ -77,6 +78,7 @@ public:
     void OnRun() {
         while(1) {
             testled << false;
+            //dbgout << "Led off\r\n" ;
             Delay(1200);
         }
     }
@@ -87,15 +89,16 @@ public:
 void MainTask::OnRun() {
 
     dbgout << "Helloworld\r\n" ;
-    
+    dbgout << "Pic32Copter board here\r\n" ;
+
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
     while(1) {
-        Delay(130);
-        System::dbgcounter--;
-
+        Delay(90);
+        System::dbgcounter++;
+        dbgout << "01234567890123456789 maintask running cycle:" << System::dbgcounter << "\r\n";
     }
 
 }

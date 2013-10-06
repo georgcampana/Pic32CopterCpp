@@ -12,6 +12,7 @@
 
 template<Int32 I>
 class SafeCircularBuffer {
+
     UINT8 buffer[I];
 
     UINT8 *wrptr;  // read/written only by writer thread/interrupt
@@ -37,10 +38,10 @@ inline bool SafeCircularBuffer<I>::putChar(char char2put) {
     if(datalen == I) { // buffer is full
         return false;
     }
-
     *wrptr++ = char2put;
     HAL::AtomicInc((Int32*)&datalen);
     if(wrptr == &buffer[I]) wrptr = buffer;
+
     return true;
 }
 

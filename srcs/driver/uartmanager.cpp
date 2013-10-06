@@ -183,9 +183,7 @@ void UartManager::handleInterrupt() {
                    INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_DISABLED);
                    break;
                }
-               Int32 intstatus = INTDisableInterrupts(); // due to know silicon issue in PIC32
                UARTSendDataByte(module,(BYTE)nextchar);
-               INTRestoreInterrupts(intstatus);
                sent++;
            }
        }

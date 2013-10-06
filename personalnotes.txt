@@ -429,9 +429,28 @@ msg posting seems OK
 
 
 ZeroLatency
-
-
 Target: never switch off interrupts to protect OS data.
+ZeroLatency will be implemented in a separate branch
+For the moment i have nly added a Scheduler disable/enable that is mapped to
+the int enable/disable
+
+approach to have good Int latency:
+
+There are 2 types of Interrupts:
+
+Normal and Highspeed
+
+The scheduler timer is normal and runs on lower priority (1 in Pic32)
+A Int that need quick response is a Highspeed Int.
+It runs on a higher int level and does not need to use the IntPrologue and Intprologue.
+But a high speed int that is not using the special Intprologue and epilogue
+is not allowed to make any kernel call.
+
+
+All highspeed ints must run at a higher pri level no that it is safe to interrupt
+a low pri Int running already.
+
+This will be changed radically with the zero latency approach.
 
 
 
