@@ -289,9 +289,11 @@ transferMainStack:
     ins	$k0, $zero, 1, 15 # this enables nested interrupts since EXL (and ERL are set t0 0)
     ori	$k0, $k0, \intlevel   # 0x400 -> level = 1 0x1800 --> level = 6
 
+    lw $sp,%gp_rel(interruptstack)($gp) # MUST be before the reactivation of INTS
+
     mtc0 $k0, $12 # from here on nested INTS are enabled
 
-    lw $sp,%gp_rel(interruptstack)($gp)
+
 .endm
 
 #macro IntEpilogue
