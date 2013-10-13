@@ -20,7 +20,7 @@ MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-UartManager dbgserial(UART1,9600);
+UartManager dbgserial(UART1,115200);
 
 OutStream dbgout(dbgserial);
 
@@ -33,7 +33,7 @@ public:
 } testsemaphore;
 
 
-class OutRunningTask : public Task<2048> {
+class OutRunningTask : public Task<1024> {
 
 public:
     OutRunningTask() {
@@ -41,12 +41,12 @@ public:
     }
     void OnRun() {
         Delay(2000);
-
+        dbgout << "Outrunning task: bye bye\r\n" ;
     }
 
 } outrunning;
 
-class BlinkerTask : public Task<2048> {
+class BlinkerTask : public Task<1024> {
 
     Int32 fakecounter;
 
@@ -56,16 +56,18 @@ public:
     }
 
     void OnRun()  {
+        UInt32 counter = 9;
         while(1) {
-            testled << true;
-            //dbgout << "Led on\r\n" ;
+            testled.toggle();
+            dbgout << counter++;
+            dbgout << " Led toggled\r\n" ;
             Delay(1200);
         }
     }
 
 } blinker2;
 
-class BlinkerTask3 : public Task<2048> {
+class BlinkerTask3 : public Task<1024> {
     
     Message testmsg;
 
@@ -77,7 +79,7 @@ public:
 
     void OnRun() {
         while(1) {
-            testled << false;
+            //testled << false;
             //dbgout << "Led off\r\n" ;
             Delay(1200);
         }
@@ -91,14 +93,16 @@ void MainTask::OnRun() {
     dbgout << "Helloworld\r\n" ;
     dbgout << "Pic32Copter board here\r\n" ;
 
+    //dbgserial.setLocalEcho(true);
+
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
     while(1) {
-        Delay(90);
+        Delay(10);
         System::dbgcounter++;
-        dbgout << "01234567890123456789 maintask running cycle:" << System::dbgcounter << "\r\n";
+        dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }
 
 }
