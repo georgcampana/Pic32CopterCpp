@@ -93,10 +93,10 @@ UINT16 UartManager::write(const char* string2write) {
     return transferred;
 }
 
-bool UartManager::write(char chart2write) {
+bool UartManager::write(char char2write) {
     bool success = false;
-    if(chart2write != 0x00) {
-        success =  txbuffer.putChar(chart2write);
+    if(char2write != 0x00) {
+        success =  txbuffer.putChar(char2write);
         if(success) {
             INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
         }

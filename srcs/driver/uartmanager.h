@@ -33,7 +33,7 @@ public:
     void clearTxBuffer();
 
     UInt16 write(const Char* string2write);
-    bool write(Char chart2write);
+    bool write(Char char2write);
 
     UInt16 countRxChars() const;
     Int16 getChar();
