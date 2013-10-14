@@ -192,7 +192,7 @@ char* Kernel::Epilogue::RescheduleIfNeeded(char* lastsp) {
 }
 
 //TODO: check how much stack we really need for the idle task
-class SysIdleTask : public Task<256> {
+class SysIdleTask : public Task<1024> {
 
 public:
     SysIdleTask() { priority = Task::TSPRI_IDLE;}
