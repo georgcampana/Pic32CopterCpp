@@ -452,6 +452,13 @@ a low pri Int running already.
 
 This will be changed radically with the zero latency approach.
 
+Issues to solve:
+if less than 2 bytes are written then seems that the UART does not send anymore data
+Solved: Issue related to the fact that the PIC32MX4xx does not assert the interrupt
+because of the 4 bytes deep buffer version.
+Solved by waiting for the "transmission complete" interrupt instead of the "free space"
+is probably not the best solution in terms of baud usage.
+
 
 
 

@@ -53,7 +53,7 @@ UartManager::UartManager(UART_MODULE mod, UINT32 baud) : localecho(false), modul
     // have to force/cast to the enum because it generates an error otherwise
     // when compiled under c++ --> should be communicated to microchip
     // to ammend the xc32 compiler
-    UARTSetFifoMode(module, (UART_FIFO_MODE)(UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_TX_BUFFER_EMPTY));
+    UARTSetFifoMode(module, (UART_FIFO_MODE)(UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_TX_DONE));
 
     UARTSetLineControl(module, (UART_LINE_CONTROL_MODE)(UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1));
 

@@ -26,7 +26,7 @@ class UartManager : public CharStreamDevice {
 
     bool localecho;
 public:
-    UartManager(UART_MODULE mod, UInt32 baud = 115000);
+    UartManager(UART_MODULE mod, UInt32 baud = 115200);
 
     void handleInterrupt();
     void clearRxBuffer();

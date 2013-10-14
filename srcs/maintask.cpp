@@ -20,7 +20,7 @@ MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-UartManager dbgserial(UART1,115200);
+UartManager dbgserial(UART1,9600);
 
 OutStream dbgout(dbgserial);
 
@@ -56,11 +56,10 @@ public:
     }
 
     void OnRun()  {
-        UInt32 counter = 9;
+        UInt32 counter = 0;
         while(1) {
             testled.toggle();
-            dbgout << counter++;
-            dbgout << " Led toggled\r\n" ;
+            dbgout << counter++ << " Led toggled\r\n" ;
             Delay(1200);
         }
     }
@@ -81,7 +80,7 @@ public:
         while(1) {
             //testled << false;
             //dbgout << "Led off\r\n" ;
-            Delay(1200);
+            Delay(1500);
         }
     }
 
@@ -93,14 +92,14 @@ void MainTask::OnRun() {
     dbgout << "Helloworld\r\n" ;
     dbgout << "Pic32Copter board here\r\n" ;
 
-    //dbgserial.setLocalEcho(true);
+    dbgserial.setLocalEcho(true);
 
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
     while(1) {
-        Delay(10);
+        Delay(1000);
         System::dbgcounter++;
         dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }
