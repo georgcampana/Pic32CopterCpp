@@ -460,8 +460,23 @@ Solved by waiting for the "transmission complete" interrupt instead of the "free
 is probably not the best solution in terms of baud usage.
 
 
+Nested interrupts:
+
+if the previous level was not 0 then we serve a nested int
+    <save s7>
+    set s7 = current running level
+    <partial save-regs temps-only>
+else
+    <full save-reg prologue>
+    set s7 = 0
+end if
+
+<int service routine>
 
 
+Int code steps to optimze properly:
 
-
-
+-remove redundant s8/fp
+-enable ints earlier for the first level running int (not nested)
+-use same save sequence (cosmetic only though)
+-allow return boolean from interrupt to indicate if a signal has been set

@@ -238,15 +238,19 @@ transferMainStack:
     lui  $k1, 7
     srl  $k1, $k1, 6       /* prepare mask to extract IDL from status */
     and  $k1, $k0, $k1
-    bne  $k1, $0, _hCTnestedInt
+    bne  $k1, $zero, _hNestedIntP\intlevel
     nop
     /* we come IDL = 0 which means "normal user level" we save the reg-file and switch */
     #rdpgpr $sp, $sp /* use previous sp.  We have still STATUS in k0 */
 
     addiu $sp, $sp, -128  # we create some space on the stack
-    sw $sp, %gp_rel(ORIGSP)($gp) # we persist the sp of the currently loosing-cpu task
 
     /* TODO: rearrange the order to minimize disabled ints */
+    sw $s6, 92($sp)  # will host the current task stack pointer (used for level 0 only)
+    sw $s7, 96($sp)  # will host the int level of the loosing task (must be 0)
+    addiu $s6, $sp, 0 # s6 contains the ORIGSP
+    addiu $s7, $zero, 0  # s7 contains the current level (0 since we are here)
+
     sw $at, ($sp)
     sw $v0, 4($sp)
     sw $v1, 8($sp)
@@ -270,8 +274,6 @@ transferMainStack:
     sw $s3, 80($sp)
     sw $s4, 84($sp)
     sw $s5, 88($sp)
-    sw $s6, 92($sp)
-    sw $s7, 96($sp)
     sw $s8, 100($sp)
     sw $ra, 104($sp)
     mfhi $v0
@@ -292,21 +294,65 @@ transferMainStack:
     lw $sp,%gp_rel(interruptstack)($gp) # MUST be before the reactivation of INTS
 
     mtc0 $k0, $12 # from here on nested INTS are enabled
+    j _hPrologueEnd\intlevel
+    nop
 
+_hNestedIntP\intlevel:
+
+    addiu $sp, $sp, -96  # needed space to store the registers
+    sw $s7,   ($sp)      # we store the s7 to use it for the leaving int level   
+    addiu $s7, $k1, 0    # the original level set before jumping here (shifted though)
+    mfc0 $k1, $14 # EPC
+    sw $k1, 92($sp) # orig epc
+    sw $k0, 88($sp) # orig status
+   /* let's set the new Interrupt level */
+    ins	$k0, $zero, 1, 15 # this enables nested interrupts since EXL (and ERL are set t0 0)
+    ori	$k0, $k0, \intlevel   # 0x400 -> level = 1 0x1800 --> level = 6
+    mtc0 $k0, $12 # set status, from here on nested INTS are enabled
+
+    sw $ra, 76($sp)
+    sw $s8, 72($sp)
+    sw $t9, 68($sp)
+    sw $t8, 64($sp)
+    sw $t7, 60($sp)
+    sw $t6, 56($sp)
+    sw $t5, 52($sp)
+    sw $t4, 48($sp)
+    sw $t3, 44($sp)
+    sw $t2, 40($sp)
+    sw $t1, 36($sp)
+    sw $t0, 32($sp)
+    sw $a3, 28($sp)
+    sw $a2, 24($sp)
+    sw $a1, 20($sp)
+    sw $a0, 16($sp)
+    sw $v1, 12($sp)
+    sw $v0,  8($sp)
+    sw $at,  4($sp)
+    mflo $v0
+    sw $v0, 84($sp)
+    mfhi $v0
+    sw $v0, 80($sp)
+
+
+_hPrologueEnd\intlevel:
 
 .endm
 
 #macro IntEpilogue
-.macro IntEpilogue
+.macro IntEpilogue intlevel=0x400
     di $zero # disable int--> disable nested interrupts
     ehb
 
+    bne $s7, $0, _hNestedIntE\intlevel
+    nop
+
     /* now we try to get the  stackpointer of the next task to execute */
-    lw $a0, %gp_rel(ORIGSP)($gp)
+    addiu $a0, $s6, 0   # s6 still contains the original stack pointer of the interrupted task
     addiu $sp, $sp, -16 # (area for the called func to store a0-a3)
     jal RescheduleIfNeeded
     nop
-    addiu $sp, $sp, 16 #  could be avoided because we replace sp in the next instruction
+    #addiu $sp, $sp, 16 #  avoided because we replace sp in the next instruction
 
     /* we have in $v0 the stack pointer of the next task */
     addiu $sp, $v0, 0
@@ -356,6 +402,44 @@ transferMainStack:
     eret  # back to the caller or orginal program counter
     nop
 
+_hNestedIntE\intlevel:
+
+    lw $v0, 84($sp)
+    mtlo $v0
+    lw $v1, 80($sp)
+    mthi $v0
+
+    lw $ra, 76($sp)
+    lw $s8, 72($sp)
+    lw $t9, 68($sp)
+    lw $t8, 64($sp)
+    lw $t7, 60($sp)
+    lw $t6, 56($sp)
+    lw $t5, 52($sp)
+    lw $t4, 48($sp)
+    lw $t3, 44($sp)
+    lw $t2, 40($sp)
+    lw $t1, 36($sp)
+    lw $t0, 32($sp)
+    lw $a3, 28($sp)
+    lw $a2, 24($sp)
+    lw $a1, 20($sp)
+    lw $a0, 16($sp)
+    lw $v1, 12($sp)
+    lw $v0,  8($sp)
+    lw $at,  4($sp)
+    lw $s7,   ($sp) # used to hold the previous level
+    di $zero
+    ehb
+    lw $k0, 92($sp)
+    lw $k1, 88($sp)
+    mtc0 $k0, $14       # EPC restored
+    addiu $sp, $sp, 96
+    mtc0 $k1, $12       # status restored
+
+    eret  # back to the caller or orginal program counter
+    nop
+
 .endm
 
 
@@ -388,13 +472,7 @@ handleCoreTimer:
     addiu $sp, $sp, 16  # see above
     /*-END------- actual INT code to handle -------*/
 
-    IntEpilogue
-
- _hCTnestedInt:
-    sdbbp 0
-
-# TODO: nested timeslice (should be simpler)
-
+    IntEpilogue intlevel=0x400
 
 .end handleCoreTimer
 
@@ -456,6 +534,3 @@ atomicDec:
 interruptstack:
 	.space	4
 
-/* this is to hold the Original StackPointer when entering the SYS CALL */
-ORIGSP:
-	.space	4
