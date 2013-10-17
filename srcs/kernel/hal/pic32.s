@@ -229,6 +229,19 @@ transferMainStack:
 .end transferMainStack
 
 
+/*  interrupt prologue and epilogue
+*
+*   This handles the storing of task / nested ints when a new interrupt is served.
+*   You must indicate the desired int level IDL in the form that is already shifted
+*
+*   level-0 = 0,        level-1 = 0x0400
+*   level-2 = 0x0800,   level-3 = 0x0c00
+*   level-4 = 0x1000,   level-5 = 0x1400
+*   level-6 = 0x1800,   level-7 = 0x1c00 (shadow GPR)
+*
+*/
+
+
 #macro IntPrologue
 .macro IntPrologue intlevel=0x400
    # if the previous context was an interrupt then we simply execute the interrupt (reg safe)
@@ -475,6 +488,39 @@ handleCoreTimer:
     IntEpilogue intlevel=0x400
 
 .end handleCoreTimer
+
+/* PIC32 Uart1 interrupt (vector24)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+
+.section .vector_24,code
+   j      uart1IntHandler
+   nop
+
+.section .text,code
+.ent uart1IntHandler
+uart1IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+
+    /* 0x1400 = level 5 */
+    IntPrologue intlevel=0x1400
+
+    /*-BEGIN------- actual INT code to handle -------*/
+    addiu $sp, $sp, -16 # 
+    jal Uart1InterruptServiceRoutine # call into the c code
+    nop
+    addiu $sp, $sp, 16  # see above
+    /*-END------- actual INT code to handle -------*/
+
+    IntEpilogue intlevel=0x1400
+
+.end uart1IntHandler
+
 
 .ent getInterruptLevel
 getInterruptLevel:
