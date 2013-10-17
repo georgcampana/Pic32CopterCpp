@@ -20,7 +20,7 @@ MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-UartManager dbgserial(UART1,9600);
+UartManager dbgserial(UART1,115200);
 
 OutStream dbgout(dbgserial);
 
@@ -99,7 +99,7 @@ void MainTask::OnRun() {
     Kernel::AddTask(&blinker3);
 
     while(1) {
-        Delay(1000);
+        Delay(43);
         System::dbgcounter++;
         dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }

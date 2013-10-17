@@ -26,7 +26,7 @@ extern "C" {
 
 void
 //__ISR(_UART_1_VECTOR, ipl5)
-Uart1InterruptServiceRoutine(void){
+Uart1IntService(void){
     uart1_ref->handleInterrupt();
 }
 
