@@ -8,7 +8,7 @@
 #ifndef DEVICE_H
 #define	DEVICE_H
 
-#include "basetypes.h"
+#include "semaphore.h"
 
 class DeviceBase {
     Int32 opencnt;
@@ -33,6 +33,16 @@ public:
     virtual Int16 getChar() {return -1;}
     virtual UInt16 readLine(UInt8* dest, UInt16 maxlen) { return 0 ;}
 
+
+};
+
+class SingleAccessDevice : public DeviceBase {
+    Semaphore access;
+
+public:
+
+    virtual bool open() { }
+    virtual void close() { }
 
 };
 
