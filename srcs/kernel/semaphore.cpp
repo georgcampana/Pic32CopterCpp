@@ -13,10 +13,18 @@ bool Semaphore::Obtain(Int32 maxwaitms) {
 
     TaskBase* myself = Kernel::GetRunningTask();
 
+    // Quick attempt: works in case we get the semaphore
+    // otherwise we go for the heavy way (disable and reenable)
+
+    if(HAL::LockTestAndSet((Int32*)grantedtask, (Int32) myself ) == 0) {
+        return true;
+    }
+
+    // was tken already we attempt again in the sad way (by locking scheduling)
     Kernel::SchedulerCtrl ossafe;
     ossafe.EnterProtected();
 
-    // if sempahore is free grant immediately
+    // if sempahore is now free grant immediately (could have been freed between lock an EnterProtected)
     if(grantedtask == 0) {
         grantedtask = myself;
     }
@@ -44,6 +52,13 @@ bool Semaphore::Obtain(Int32 maxwaitms) {
 bool Semaphore::TryObtain() {
 
     TaskBase* myself = Kernel::GetRunningTask();
+
+    // Quick attempt: works in case we get the semaphore
+    // otherwise we go for the heavy way (disable and reenable)
+
+    if(HAL::LockTestAndSet((Int32*)grantedtask, (Int32) myself ) == 0) {
+        return true;
+    }
 
     Kernel::SchedulerCtrl ossafe;
     ossafe.EnterProtected();
