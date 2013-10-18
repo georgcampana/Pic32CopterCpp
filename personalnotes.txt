@@ -476,7 +476,9 @@ end if
 
 Int code steps to optimze properly:
 
--remove redundant s8/fp
+-remove redundant s8/fp: DONE
 -enable ints earlier for the first level running int (not nested)
 -use same save sequence (cosmetic only though)
--allow return boolean from interrupt to indicate if a signal has been set
+-allow return boolean from interrupt to indicate if a signal has been set: NOT FEASIBLE
+-avoid usage of extra jumps for the nested case and do not use s7 for the level DONE
+-add / rem extra sp space for the called routine directly from the save/restore code:DONE

@@ -22,8 +22,8 @@ swapTaskContext:
     * because an int could reschedule the current task
     * steps: create stack space; save status, save gpr, save orig sp;
     *        take new task's sp; restore gpr; restore status; remove sp space
-    *  124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    *  fp,  epc,status,lo ,hi, ra, s8, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    *  124,   120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    *  <free>,epc,status,lo ,hi, ra, fp, s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     */
 
     // we simulate a systemcall here
@@ -63,7 +63,7 @@ swapTaskContext:
     sw $s5, 88($sp)
     sw $s6, 92($sp)
     sw $s7, 96($sp)
-    sw $s8, 100($sp)
+    sw $fp, 100($sp)
     sw $ra, 104($sp)
     mfhi $v0
     sw $v0, 108($sp)
@@ -88,7 +88,7 @@ swapTaskContext:
     lw $v0, 108($sp)
     mthi $v0
     lw $ra, 104($sp)
-    lw $s8, 100($sp)
+    lw $fp, 100($sp)
     lw $s7, 96($sp)
     lw $s6, 92($sp)
     lw $s5, 88($sp)
@@ -148,8 +148,8 @@ forkTask:
     addiu $t0, $t0, -16 // arg0-arg3 list
 
     /* time to init the stack for the reschedule
-    * 124, 120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
-    * fp,  epc, status,lo ,hi, ra, s8,s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
+    * 124,   120, 116,  112,108,104,100,96,92,88,84,80,76,72,68,64,60,56,52,48,44,40,36,32,28,24,20,16,12, 8, 4, 0
+    * <free>,epc, status,lo ,hi, ra, s8,s7,s6,s5,s4,s3,s2,s1,s0,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0,a3,a2,a1,a0,v1,v0,at
     */
     addiu $t0, $t0, -128  // we create some space on the stack
     sw $0, ($t0)        // at
@@ -178,14 +178,13 @@ forkTask:
     sw $s5,88($t0)      // s5
     sw $s6,92($t0)      // s6
     sw $s7,96($t0)      // s7
-    sw $s8,100($t0)     // s8
+    sw $fp,100($t0)     // fp=s8 this might be used by the interrupted task
     sw $ra,104($t0)     // return address (should never be necesary since we just started a new task)
     sw $0, 108($t0)     // hi
     sw $0, 112($t0)     // lo
     mfc0 $t1, $12       // Status
     sw $t1, 116($t0)    // CP0 status
     sw $a3, 120($t0)    
-    sw $fp, 124($t0)    // this might be used by the interrupted task
 
     sw $t0, ($a1)       // we store the stackpointer in the var location
 
