@@ -4,7 +4,7 @@
  *
  */
 
-.globl swapTaskContext, forkTask, transferMainStack, getInterruptLevel, atomicInc, atomicDec
+.globl swapTaskContext, forkTask, transferMainStack, getInterruptLevel, atomicInc, atomicDec, lockTestAndSet
 .text
 
 
@@ -264,8 +264,6 @@ atomicInc:
 .ent atomicDec
 atomicDec:
     .set noreorder
-    .set nomips16
-    .set noat
 
     ll $v0, 0($a0)
     addiu    $v0, $v0, -1
@@ -277,3 +275,22 @@ atomicDec:
     nop
 .end atomicDec
 
+/*
+ *   returns old value if set already or zero in case of successful set
+ *   $a0 = pointer to uint32 var  , $a1 = uint32 value to set
+*/
+.ent lockTestAndSet
+lockTestAndSet:
+    .set noreorder
+
+    addiu $t0, $a1, 0           /* t0 = val to set (to preserve a1)   */
+    ll $v0, 0($a0)              /* read current value and set monitor */
+    bne $v0, $zero, _alreadyset /* if is not zero then we exit and return the current value */
+    nop
+    sc $t0, 0($a0)              /* if *a0 is unchanged then we set it to t0. Otherwise t0 is set to 0 */
+    beq $t0, $zero, lockTestAndSet /* retry in case of changed value between test and set */
+    nop
+_alreadyset:
+    jr $ra
+    nop
+.end lockTestAndSet

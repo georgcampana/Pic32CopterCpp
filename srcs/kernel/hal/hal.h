@@ -23,6 +23,7 @@ extern int getInterruptLevel();
 
 extern int atomicInc(int* val2inc);
 extern int atomicDec(int* val2dec);
+extern int lockTestAndSet(int* val2set, int value);
 
 #ifdef	__cplusplus
 }
@@ -66,6 +67,7 @@ public:
 
     static Int32 AtomicInc(Int32* val2inc);
     static Int32 AtomicDec(Int32* val2dec);
+    static Int32 LockTestAndSet(Int32* val2set, Int32 value);
 
     static void NothingToDo();
 private:
@@ -154,11 +156,15 @@ inline HAL::IntEpilogue* HAL::GetRescheduleHandler() {
 }
 
 inline Int32 HAL::AtomicInc(Int32* val2inc) {
-::atomicInc((int*)val2inc);
+    return::atomicInc((int*)val2inc);
 }
 
 inline Int32 HAL::AtomicDec(Int32* val2dec) {
-::atomicDec((int*)val2dec);
+    return ::atomicDec((int*)val2dec);
+}
+
+inline Int32 HAL::LockTestAndSet(Int32* var2set, Int32 value) {
+    return ::lockTestAndSet((int*)var2set, (int)value);
 }
 
 inline void HAL::NothingToDo() {
