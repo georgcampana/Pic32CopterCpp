@@ -40,7 +40,6 @@ static void uitoa(Char * buf, UInt32 val);
 
 OutStream::OutStream(CharStreamDevice& serialif) : outdevice(serialif) {
     outdevice.open();
-    asciibuffer[0] = 0;
 }
 
 OutStream::~OutStream(){
@@ -48,12 +47,16 @@ OutStream::~OutStream(){
 }
 
 OutStream& OutStream::operator << (Int32 lnumber) {
+    Char asciibuffer[32]; // should be enough to accomodate long floats number too
+    asciibuffer[0] = 0;
     itoa<Int32>(asciibuffer, lnumber);
     outdevice.write(asciibuffer);
     return *this;
 }
 
 OutStream& OutStream::operator << (UInt32 ulnumber) {
+    Char asciibuffer[32]; // should be enough to accomodate long floats number too
+    asciibuffer[0] = 0;
     itoa<UInt32>(asciibuffer, ulnumber);
     outdevice.write(asciibuffer);
     return *this;

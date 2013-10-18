@@ -31,6 +31,18 @@
     sw $s7, 96($sp)     /* will host the current task stack pointer (used for level 0 only) */
     addiu $s7, $sp, 0   /* s7 contains the ORIGSP */
 
+    sw $k0, 116($s7) /* original status after entering the INT (EXL = 1 and IDL=ontouched) */
+    mfc0 $k1, $14    /* EPC */
+    sw $k1, 120($s7) /* this is the future EPC */
+
+   /* let's set the new Interrupt level */
+    ins	$k0, $zero, 1, 15   /* this enables nested interrupts since EXL (and ERL are set t0 0) */
+    ori	$k0, $k0, \intlevel /* 0x400 -> level = 1 0x1800 --> level = 6 */
+
+    lw $sp,%gp_rel(interruptstack)($gp) /* MUST be before the reactivation of INTS */
+
+    mtc0 $k0, $12 /* from here on nested INTS are enabled */
+
     sw $at, ($s7)
     sw $v0, 4($s7)
     sw $v1, 8($s7)
@@ -61,19 +73,6 @@
     sw $v0, 108($s7)
     mflo $v0
     sw $v0, 112($s7)
-    #mfc0 $v0, $12 /* Status */
-    #sw $v0, 116($s7)
-    sw $k0, 116($s7) /* original status after entering the INT (EXL = 1 and IDL=ontouched) */
-    mfc0 $v0, $14    /* EPC */
-    sw $v0, 120($s7) /* this is the future EPC */
-
-   /* let's set the new Interrupt level */
-    ins	$k0, $zero, 1, 15   /* this enables nested interrupts since EXL (and ERL are set t0 0) */
-    ori	$k0, $k0, \intlevel /* 0x400 -> level = 1 0x1800 --> level = 6 */
-
-    lw $sp,%gp_rel(interruptstack)($gp) /* MUST be before the reactivation of INTS */
-
-    mtc0 $k0, $12 /* from here on nested INTS are enabled */
 
     /*-BEGIN------- actual INT code to handle -------*/
     addiu $sp, $sp, -16 #
@@ -88,7 +87,7 @@
     /* now we try to get the  stackpointer of the next task to execute */
     addiu $a0, $s7, 0   /* s7 still contains the original stack pointer of the interrupted task */
 /*  addiu $sp, $sp, -16 # balanced with addiu above (area for the called func to store a0-a3) */
-    jal RescheduleIfNeeded 
+    jal RescheduleIfNeeded
     nop
 /*  addiu $sp, $sp, 16 #  avoided because we replace sp in the next instruction */
 

@@ -474,10 +474,10 @@ end if
 <int service routine>
 
 
-Int code steps to optimze properly:
+Int code steps to optimize properly:
 
 -remove redundant s8/fp: DONE
--enable ints earlier for the first level running int (not nested)
+-enable ints earlier for the first level running int (not nested): DONE FOR PROLOGUE
 -use same save sequence (cosmetic only though)
 -allow return boolean from interrupt to indicate if a signal has been set: NOT FEASIBLE
 -avoid usage of extra jumps for the nested case and do not use s7 for the level DONE

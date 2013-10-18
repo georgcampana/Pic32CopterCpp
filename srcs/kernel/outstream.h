@@ -13,8 +13,6 @@
 class OutStream {
     CharStreamDevice& outdevice;
 
-    Char asciibuffer[32]; // should be enough to accomodate long floats number too
-
 public:
     OutStream(CharStreamDevice& serialif);
     ~OutStream();
