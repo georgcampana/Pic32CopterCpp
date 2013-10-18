@@ -142,7 +142,7 @@ void UartManager::setLocalEcho(bool newstate) {
 void UartManager::setupInterrupt() {
 
     // Set Interrupt priorities
-    INTSetVectorPriority((INT_VECTOR)INT_VECTOR_UART(module), INT_PRIORITY_LEVEL_5);
+    INTSetVectorPriority((INT_VECTOR)INT_VECTOR_UART(module), INT_PRIORITY_LEVEL_2);
     INTSetVectorSubPriority((INT_VECTOR)INT_VECTOR_UART(module), INT_SUB_PRIORITY_LEVEL_3);
 
     INTEnable((INT_SOURCE)INT_SOURCE_UART_RX(module), INT_ENABLED);
