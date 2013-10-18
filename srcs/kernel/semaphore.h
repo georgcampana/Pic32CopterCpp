@@ -16,6 +16,8 @@ public:
     bool Obtain(Int32 maxwaitms = -1);
     bool TryObtain();
     void Release();
+
+    Semaphore();
 private:
 
     class WaitingTask : public Node {
@@ -29,6 +31,8 @@ private:
     TaskBase* grantedtask;
     List taskqueue;
 };
+
+inline Semaphore::Semaphore() : Node(Node::NT_SEMAPHORE) {}
 
 inline Semaphore::WaitingTask::WaitingTask(TaskBase* task2queue, SignalPool::SIGNAL sig2use) : taskinqueue(task2queue), tasksignal(sig2use) {}
 inline void Semaphore::WaitingTask::SignalAvailability() { taskinqueue->Signal(tasksignal); }
