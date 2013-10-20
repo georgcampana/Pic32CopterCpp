@@ -26,7 +26,7 @@ bool Semaphore::Obtain(Int32 maxwaitms) {
     // Quick attempt: works in case we get the semaphore
     // otherwise we go for the heavy way (disable and reenable)
 
-    if(HAL::LockTestAndSet((Int32*)grantedtask, (Int32) myself ) == 0) {
+    if(HAL::LockTestAndSet((Int32*)&grantedtask, (Int32) myself ) == 0) {
         return true;
     }
 
@@ -39,17 +39,13 @@ bool Semaphore::Obtain(Int32 maxwaitms) {
         grantedtask = myself;
     }
     else {
-        SignalPool::SIGNAL semsig = myself->tasksignals.Alloc();
-        WaitingTask thistask(myself, semsig);
-        taskqueue.Append(&thistask);
+        TaskBase::WaitingTaskItem* waititem = myself->GetWaitItem();
+        taskqueue.Append(waititem);
 
-        SignalPool::SIGNALMASK arrivedsig =
-                myself->Wait(semsig, maxwaitms); // scheduler might reschedule
+        bool arrivedsig = waititem->Wait(maxwaitms);
+        waititem->RemoveFromList();
 
-        myself->tasksignals.Free(semsig);
-        thistask.RemoveFromList();
-
-        if(arrivedsig != 0) { //no timeout
+        if(arrivedsig) { //no timeout
             grantedtask = myself;
         }
     }
@@ -90,8 +86,8 @@ void Semaphore::Release() {
 
     grantedtask = 0;
     if(!taskqueue.IsEmpty()) {
-        WaitingTask* nextinqueue = (WaitingTask*)taskqueue.GetFirst();
-        nextinqueue->SignalAvailability(); // can potentially reschedule
+        TaskBase::WaitingTaskItem* nextinqueue = (TaskBase::WaitingTaskItem*)taskqueue.GetFirst();
+        nextinqueue->Signal(); // can potentially reschedule
     }
 
     ossafe.Exit();
