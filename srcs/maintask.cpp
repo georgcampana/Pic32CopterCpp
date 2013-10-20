@@ -50,7 +50,11 @@ public:
         priority = TSPRI_NORMAL;
     }
     void OnRun() {
+        testsemaphore.Obtain();
+        dbgout << "Outrun: Semaphore taken\r\n" ;
         Delay(2000);
+        testsemaphore.Release();
+        dbgout << "Outrun: Semaphore released\r\n" ;
         dbgout << "Outrunning task: bye bye\r\n" ;
     }
 
@@ -67,6 +71,18 @@ public:
 
     void OnRun()  {
         UInt32 counter = 0;
+        Delay(200);
+        if(testsemaphore.TryObtain() == true ) {
+            dbgout << "Blinky: Tried worked\r\n" ;
+        }
+        else {
+             dbgout << "Blinky: Tried failed\r\n" ;
+             testsemaphore.Obtain();
+             dbgout << "Blinky: relesed\r\n";
+        }
+
+        dbgout << "Blinky: sem released\r\n" ;
+
         while(1) {
             testled.toggle();
             dbgout << counter++ << " Led toggled\r\n" ;
@@ -101,6 +117,7 @@ void MainTask::OnRun() {
 
     dbgout << "Helloworld\r\n" ;
     dbgout << "Pic32Copter board here\r\n" ;
+    Delay(500);
 
     dbgserial.setLocalEcho(true);
 
