@@ -1,14 +1,26 @@
-/*  interrupt prologue and epilogue
-*
-*   This handles the storing of task / nested ints when a new interrupt is served.
-*   You must indicate the desired int level IDL in the form that is already shifted
-*
-*   level-0 = 0,        level-1 = 0x0400
-*   level-2 = 0x0800,   level-3 = 0x0c00
-*   level-4 = 0x1000,   level-5 = 0x1400
-*   level-6 = 0x1800,   level-7 = 0x1c00 (shadow GPR)
-*
-*/
+/*
+ * Pic32CopterCpp -- A C++ microOS for the PIC32
+ *
+ * Copyright (C) 2012 - 2014, Georg Campana
+ *
+ * Georg Campana <g.campana(AT)stetel.com>
+ *
+ * This program is free software, distributed under the terms of
+ * the GNU General Public License Version 2. See the LICENSE.txt file
+ * at the top of the source tree.
+ *
+ *
+ * interrupt prologue and epilogue
+ *
+ *   This handles the storing of task / nested ints when a new interrupt is served.
+ *   You must indicate the desired int level IDL in the form that is already shifted
+ *
+ *   level-0 = 0,        level-1 = 0x0400
+ *   level-2 = 0x0800,   level-3 = 0x0c00
+ *   level-4 = 0x1000,   level-5 = 0x1400
+ *   level-6 = 0x1800,   level-7 = 0x1c00 (shadow GPR)
+ *
+ */
 
 
 /* macro IntHandler */

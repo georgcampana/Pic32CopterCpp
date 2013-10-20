@@ -1,3 +1,20 @@
+/*
+ * Pic32CopterCpp -- A C++ microOS for the PIC32
+ *
+ * Copyright (C) 2012 - 2014, Georg Campana
+ *
+ * Georg Campana <g.campana(AT)stetel.com>
+ *
+ * This program is free software, distributed under the terms of
+ * the GNU General Public License Version 2. See the LICENSE.txt file
+ * at the top of the source tree.
+ *
+ * File:   outstream.cpp
+ * Author: georg
+ *
+ * Created on 1 settembre 2013, 22.18
+ */
+
 #include "outstream.h"
 
 // let me avoid to include heavy headers
