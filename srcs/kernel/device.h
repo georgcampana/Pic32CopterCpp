@@ -10,7 +10,7 @@
  * at the top of the source tree.
  *
  * File:   device.h
- * Author: gcamp_000
+ * Author: georg
  *
  * Created on 1 settembre 2013, 0.44
  */
@@ -20,15 +20,19 @@
 
 #include "semaphore.h"
 
-class DeviceBase {
+class DeviceBase : Node {
     Int32 opencnt;
 
 public:
 
-    DeviceBase() : opencnt(0)  {}
+    DeviceBase() ;
 
-    virtual bool open() { opencnt++;}
-    virtual void close() { if(opencnt>0) opencnt--;}
+    virtual bool open(Int32 maxms = -1);
+    virtual void close();
+
+protected:
+    bool TaskDefaultWait(TaskBase* taskwillwait, Int32 maxmx = -1);
+    void SignalWaitingTask(TaskBase* taskwillwait1);
 
 };
 
@@ -51,10 +55,11 @@ class SingleAccessDevice : public DeviceBase {
 
 public:
 
-    virtual bool open() { }
-    virtual void close() { }
+    bool open(Int32 maxms = -1);
+    void close();
 
 };
+
 
 #endif	/* DEVICE_H */
 

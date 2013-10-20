@@ -19,8 +19,9 @@
 #define	I2CMANAGER_H
 
 #include "../kernel/system.h"
+#include "../kernel/device.h"
 
-class I2c {
+class I2c : public SingleAccessDevice {
     enum STATUS {
 
         NOT_INIT = 0,
