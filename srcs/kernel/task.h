@@ -31,6 +31,8 @@ class TaskBase : public MsgPort {
     virtual void OnRun();
  protected:
 
+    // System object with access to task internals
+    friend class DeviceBase;
     friend class Semaphore;
     friend class MsgPort;
     friend class Kernel;
@@ -50,7 +52,20 @@ class TaskBase : public MsgPort {
      TS_WAITING,
      TS_DONE
     } status;
+
+    // used to easely wait for sys objects like semaphores, devices etc
+    class WaitingTaskItem : public Node {
+        TaskBase* task2signal;
+     public:
+        WaitingTaskItem(TaskBase* task2signal);
+        void Signal();
+        bool Wait(Int32 maxms=-1 );
+
+    } defaultwaititem;
+
     
+    WaitingTaskItem* GetWaitItem();
+
     enum TaskPri {
         TSPRI_XHIGH = 10,
         TSPRI_HIGH = 5,
@@ -64,6 +79,7 @@ class TaskBase : public MsgPort {
 };
 
 
+inline TaskBase::WaitingTaskItem* TaskBase::GetWaitItem() { return &defaultwaititem; }
 
 template <Int32 S>
 class Task : public TaskBase {

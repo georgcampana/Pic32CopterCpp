@@ -18,7 +18,8 @@
 #include "task.h"
 #include "kernel.h"
 
-TaskBase::TaskBase(char* newstack, Int32 stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack), stacksize(stackdimension), status(TS_NEW) {
+TaskBase::TaskBase(char* newstack, Int32 stackdimension): execstack(newstack), tasksignals(), savedstackpointer(newstack),
+                                                         stacksize(stackdimension), status(TS_NEW), defaultwaititem(this) {
 
     SetTargetTask(this,tasksignals.Alloc()); // init of the msgport
 
@@ -110,4 +111,15 @@ SignalPool::SIGNALMASK TaskBase::Wait(SignalPool::SIGNALMASK sigs2wait, Int32 ma
     return resultsigs;
 }
 
+TaskBase::WaitingTaskItem::WaitingTaskItem(TaskBase* waitingtask) {
+    this->task2signal = waitingtask ;
+}
 
+// true if signal arrived, false in case of timeout
+bool TaskBase::WaitingTaskItem::Wait(Int32 maxms) {
+    return (task2signal->Wait(SignalPool::SYSOBJECT_SIG,maxms) != 0);
+}
+
+void TaskBase::WaitingTaskItem::Signal() {
+    task2signal->Signal(SignalPool::SYSOBJECT_SIG);
+}
