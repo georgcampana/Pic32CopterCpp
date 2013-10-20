@@ -34,8 +34,9 @@ class SignalPool {
     SIGNALMASK CheckWaiting() const;
     void SetWaitingSigs(SIGNALMASK signals2wait);
 
-    static const SIGNAL SYSTIMER_SIG  = 0x00000001; // preallocated signal for the Systimer
-    static const SIGNAL FIRSTFREE_SIG = 0x00000002; // first user available signal
+    static const SIGNAL SYSTIMER_SIG   = 0x00000001; // preallocated signal for the Systimer
+    static const SIGNAL SYSOBJECT_SIG  = 0x00000002; // preallocated signal for sys objects (semaphore, etc)
+    static const SIGNAL FIRSTFREE_SIG  = 0x00000004; // first user available signal
 
  private:
     SIGNALMASK signals_alloc; // allocated signales
@@ -44,7 +45,7 @@ class SignalPool {
 
 };
 
-inline SignalPool::SignalPool() : signals_alloc(SYSTIMER_SIG), signals_set(0) {}
+inline SignalPool::SignalPool() : signals_alloc(SYSTIMER_SIG | SYSOBJECT_SIG), signals_set(0) {}
 
 inline void SignalPool::Set(SIGNAL sigbit) { signals_set |= sigbit; }
 
