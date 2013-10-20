@@ -1,0 +1,26 @@
+Pic32CopterCpp is distributed under the GNU General Public License
+version 2 and is also available under alternative licenses negotiated
+directly with Georg Campana. The GPL (version 2) is included in this
+source tree in the file COPYING.
+
+Georg Campana holds copyright and/or sufficient licenses to all 
+parties of the Pic32CopterCpp project, and therefore can grant,
+at his sole discretion, the ability for companies, individuals,
+or organizations to create proprietary or Open Source (even if not GPL)
+applications or firmwares which may include the portions of 
+Pic32CopterCpp which fall under the copyright/license umbrella, 
+or are distributed under more flexible licenses than GPL.
+
+If you wish to use my code in other GPL programs, there is no 
+requirement that you provide the same exception in your
+GPL'd products..
+
+If you want to use it instead for any commercial, not GPL'd, product
+then please contact me:
+
+
+Georg Campana
+
+g.campana(AT)stetel.com
++39 0586 275021
+
