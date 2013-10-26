@@ -16,6 +16,7 @@
  */
 
 #include "i2cmanager.h"
+#include "../kernel/kernel.h"
 
 #include <p32xxxx.h>
 #include <plib.h>
@@ -27,7 +28,9 @@ I2c* i2c2_ref;
 extern "C" {
 #endif
 
-void __ISR(_I2C_1_VECTOR, ipl5) I2c1InterruptServiceRoutine(void)
+void
+// __ISR(_I2C_1_VECTOR, ipl5)
+I2c1IntService(void)
 {
     i2c1_ref->handleInterrupt();
 }
@@ -199,6 +202,10 @@ void I2c::handleInterrupt() {
             if(listener2notify!=NULL) {
                 listener2notify->TransferCompleted(errortype, datalen);
             }
+            if(waitingtask!=NULL) {
+                SignalWaitingTask(waitingtask);
+                waitingtask = NULL;
+            }
             break;
         }
 
@@ -234,6 +241,13 @@ void I2c::handleInterrupt() {
             break;
     }
 
+    if(buserror) {
+        if(waitingtask!=NULL) {
+            SignalWaitingTask(waitingtask);
+            waitingtask = NULL;
+        }
+    }
+
     return;
 }
 
@@ -262,6 +276,7 @@ I2c::I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq) {
     currentstatus = NOT_INIT;
     buserror = false;
     listener2notify = NULL;
+    waitingtask = NULL;
 
     if(mod == I2C1) {
         i2c1_ref = this;
@@ -290,7 +305,7 @@ bool I2c::StartWriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value, E
 }
 
 bool I2c::StartReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest, EventListener* listener) {
-    if(isBusy()) return true; // not ready
+    if(isBusy()) return true; // not ready = error
 
     resetAnyBusError();
     currentschema = READ_REG;
@@ -339,23 +354,36 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
 
 bool I2c::ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
     StartReadByteFromReg(devaddress, regaddress, valuedest);
-    while(isBusy() && buserror==false);
+
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+
     return buserror;
 }
 bool I2c::WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value){
     StartWriteByteToReg(devaddress, regaddress, value);
-    while(isBusy() && buserror==false);
+
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+
     return buserror;
 }
 
 bool I2c::ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
     StartReadFromReg(devaddress, regaddress, len, valuesdest);
-    while(isBusy() && buserror==false);
+
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+
     return buserror;
 }
 
 bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values){
     StartWriteToReg(devaddreess, regaddress, len, values);
-    while(isBusy() && buserror==false);
+
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+
     return buserror;
 }
+

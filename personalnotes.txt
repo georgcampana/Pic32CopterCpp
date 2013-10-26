@@ -482,3 +482,10 @@ Int code steps to optimize properly:
 -allow return boolean from interrupt to indicate if a signal has been set: NOT FEASIBLE
 -avoid usage of extra jumps for the nested case and do not use s7 for the level DONE
 -add / rem extra sp space for the called routine directly from the save/restore code:DONE
+
+Next steps:
+
+transform the I2CDriver into a SingleAccesDevice
+port of the invensense code to C++ into a device driver
+pwm driver
+set volatile on variables, structures which are shared between: different tasks and interrupts

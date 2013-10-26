@@ -38,7 +38,7 @@ class TaskBase : public MsgPort {
     friend class Kernel;
 
     SignalPool::SIGNALMASK Wait(SignalPool::SIGNALMASK sigs2wait, Int32 maxms=-1 );
-    void Delay(Int32 waitms);
+        void Delay(Int32 waitms);
 
     char* execstack;
     SignalPool tasksignals;

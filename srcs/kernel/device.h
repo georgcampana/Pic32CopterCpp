@@ -53,7 +53,9 @@ public:
 class SingleAccessDevice : public DeviceBase {
     Semaphore access;
 
+    TaskBase* waitingtask;
 public:
+    SingleAccessDevice() : waitingtask(NULL){}
 
     bool open(Int32 maxms = -1);
     void close();

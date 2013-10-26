@@ -86,6 +86,8 @@ class Kernel {
      static void InterruptEpilogue();
      static void RecheduleIfPending();
 
+     static void DelayCurrentTask(Int32 waitms);
+
      static void InitAndStartMainTask(TaskBase* firsttask);
      
      static class Epilogue : public HAL::IntEpilogue {
@@ -130,6 +132,9 @@ inline bool Kernel::InterruptRunning() { return HAL::InterruptRunning() ;}
 inline void Kernel::SetReschedulePending() { reschedulepending = true; }
 inline void Kernel::InterruptEpilogue() {if(reschedulepending) Reschedule(); }
 inline void Kernel::RecheduleIfPending() {if(reschedulepending) Reschedule(); }
+
+inline void Kernel::DelayCurrentTask(Int32 waitms) {runningnow->Delay(waitms) ; }
+
 
 inline Char* Kernel::getCurrentSavedSP() { return runningnow->savedstackpointer; }
 inline void Kernel::setCurrentSavedSP(Char* stackpointer) {  runningnow->savedstackpointer = stackpointer; }
