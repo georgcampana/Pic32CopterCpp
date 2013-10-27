@@ -25,14 +25,17 @@
 
 #include "driver/digitaliomanager.h"
 #include "driver/uartmanager.h"
+#include "driver/i2cmanager.h"
 
 MainTask parenttask;
 
 // led present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
-UartManager dbgserial(UART1,115200);
+UartManager dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
+
+I2c chipbus(I2C1, 50000);
 
 class ProtectedResource : public Semaphore {
     Int32 counter;
@@ -78,7 +81,7 @@ public:
         else {
              dbgout << "Blinky: Tried failed\r\n" ;
              testsemaphore.Obtain();
-             dbgout << "Blinky: relesed\r\n";
+             dbgout << "Blinky: released\r\n";
         }
 
         dbgout << "Blinky: sem released\r\n" ;
@@ -125,6 +128,14 @@ void MainTask::OnRun() {
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
+    UInt8 tmp = 0xee;
+    if(chipbus.open()) {
+        chipbus.ReadByteFromReg( 0x68, 0x75 , &tmp ); // MPU-6050 whoami
+        dbgout << "Whoami of the MPU 6050 is: "  << tmp << "\r\n";
+        chipbus.close();
+    }
+
+    
     while(1) {
         Delay(43);
         System::dbgcounter++;

@@ -30,7 +30,7 @@ class MPU_9150 : public SingleAccessDevice {
 
     UINT8 tempworkbuffer[128];
 
-    // State machine for interrupt trasfers using the i2c
+    // State machine for interrupt transfers using the i2c
     enum I2cStateMachine {
         I2C_NONE = 0,
         I2C_CTRL_READ,
@@ -43,11 +43,17 @@ class MPU_9150 : public SingleAccessDevice {
     } i2ctrans;
     // used across i2c transfers
     UINT8 tmpregvalue;
+
+    bool dmp_enabled;
+    bool half_sensitivity;
   public:
 
     MPU_9150(I2c& busmanager, UINT8 busaddress = MPU9150_DEFAULT_ADDRESS );
     bool Init();
 
+  protected:
+    bool Reset();
+    bool checkChipVersion();
 };
 
 

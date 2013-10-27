@@ -106,7 +106,7 @@ private:
     void handleInterrupt();
 
     //constructor
-    I2c(I2C_MODULE mod, UINT32 perif_freq, UINT32 i2c_freq);
+    I2c(I2C_MODULE mod, UINT32 i2c_freq);
 
     BusError getErrorType();
     UINT16 getRemainingBytes();
