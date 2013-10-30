@@ -51,7 +51,7 @@ public:
 };
 
 class SingleAccessDevice : public DeviceBase {
-    Semaphore access;
+    NestableSemaphore access;
 
     TaskBase* waitingtask;
 public:

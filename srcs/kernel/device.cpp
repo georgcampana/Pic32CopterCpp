@@ -32,10 +32,10 @@ void DeviceBase::SignalWaitingTask(TaskBase* waitingtask) {
 }
 
 bool SingleAccessDevice::open(Int32 maxms) {
-    return access.Obtain(maxms);
+    return access.ObtainNested(maxms);
 }
 
 void SingleAccessDevice::close() {
-    access.Release();
+    access.ReleaseNested();
 }
 

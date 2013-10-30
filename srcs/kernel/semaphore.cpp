@@ -92,3 +92,41 @@ void Semaphore::Release() {
 
     ossafe.Exit();
 }
+
+
+
+bool NestableSemaphore::ObtainNested(Int32 maxwaitms) {
+    TaskBase* myself = Kernel::GetRunningTask();
+
+    if(myself == grantedtask) {
+        nestingcounter++ ;
+        return true;
+    }
+
+    if(Obtain(maxwaitms)) {
+        nestingcounter++ ;
+        return true;
+    }
+    return false;
+}
+
+bool NestableSemaphore::TryObtainNested() {
+    TaskBase* myself = Kernel::GetRunningTask();
+
+    if(myself == grantedtask) {
+        nestingcounter++ ;
+        return true;
+    }
+
+    if(TryObtain()) {
+        nestingcounter++ ;
+        return true;
+    }
+    return false;
+}
+
+void NestableSemaphore::ReleaseNested() {
+    if(--nestingcounter == 0) {
+        Release();
+    }
+}

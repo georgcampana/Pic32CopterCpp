@@ -28,13 +28,27 @@ public:
     void Release();
 
     Semaphore();
-private:
+protected:
 
     TaskBase* grantedtask;
     List taskqueue;
 };
 
-inline Semaphore::Semaphore() : Node(Node::NT_SEMAPHORE) {}
+inline Semaphore::Semaphore() : Node(Node::NT_SEMAPHORE), grantedtask(NULL) {}
+
+class NestableSemaphore : Semaphore {
+   UInt32 nestingcounter;
+public:
+   NestableSemaphore();
+   bool ObtainNested(Int32 maxwaitms = -1);
+   bool TryObtainNested();
+   void ReleaseNested();
+
+};
+
+inline NestableSemaphore::NestableSemaphore() : nestingcounter(0) {}
+
+
 
 #endif	/* SEMAPHORE_H */
 
