@@ -50,25 +50,18 @@ enum MPU9150_REGS
 #       define MPUREG_CONFIG_EXT_SYNC_GYROZ                     0x20
 #       define MPUREG_CONFIG_EXT_SYNC_ACCX                      0x28
 #       define MPUREG_CONFIG_EXT_SYNC_ACCY                      0x30
-#       define MPUREG_CONFIG_EXT_SYNC_ACCZ                      0x38
-#       define MPUREG_CONFIG_DLPF_MASK                          0x07
-#       define MPUREG_CONFIG_DLPF_BW_256                        0x00
-#       define MPUREG_CONFIG_DLPF_BW_188                        0x01
-#       define MPUREG_CONFIG_DLPF_BW_98                         0x02
-#       define MPUREG_CONFIG_DLPF_BW_42                         0x03
-#       define MPUREG_CONFIG_DLPF_BW_20                         0x04
-#       define MPUREG_CONFIG_DLPF_BW_10                         0x05
-#       define MPUREG_CONFIG_DLPF_BW_5                          0x06
+#       define MPUREG_CONFIG_EXT_SYNC_ACCZ                      0x38                        0x07
+// see public enum for Digital low pass filter
     MPU9150_RA_GYRO_CONFIG      =0x1B,
-#       define BITS_GYRO_FS_250DPS                              0x00
-#       define BITS_GYRO_FS_500DPS                              0x08
-#       define BITS_GYRO_FS_1000DPS                             0x10
-#       define BITS_GYRO_FS_2000DPS                             0x18
-#       define BITS_GYRO_FS_MASK                                0x18    // only bits 3 and 4 are used for gyro full scale so use this to mask off other bits
+// see public enum for Gyro FSR
 #       define BITS_GYRO_ZGYRO_SELFTEST                         0x20
 #       define BITS_GYRO_YGYRO_SELFTEST                         0x40
 #       define BITS_GYRO_XGYRO_SELFTEST                         0x80
     MPU9150_RA_ACCEL_CONFIG     =0x1C,
+// see public enum for Accell FSR
+#       define BITS_ACCEL_ZACCEL_SELFTEST                         0x20
+#       define BITS_ACCEL_YACCEL_SELFTEST                         0x40
+#       define BITS_ACCEL_XACCEL_SELFTEST                         0x80
     MPU9150_RA_FF_THR           =0x1D,
     MPU9150_RA_FF_DUR           =0x1E,
     MPU9150_RA_MOT_THR          =0x1F,

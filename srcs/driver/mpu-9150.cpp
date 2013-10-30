@@ -45,3 +45,26 @@ bool MPU_9150::checkChipVersion() {
         }
     }
 }
+
+bool MPU_9150::SetGyroFullscale(GYRO_FSR fsvalue) {
+   return i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_GYRO_CONFIG, (UInt8)fsvalue);
+}
+
+bool MPU_9150::SetAccelFullScale(ACCEL_FSR fsvalue) {
+    return i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_ACCEL_CONFIG, (UInt8)fsvalue);
+}
+
+bool MPU_9150::SetLowPassFilter(LOW_PASS_FILTER filtervalue) {
+    UInt8 regvalue = (UInt8)filtervalue;
+
+    // TODO: consider sync flags to "or" bitwise
+    return i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_GYRO_CONFIG, regvalue);
+}
+
+bool MPU_9150::SetSampleRate(UInt16 desiredrate) {
+
+}
+
+bool MPU_9150::ConfigFifoData(UInt32 bitmask) {
+
+}
