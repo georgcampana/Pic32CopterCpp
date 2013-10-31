@@ -91,7 +91,7 @@ private:
 
   protected:
     bool Reset();
-    bool checkChipVersion();
+    bool CheckChipVersion();
     bool SetGyroFullscale(GYRO_FSR fsvalue);
     bool SetAccelFullScale(ACCEL_FSR fsvalue);
     bool SetLowPassFilter(LOW_PASS_FILTER filtervalue);

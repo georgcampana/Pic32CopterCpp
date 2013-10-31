@@ -26,6 +26,7 @@
 #include "driver/digitaliomanager.h"
 #include "driver/uartmanager.h"
 #include "driver/i2cmanager.h"
+#include "driver/mpu-9150.h"
 
 MainTask parenttask;
 
@@ -36,6 +37,7 @@ UartManager dbgserial(UART1, 115200);
 OutStream dbgout(dbgserial);
 
 I2c chipbus(I2C1, 50000);
+MPU_9150 motionsensor(chipbus);
 
 class ProtectedResource : public Semaphore {
     Int32 counter;
@@ -128,18 +130,13 @@ void MainTask::OnRun() {
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
-    UInt8 tmp = 0xee;
-    if(chipbus.open()) {
-        chipbus.ReadByteFromReg( 0x68, 0x75 , &tmp ); // MPU-6050 whoami
-        dbgout << "Whoami of the MPU 6050 is: "  << tmp << "\r\n";
-        chipbus.close();
-    }
+    motionsensor.Init();
 
     
     while(1) {
         Delay(43);
         System::dbgcounter++;
-        dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
+        //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }
 
 }
