@@ -81,6 +81,7 @@ private:
     UINT8 tmpregvalue;
 
     bool dmp_enabled;
+    bool fifo_enabled;
     bool half_sensitivity;
     LOW_PASS_FILTER current_dlpf;
 
@@ -89,6 +90,14 @@ private:
     MPU_9150(I2c& busmanager, UINT8 busaddress = MPU9150_DEFAULT_ADDRESS );
     bool Init();
 
+    bool SetFifoDest();
+
+    bool EnableFifo();
+    bool DisableFifo();
+    bool EnableDmp();
+    bool DisableDmp();
+
+
   protected:
     bool Reset();
     bool CheckChipVersion();
@@ -96,7 +105,13 @@ private:
     bool SetAccelFullScale(ACCEL_FSR fsvalue);
     bool SetLowPassFilter(LOW_PASS_FILTER filtervalue);
     bool SetSampleRate(UInt16 desiredrate);
-    bool ConfigFifoData(UInt32 bitmask);
+    bool ConfigFifoData(UInt8 bitmask);
+
+    bool ReadFromFifo(UInt8* destbuffer, UInt8 len);
+
+    bool PushDmpFirmware();
+
+
 
 };
 

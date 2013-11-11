@@ -485,7 +485,52 @@ Int code steps to optimize properly:
 
 Next steps:
 
-transform the I2CDriver into a SingleAccesDevice
-port of the invensense code to C++ into a device driver
+transform the I2CDriver into a SingleAccesDevice: Done
+port of the invensense code to C++ into a device driver: in progress
 pwm driver
 set volatile on variables, structures which are shared between: different tasks and interrupts
+
+Notes about the invensense driver
+
+Gyro & Accell (& Compass) switched on
+Sample rate = 50 Hz
+digital low filter = 42 Hz
+low power = no
+Dmp settato solo per DMP_FEATURE_6X_LP_QUAT
+
+DmpFifoPacket:
+
+3AXIS or 6AXIS:
+4 Quat0
+4 Quat1
+4 Quat2
+4 Quat3
+
+ACCEL
+2 AxisX
+2 AxisY
+2 AxisZ
+
+GYRO
+2 GyroX
+2 GyroY
+2 GyroZ
+
+TAP&ORIENT
+4 Gestures
+
+MpuFifoPacket
+
+ACCEL
+2 AxisX
+2 AxisY
+2 AxisZ
+
+TEMP
+2 Temperature
+
+GYRO
+2 GyroX
+2 GyroY
+2 GyroZ
+

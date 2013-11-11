@@ -6,8 +6,7 @@
 MPU_9150::MPU_9150(I2c& busmanager, UINT8 busaddress ) :
                         i2cmanager(busmanager), i2caddr(busaddress),
                         half_sensitivity(false), dmp_enabled(false),
-                        current_dlpf(CONFIG_DLPF_BW_256) {
-    
+                        fifo_enabled(false), current_dlpf(CONFIG_DLPF_BW_256) {
     
 }
 
@@ -28,6 +27,15 @@ bool MPU_9150::Init() {
     if(dmp_enabled == false) {
         if(ConfigFifoData(0)) return true;
     }
+    else {
+        if(ConfigFifoData( BITS_FIFO_EN_TEMP  | BITS_FIFO_EN_ACCEL | BITS_FIFO_EN_GYROZ |
+                           BITS_FIFO_EN_GYROY | BITS_FIFO_EN_GYROX )) return true;
+    }
+
+
+
+
+    return false; // everything went ok
 }
 
 
@@ -37,8 +45,8 @@ bool MPU_9150::Reset() {
     Kernel::DelayCurrentTask(100);
     if(error) return error;
 
-    // wake up
-    error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_PWR_MGMT_1, 0x00);
+    // wake up and set clock source to be the gyro
+    error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_PWR_MGMT_1, 0x00 | BIT_PWR_MGMT_1_CLK_XGYRO);
 
     return error;
 }
@@ -113,10 +121,43 @@ bool MPU_9150::SetSampleRate(UInt16 desiredrate) {
     return i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_SMPLRT_DIV, regvalue);
 }
 
-bool MPU_9150::ConfigFifoData(UInt32 bitmask) {
+bool MPU_9150::ConfigFifoData(UInt8 bitmask) {
 
-    if(dmp_enabled) return true; // fifo is filled by dmp not by mpu
+    // if dmp is on this should be 0 because fifo is filled by dmp not by mpu
 
 
+    return i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_FIFO_EN, bitmask);
 
+
+}
+
+bool MPU_9150::EnableFifo() {
+
+    bool error = false;
+
+    if(dmp_enabled) {
+        error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_USER_CTRL, BIT_USER_CTRL_DMP_EN);
+    }
+    else {
+        error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_USER_CTRL, BIT_USER_CTRL_FIFO_EN);
+    }
+
+    if(error == false) {
+        fifo_enabled = true;
+    }
+
+    return error;
+}
+
+bool MPU_9150::DisableFifo() {
+
+    // disable dmp and fifo
+    bool error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_USER_CTRL, 0x00);
+
+    if(error == false) {
+        // dmp flag controlled by the other methods
+        fifo_enabled = false;
+    }
+
+    return error;
 }

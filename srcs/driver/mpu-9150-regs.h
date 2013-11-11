@@ -69,6 +69,14 @@ enum MPU9150_REGS
     MPU9150_RA_ZRMOT_THR        =0x21,
     MPU9150_RA_ZRMOT_DUR        =0x22,
     MPU9150_RA_FIFO_EN          =0x23,
+#       define BITS_FIFO_EN_SLAVE0                              0x01
+#       define BITS_FIFO_EN_SLAVE1                              0x02
+#       define BITS_FIFO_EN_SLAVE2                              0x04
+#       define BITS_FIFO_EN_ACCEL                               0x08
+#       define BITS_FIFO_EN_GYROZ                               0x10
+#       define BITS_FIFO_EN_GYROY                               0x20
+#       define BITS_FIFO_EN_GYROX                               0x40
+#       define BITS_FIFO_EN_TEMP                                0x80
     MPU9150_RA_I2C_MST_CTRL     =0x24,
     MPU9150_RA_I2C_SLV0_ADDR    =0x25,
     MPU9150_RA_I2C_SLV0_REG     =0x26,
