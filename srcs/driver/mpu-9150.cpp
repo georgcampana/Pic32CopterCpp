@@ -6,7 +6,8 @@
 MPU_9150::MPU_9150(I2c& busmanager, UINT8 busaddress ) :
                         i2cmanager(busmanager), i2caddr(busaddress),
                         half_sensitivity(false), dmp_enabled(false),
-                        fifo_enabled(false), current_dlpf(CONFIG_DLPF_BW_256) {
+                        fifo_enabled(false), current_dlpf(CONFIG_DLPF_BW_256),
+                        mpudest(NULL), dmpdest(NULL) {
     
 }
 
@@ -161,3 +162,84 @@ bool MPU_9150::DisableFifo() {
 
     return error;
 }
+
+bool MPU_9150::SetFifoDest(MpuFifoPacket* dest) {
+    mpudest = dest;
+}
+
+bool MPU_9150::SetFifoDest(DmpFifoPacket* dest) {
+    dmpdest = dest;
+}
+
+
+bool MPU_9150::GetNextPacket() {
+    UInt16 currentlen;
+    
+    if(ReadFifoLength(&currentlen)) return true; // error reading
+
+    if(dmp_enabled && dmpdest != NULL) {
+        if(currentlen < DmpFifoPacket::FifoPktLength) {
+            return true; // no enough data should never happen if interrupt based
+        }
+        UInt8 buff[DmpFifoPacket::FifoPktLength];
+        if( i2cmanager.ReadFromReg(i2caddr, MPU9150_RA_FIFO_R_W,
+                                   DmpFifoPacket::FifoPktLength, buff)) {
+            return true;
+        }
+        dmpdest->Quaternion1 = buff[0]<<24  | buff[1] << 16  | buff[2]<<8  | buff[3];
+        dmpdest->Quaternion2 = buff[4]<<24  | buff[5] << 16  | buff[6]<<8  | buff[7];
+        dmpdest->Quaternion3 = buff[8]<<24  | buff[9] << 16  | buff[10]<<8 | buff[11];
+        dmpdest->Quaternion4 = buff[12]<<24 | buff[13] << 16 | buff[14]<<8 | buff[15];
+        dmpdest->AccelX = buff[16]<<16 | buff[19];
+        dmpdest->AccelY = buff[18]<<16 | buff[21];
+        dmpdest->AccelZ = buff[20]<<16 | buff[23];
+        dmpdest->GyroX = buff[22]<<16 | buff[25];
+        dmpdest->GyroY = buff[24]<<16 | buff[27];
+        dmpdest->GyroZ = buff[26]<<16 | buff[29];
+
+        dmpdest-> = SysTimer::GetNowMillisecs();
+    }
+    else
+    if(mpudest != NULL) {
+        if(currentlen < MpuFifoPacket::FifoPktLength) {
+            return true; // no enough data should never happen if interrupt based
+        }
+        UInt8 buff[MpuFifoPacket::FifoPktLength];
+        if( i2cmanager.ReadFromReg(i2caddr, MPU9150_RA_FIFO_R_W,
+                                   MpuFifoPacket::FifoPktLength, buff)) {
+            return true;
+        }
+        mpudest->AccelX = buff[0]<<16 | buff[1];
+        mpudest->AccelY = buff[2]<<16 | buff[3];
+        mpudest->AccelZ = buff[4]<<16 | buff[5];
+        mpudest->Temp   = buff[6]<<16 | buff[7];
+        mpudest->GyroX = buff[8]<<16 | buff[9];
+        mpudest->GyroY = buff[10]<<16 | buff[11]; 
+        mpudest->GyroZ = buff[12]<<16 | buff[13];
+
+        mpudest-> = SysTimer::GetNowMillisecs();
+    }
+
+    
+    return false;
+
+}
+
+bool MPU_9150::ReadFifoLength(UInt16* len) {
+    *len = 0;
+    UInt8 tmp[2];
+    // we read FifoLen High and then Low
+    bool error = i2cmanager.ReadFromReg(i2caddr, MPU9150_RA_FIFO_COUNTH, 2, tmp);
+    if(error) return error;
+
+    *len = ((tmp[0]<<8) | tmp[1]);
+
+    return false;
+}
+
+
+bool MPU_9150::PushDmpFirmware()  {
+
+
+}
+

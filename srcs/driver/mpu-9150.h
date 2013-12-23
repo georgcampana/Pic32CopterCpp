@@ -15,6 +15,28 @@
 class MPU_9150 : public SingleAccessDevice {
 
 public:
+    
+    class FifoPacket {
+     public:
+        UInt32 timestamp_ms;
+        Int16 AccelX, AccelY, AccelZ;
+        Int16 GyroX, GyroY, GyroZ;
+    };
+
+    // includes temperature
+    class MpuFifoPacket : public FifoPacket {
+      public:
+          Int16 Temp;
+
+          const static UInt16 FifoPktLength = (2+2+2 +2+2+2 +2); // Accelx,y,z Gyrox,y,z, Temp
+    };
+
+    class DmpFifoPacket : public FifoPacket  {
+      public:
+          Int32 Quaternion1, Quaternion2, Quaternion3, Quaternion4;
+
+          const static UInt16 FifoPktLength = (2+2+2 +2+2+2 +4+4+4); // inc quaternion
+    };
 
     enum MPU9150_I2C_ADDR  {
         MPU9150_ADDRESS_AD0_LOW = 0x68,
@@ -84,18 +106,23 @@ private:
     bool fifo_enabled;
     bool half_sensitivity;
     LOW_PASS_FILTER current_dlpf;
+    MpuFifoPacket* mpudest;
+    DmpFifoPacket* dmpdest;
 
   public:
 
     MPU_9150(I2c& busmanager, UINT8 busaddress = MPU9150_DEFAULT_ADDRESS );
     bool Init();
 
-    bool SetFifoDest();
+    bool SetFifoDest(MpuFifoPacket* dest);
+    bool SetFifoDest(DmpFifoPacket* dest);
 
     bool EnableFifo();
     bool DisableFifo();
     bool EnableDmp();
     bool DisableDmp();
+
+    bool GetNextPacket();
 
 
   protected:
@@ -108,6 +135,7 @@ private:
     bool ConfigFifoData(UInt8 bitmask);
 
     bool ReadFromFifo(UInt8* destbuffer, UInt8 len);
+    bool ReadFifoLength(UInt16* len);
 
     bool PushDmpFirmware();
 
