@@ -61,6 +61,10 @@ void SysTimer::CancelAlarm(AlarmItem* item2cancel) {
     item2cancel->RemoveFromList();
 }
 
+UInt32 SysTimer::GetNowMillisecs(UInt32* now_us) {
+    return HAL::ConvertTicks2Time(HAL::GetCurrentTicks(), now_us);
+}
+
 void SysTimer::Start() {
     HAL::SetAlarmHandler(&alarmhandler); // this is where we will get the alarms
 
@@ -91,6 +95,9 @@ bool SysTimer::Alarm::HandleAlarm() {
     }
     return true;
 }
+
+
+
 
 // *********************KERNEL **********************
 

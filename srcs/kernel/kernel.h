@@ -49,7 +49,7 @@ class SysTimer {
      
     static void AddAlarm(AlarmItem* item2queue, Int32 ms, Int32 us=0);
     static void CancelAlarm(AlarmItem* item2cancel);
-    static HAL::TICKS GetNowTicks();
+    static UInt32 GetNowMillisecs(UInt32* now_us=NULL);
     static void Start();
      
 private:

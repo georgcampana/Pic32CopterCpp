@@ -67,6 +67,7 @@ public:
     static void SetNextAlarm(TICKS alarmticks);
     static void ResetTickTimer();
     static TICKS ConvertTime2Ticks(UInt32 ms, UInt32 us=0);
+    static UInt32 ConvertTicks2Time(TICKS ticks2convert, UInt32* out_us=NULL);
 
     static void Init();
     static void SetAlarmHandler(TimerAlarm* handler);
@@ -147,6 +148,14 @@ inline void HAL::ResetTickTimer() {
 
 inline HAL::TICKS HAL::ConvertTime2Ticks(UInt32 ms, UInt32 us) {
     return HAL::TICKS ((ms*TICKS_PER_MS) + (us*TICKS_PER_US));
+}
+
+inline UInt32 HAL::ConvertTicks2Time(HAL::TICKS ticks2convert, UInt32* out_us) {
+    UInt32 ms = ticks2convert / TICKS_PER_MS;
+    if(out_us) {
+        *out_us = (ticks2convert-(ms*TICKS_PER_MS)) % TICKS_PER_US ;
+    }
+    return ms;
 }
 
 inline void HAL::SetAlarmHandler(HAL::TimerAlarm* handler) {
