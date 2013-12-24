@@ -114,8 +114,8 @@ private:
     MPU_9150(I2c& busmanager, UINT8 busaddress = MPU9150_DEFAULT_ADDRESS );
     bool Init();
 
-    bool SetFifoDest(MpuFifoPacket* dest);
-    bool SetFifoDest(DmpFifoPacket* dest);
+    void SetFifoDest(MpuFifoPacket* dest);
+    void SetFifoDest(DmpFifoPacket* dest);
 
     bool EnableFifo();
     bool DisableFifo();
@@ -124,6 +124,7 @@ private:
 
     bool GetNextPacket();
 
+    bool ReadFifoLength(UInt16* len);
 
   protected:
     bool Reset();
@@ -135,7 +136,7 @@ private:
     bool ConfigFifoData(UInt8 bitmask);
 
     bool ReadFromFifo(UInt8* destbuffer, UInt8 len);
-    bool ReadFifoLength(UInt16* len);
+
 
     bool PushDmpFirmware();
 

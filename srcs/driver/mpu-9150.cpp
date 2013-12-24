@@ -25,7 +25,7 @@ bool MPU_9150::Init() {
 
     if(SetSampleRate(100))return true;
 
-    if(dmp_enabled == false) {
+    if(dmp_enabled == true) {
         if(ConfigFifoData(0)) return true;
     }
     else {
@@ -62,7 +62,7 @@ bool MPU_9150::CheckChipVersion() {
     UInt8 revision = ((tmp[5] & 0x01) << 2) | ((tmp[3] & 0x01) << 1) | (tmp[1] & 0x01);
 
     if(revision == 0) {
-        bool error = i2cmanager.ReadByteFromReg(i2caddr, MPU9150_RA_XA_OFFS_H, tmp);
+        error = i2cmanager.ReadByteFromReg(i2caddr, MPU9150_RA_XA_OFFS_H, tmp);
         if(error) return error;
         revision = tmp[0] & 0x0F;
         if(revision==0) {
@@ -81,6 +81,8 @@ bool MPU_9150::CheckChipVersion() {
             }
         }
     }
+
+    return error;
 }
 
 bool MPU_9150::SetGyroFullscale(GYRO_FSR fsvalue) {
@@ -163,11 +165,11 @@ bool MPU_9150::DisableFifo() {
     return error;
 }
 
-bool MPU_9150::SetFifoDest(MpuFifoPacket* dest) {
+void MPU_9150::SetFifoDest(MpuFifoPacket* dest) {
     mpudest = dest;
 }
 
-bool MPU_9150::SetFifoDest(DmpFifoPacket* dest) {
+void MPU_9150::SetFifoDest(DmpFifoPacket* dest) {
     dmpdest = dest;
 }
 
@@ -197,10 +199,10 @@ bool MPU_9150::GetNextPacket() {
         dmpdest->GyroY = buff[24]<<16 | buff[27];
         dmpdest->GyroZ = buff[26]<<16 | buff[29];
 
-        dmpdest-> = SysTimer::GetNowMillisecs();
+        dmpdest->timestamp_ms = SysTimer::GetNowMillisecs();
     }
     else
-    if(mpudest != NULL) {
+    if(!dmp_enabled && mpudest != NULL) {
         if(currentlen < MpuFifoPacket::FifoPktLength) {
             return true; // no enough data should never happen if interrupt based
         }
@@ -217,7 +219,7 @@ bool MPU_9150::GetNextPacket() {
         mpudest->GyroY = buff[10]<<16 | buff[11]; 
         mpudest->GyroZ = buff[12]<<16 | buff[13];
 
-        mpudest-> = SysTimer::GetNowMillisecs();
+        mpudest->timestamp_ms = SysTimer::GetNowMillisecs();
     }
 
     

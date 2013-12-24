@@ -118,6 +118,8 @@ public:
 } blinker3;
 
 
+MPU_9150::MpuFifoPacket pkt;
+
 void MainTask::OnRun() {
 
     dbgout << "Helloworld\r\n" ;
@@ -132,9 +134,32 @@ void MainTask::OnRun() {
 
     motionsensor.Init();
 
-    
+
+    bool mpuerror=false;
+    motionsensor.SetFifoDest(&pkt);
+    if(!mpuerror) mpuerror = motionsensor.EnableFifo();
+
     while(1) {
-        Delay(43);
+
+        UInt16 len = 0xeeee;
+        if(!mpuerror) mpuerror = motionsensor.ReadFifoLength(&len);
+
+        if(!mpuerror && len > 0)
+        {
+            mpuerror = motionsensor.GetNextPacket();
+
+        
+            if(mpuerror == false) {
+                dbgout << "len:" ;
+                dbgout << (Int32)len ;
+                dbgout << " temp:" ;
+                dbgout << (Int32)pkt.Temp ;
+                dbgout << "\r\n";
+            }
+        }
+        mpuerror = false; // for the next cycle :)
+        
+        Delay(5);
         System::dbgcounter++;
         //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }
