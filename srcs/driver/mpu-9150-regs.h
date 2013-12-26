@@ -50,7 +50,7 @@ enum MPU9150_REGS
 #       define MPUREG_CONFIG_EXT_SYNC_GYROZ                     0x20
 #       define MPUREG_CONFIG_EXT_SYNC_ACCX                      0x28
 #       define MPUREG_CONFIG_EXT_SYNC_ACCY                      0x30
-#       define MPUREG_CONFIG_EXT_SYNC_ACCZ                      0x38                        0x07
+#       define MPUREG_CONFIG_EXT_SYNC_ACCZ                      0x38
 // see public enum for Digital low pass filter
     MPU9150_RA_GYRO_CONFIG      =0x1B,
 // see public enum for Gyro FSR
