@@ -29,6 +29,7 @@ public:
           Int16 Temp;
 
           const static UInt16 FifoPktLength = (2+2+2 +2+2+2 +2); // Accelx,y,z Gyrox,y,z, Temp
+          //Int32 GetCelsiusIntegerX10() { return (Temp/34 +350); };
     };
 
     class DmpFifoPacket : public FifoPacket  {
