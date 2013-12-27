@@ -142,24 +142,30 @@ void MainTask::OnRun() {
     while(1) {
 
         UInt16 len = 0xeeee;
-        if(!mpuerror) mpuerror = motionsensor.ReadFifoLength(&len);
+        if(!mpuerror) {
+            mpuerror = motionsensor.ReadFifoLength(&len);
+            dbgout << "len:" ;
+            dbgout << (Int32)len ;
+        }
 
-        if(!mpuerror && len > 0)
+        if(!mpuerror && len >= MPU_9150::MpuFifoPacket::FifoPktLength)
         {
             mpuerror = motionsensor.GetNextPacket();
 
         
             if(mpuerror == false) {
-                dbgout << "len:" ;
-                dbgout << (Int32)len ;
-                dbgout << " temp:" ;
-                dbgout << (Int32)pkt.Temp ;
+                dbgout << " AccelZ:" ;
+                //dbgout << (Int32)(pkt.Temp/34 + 350) ; // Note Celsius = HwTemp/340+35
+                dbgout << (Int32)pkt.AccelZ;
                 dbgout << "\r\n";
             }
         }
-        mpuerror = false; // for the next cycle :)
-        
-        Delay(5);
+
+        if(mpuerror) {
+          dbgout << "mpuerror was true :(\r\n";
+        }
+
+        Delay(20);
         System::dbgcounter++;
         //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }

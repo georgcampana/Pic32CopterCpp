@@ -23,7 +23,7 @@ bool MPU_9150::Init() {
 
     if(SetLowPassFilter(CONFIG_DLPF_BW_98))return true ;
 
-    if(SetSampleRate(100))return true;
+    if(SetSampleRate(25))return true;
 
     if(dmp_enabled == true) {
         if(ConfigFifoData(0)) return true;
@@ -97,7 +97,7 @@ bool MPU_9150::SetLowPassFilter(LOW_PASS_FILTER filtervalue) {
     UInt8 regvalue = (UInt8)filtervalue;
 
     // TODO: consider sync flags to "or" bitwise
-    if(i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_GYRO_CONFIG, regvalue)){
+    if(i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_CONFIG, regvalue)){
         return true; // error
     }
     current_dlpf = filtervalue;
@@ -192,12 +192,12 @@ bool MPU_9150::GetNextPacket() {
         dmpdest->Quaternion2 = buff[4]<<24  | buff[5] << 16  | buff[6]<<8  | buff[7];
         dmpdest->Quaternion3 = buff[8]<<24  | buff[9] << 16  | buff[10]<<8 | buff[11];
         dmpdest->Quaternion4 = buff[12]<<24 | buff[13] << 16 | buff[14]<<8 | buff[15];
-        dmpdest->AccelX = buff[16]<<16 | buff[19];
-        dmpdest->AccelY = buff[18]<<16 | buff[21];
-        dmpdest->AccelZ = buff[20]<<16 | buff[23];
-        dmpdest->GyroX = buff[22]<<16 | buff[25];
-        dmpdest->GyroY = buff[24]<<16 | buff[27];
-        dmpdest->GyroZ = buff[26]<<16 | buff[29];
+        dmpdest->AccelX = buff[16]<<8 | buff[17];
+        dmpdest->AccelY = buff[18]<<8 | buff[19];
+        dmpdest->AccelZ = buff[20]<<8 | buff[21];
+        dmpdest->GyroX = buff[22]<<8 | buff[23];
+        dmpdest->GyroY = buff[24]<<8 | buff[25];
+        dmpdest->GyroZ = buff[26]<<8 | buff[27];
 
         dmpdest->timestamp_ms = SysTimer::GetNowMillisecs();
     }
@@ -208,16 +208,17 @@ bool MPU_9150::GetNextPacket() {
         }
         UInt8 buff[MpuFifoPacket::FifoPktLength];
         if( i2cmanager.ReadFromReg(i2caddr, MPU9150_RA_FIFO_R_W,
-                                   MpuFifoPacket::FifoPktLength, buff)) {
+                                   MpuFifoPacket::FifoPktLength,  buff)) {
             return true;
         }
-        mpudest->AccelX = buff[0]<<16 | buff[1];
-        mpudest->AccelY = buff[2]<<16 | buff[3];
-        mpudest->AccelZ = buff[4]<<16 | buff[5];
-        mpudest->Temp   = buff[6]<<16 | buff[7];
-        mpudest->GyroX = buff[8]<<16 | buff[9];
-        mpudest->GyroY = buff[10]<<16 | buff[11]; 
-        mpudest->GyroZ = buff[12]<<16 | buff[13];
+
+        mpudest->AccelX   = buff[0]<<8  | buff[1];
+        mpudest->AccelY = buff[2]<<8  | buff[3];
+        mpudest->AccelZ = buff[4]<<8  | buff[5];
+        mpudest->Temp = buff[6]<<8  | buff[7];
+        mpudest->GyroX  = buff[8]<<8  | buff[9];
+        mpudest->GyroY  = buff[10]<<8 | buff[11];
+        mpudest->GyroZ  = buff[12]<<8 | buff[13];
 
         mpudest->timestamp_ms = SysTimer::GetNowMillisecs();
     }
@@ -244,4 +245,6 @@ bool MPU_9150::PushDmpFirmware()  {
 
 
 }
+
+
 
