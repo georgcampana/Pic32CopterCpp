@@ -45,6 +45,7 @@ class System {
 
 public:
     static Int32 dbgcounter;
+    static bool dbgflag;
 
 
 

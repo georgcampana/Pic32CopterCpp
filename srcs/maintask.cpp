@@ -36,7 +36,7 @@ UartManager dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
 
-I2c chipbus(I2C1, 50000);
+I2c chipbus(I2C1, 100000);
 MPU_9150 motionsensor(chipbus);
 
 class ProtectedResource : public Semaphore {
@@ -91,6 +91,7 @@ public:
         while(1) {
             testled.toggle();
             dbgout << counter++ << " Led toggled\r\n" ;
+            //dbgout << "flag is: " << System::dbgflag;
             Delay(1200);
         }
     }
@@ -144,8 +145,8 @@ void MainTask::OnRun() {
         UInt16 len = 0xeeee;
         if(!mpuerror) {
             mpuerror = motionsensor.ReadFifoLength(&len);
-            dbgout << "len:" ;
-            dbgout << (Int32)len ;
+            //dbgout << "len:" ;
+            //dbgout << (Int32)len ;
         }
 
         if(!mpuerror && len >= MPU_9150::MpuFifoPacket::FifoPktLength)
@@ -165,7 +166,7 @@ void MainTask::OnRun() {
           dbgout << "mpuerror was true :(\r\n";
         }
 
-        Delay(20);
+        Delay(19);
         System::dbgcounter++;
         //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }

@@ -50,3 +50,4 @@
 
 
 Int32 System::dbgcounter = 0;
+bool System::dbgflag = false;

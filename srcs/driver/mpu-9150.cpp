@@ -212,10 +212,10 @@ bool MPU_9150::GetNextPacket() {
             return true;
         }
 
-        mpudest->AccelX   = buff[0]<<8  | buff[1];
+        mpudest->AccelX = buff[0]<<8  | buff[1];
         mpudest->AccelY = buff[2]<<8  | buff[3];
         mpudest->AccelZ = buff[4]<<8  | buff[5];
-        mpudest->Temp = buff[6]<<8  | buff[7];
+        mpudest->Temp   = buff[6]<<8  | buff[7];
         mpudest->GyroX  = buff[8]<<8  | buff[9];
         mpudest->GyroY  = buff[10]<<8 | buff[11];
         mpudest->GyroZ  = buff[12]<<8 | buff[13];

@@ -386,4 +386,3 @@ bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT
 
     return buserror;
 }
-
