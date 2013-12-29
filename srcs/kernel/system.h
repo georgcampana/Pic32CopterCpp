@@ -39,14 +39,21 @@ extern "C" {
 #define	GetPeripheralClock()        (GetSystemClock()/(1 << OSCCONbits.PBDIV))
 #define GetInstructionClock()       (SYS_CLOCK)
 
+#ifdef NDEBUG
+# ifndef DEBUG
+#  define DEBUG
+# endif
+#endif
+
 
 // singleton class (everything is static)
 class System {
 
 public:
+#ifdef DEBUG
     static Int32 dbgcounter;
     static bool dbgflag;
-
+#endif
 
 
 };

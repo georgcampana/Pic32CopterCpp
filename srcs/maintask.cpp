@@ -30,8 +30,11 @@
 
 MainTask parenttask;
 
-// led present on the Pinguino micro
+// led and button present on the Pinguino micro
 OutputPin testled(IOPORT_D, BIT_1);
+InputPin dmpbutton(IOPORT_D, BIT_0);
+
+
 UartManager dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
@@ -92,7 +95,11 @@ public:
             testled.toggle();
             dbgout << counter++ << " Led toggled\r\n" ;
             //dbgout << "flag is: " << System::dbgflag;
-            Delay(1200);
+            if(dmpbutton.get()==false) {
+                dbgout << "MT:" << (UInt32) &parenttask;
+                Kernel::dbg_DumpStatus(dbgout);
+            }
+            Delay(1000);
         }
     }
 
@@ -155,9 +162,9 @@ void MainTask::OnRun() {
 
         
             if(mpuerror == false) {
-                dbgout << " AccelZ:" ;
+                dbgout << " GyroZ:" ;
                 //dbgout << (Int32)(pkt.Temp/34 + 350) ; // Note Celsius = HwTemp/340+35
-                dbgout << (Int32)pkt.AccelZ;
+                dbgout << (Int32)pkt.GyroZ;
                 dbgout << "\r\n";
             }
         }
@@ -166,7 +173,7 @@ void MainTask::OnRun() {
           dbgout << "mpuerror was true :(\r\n";
         }
 
-        Delay(19);
+        Delay(18);
         System::dbgcounter++;
         //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }

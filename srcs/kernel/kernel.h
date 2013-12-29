@@ -21,6 +21,9 @@
 #include "hal/hal.h"
 #include "task.h"
 
+#ifdef DEBUG
+# include"outstream.h"
+#endif
 
 class SysTimer {
 
@@ -51,6 +54,10 @@ class SysTimer {
     static void CancelAlarm(AlarmItem* item2cancel);
     static UInt32 GetNowMillisecs(UInt32* now_us=NULL);
     static void Start();
+
+#ifdef DEBUG
+    static void dbg_Dump();
+#endif
      
 private:
     static class Alarm : public HAL::TimerAlarm {
@@ -111,6 +118,10 @@ class Kernel {
            void Exit() { HAL::RestoreScheduler(sched_status); }
      };
 
+#ifdef DEBUG
+    static void dbg_DumpStatus(OutStream& dbo);
+    static void dbg_DumpTaskList(OutStream& dbo, List& list2dump);
+#endif
 
 private:
      static Char* getCurrentSavedSP();

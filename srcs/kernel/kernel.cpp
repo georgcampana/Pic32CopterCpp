@@ -71,6 +71,10 @@ void SysTimer::Start() {
     AddAlarm(&timeslice,TIMESLICE_QUANTUM); // this appends the first alarm
 }
 
+// this gets called by the system timer interrupt
+// NOTE: can potentially be interrupted by other interrupt handlers with higher priority
+// so it is important to be careful with system objects and concurrent changes
+//
 bool SysTimer::Alarm::HandleAlarm() {
     while(!queuedalarms.IsEmpty()) {
         HAL::TICKS now = HAL::GetCurrentTicks();
@@ -82,7 +86,10 @@ bool SysTimer::Alarm::HandleAlarm() {
             if(first->IsTimeSliceAlarm()) {
                 // normal elapsed timeslice. we reschedule the queueitem
                 AddAlarm(&timeslice,TIMESLICE_QUANTUM); // this re-appends the timeslice alarm
-                Kernel::QuantumElapsed();
+                Kernel::InterruptCtrl intsafe;
+                intsafe.Disable();
+                    Kernel::QuantumElapsed();
+                intsafe.Restore();
             }
             else { // a task that is waiting for a timed signal
                 first->SignalTask();
@@ -240,3 +247,49 @@ void Kernel::InitAndStartMainTask(TaskBase* firsttask) {
     Reschedule(); // we stay with the idle task
 }
 
+#ifdef DEBUG
+void Kernel::dbg_DumpStatus(OutStream& dbo) {
+
+    //TODO: use hal bitbanged serial
+    //if(dbgoutput == NULL) dbgoutput = HAL::getDefaultDbgOutput();
+    dbo << "Kernel Dump:\r\n\r\n";
+    dbo << "running: " << (UInt32)runningnow << "\r\n";
+    //dbo << "reschedulepending: " << reschedulepending << "\r\n";
+
+    // Ready Tasks
+    dbo << "List of readytasks:\r\n";
+    dbg_DumpTaskList(dbo,readytasks);
+
+    // Waiting Tasks
+    dbo << "List of waitingtasks:\r\n";
+    dbg_DumpTaskList(dbo,waitingtasks);
+
+}
+
+void Kernel::dbg_DumpTaskList(OutStream& dbo, List& list2dump) {
+    if(list2dump.IsEmpty()) {
+        dbo << "--EMPTY--";
+    }
+    else {
+        TaskBase* listpointer = (TaskBase*)list2dump.GetFirst();
+
+        while(true) {
+            if(listpointer == NULL) break;
+            if(list2dump.IsTail(listpointer)) break;
+
+            // TASK BLOCK
+            {
+                dbo << "TASK:" << (UINT32)listpointer << " ";
+                dbo << "Status:" << (UInt32)listpointer->status << " " ;
+                dbo << "Sigs A:" << (UInt32)listpointer->tasksignals.signals_alloc << " ";
+                dbo << "S:" << (UInt32)listpointer->tasksignals.signals_set  << " ";
+                dbo << "W:" << (UInt32)listpointer->tasksignals.signals_waitingfor  << "\r\n";
+                //dbo << "\r\n";
+            }
+
+            listpointer = (TaskBase*)listpointer->GetNext();
+        }
+    }
+}
+
+#endif

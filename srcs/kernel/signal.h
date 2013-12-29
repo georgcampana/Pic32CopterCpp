@@ -38,10 +38,14 @@ class SignalPool {
     static const SIGNAL SYSOBJECT_SIG  = 0x00000002; // preallocated signal for sys objects (semaphore, etc)
     static const SIGNAL FIRSTFREE_SIG  = 0x00000004; // first user available signal
 
+    // for debugging purposes only USE access methods only
+    friend class Kernel;
+
  private:
     SIGNALMASK signals_alloc; // allocated signales
     SIGNALMASK signals_set; // arrived signales
     SIGNALMASK signals_waitingfor; // waitingfor signals
+
 
 };
 
@@ -68,6 +72,7 @@ inline SignalPool::SIGNALMASK SignalPool::CheckWaiting() const {
 inline void SignalPool::SetWaitingSigs(SIGNALMASK signals2wait) {
     signals_waitingfor = signals2wait;
 }
+
 
 #endif	/* SIGNAL_H */
 

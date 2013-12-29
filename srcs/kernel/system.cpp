@@ -48,6 +48,7 @@
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
 
-
+#ifdef DEBUG
 Int32 System::dbgcounter = 0;
 bool System::dbgflag = false;
+#endif
