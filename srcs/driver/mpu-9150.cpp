@@ -23,7 +23,7 @@ bool MPU_9150::Init() {
 
     if(SetLowPassFilter(CONFIG_DLPF_BW_98))return true ;
 
-    if(SetSampleRate(25))return true;
+    if(SetSampleRate(50))return true;
 
     if(dmp_enabled == true) {
         if(ConfigFifoData(0)) return true;
