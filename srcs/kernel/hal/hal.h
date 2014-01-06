@@ -188,8 +188,8 @@ inline Int32 HAL::LockTestAndSet(Int32* var2set, Int32 value) {
 
 inline void HAL::NothingToDo() {
     while(1){
-        // TODO: seems that wait is blocking everything must be tuned better
-        //_wait();
+        _wait(); // stops the cpu until an interrupt happens
+                 // can be commented in case it causes issues and power is not an issue
     }
 }
 
