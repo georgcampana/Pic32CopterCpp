@@ -39,7 +39,7 @@ UartManager dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
 
-I2c chipbus(I2C1, 100000);
+I2c chipbus(I2C1, 150000);
 MPU_9150 motionsensor(chipbus);
 
 class ProtectedResource : public Semaphore {
@@ -93,7 +93,7 @@ public:
 
         while(1) {
             testled.toggle();
-            dbgout << counter++ << " Led toggled\r\n" ;
+            //dbgout << counter++ << " Led toggled\r\n" ;
             //dbgout << "flag is: " << System::dbgflag;
             if(dmpbutton.get()==false) {
                 dbgout << "MT:" << (UInt32) &parenttask;
@@ -162,10 +162,10 @@ void MainTask::OnRun() {
 
         
             if(mpuerror == false) {
-                dbgout << " GyroZ:" ;
+                dbgout << SysTimer::GetNowMillisecs() << ": ";
                 //dbgout << (Int32)(pkt.Temp/34 + 350) ; // Note Celsius = HwTemp/340+35
                 dbgout << (Int32)pkt.GyroZ;
-                dbgout << "\r\n";
+                dbgout << "\r";
             }
         }
 
@@ -173,7 +173,7 @@ void MainTask::OnRun() {
           dbgout << "mpuerror was true :(\r\n";
         }
 
-        Delay(18);
+        Delay(5);
         System::dbgcounter++;
         //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
     }
