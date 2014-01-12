@@ -10,7 +10,7 @@
  * at the top of the source tree.
  *
  * File:   task.cpp
- * Author: gcamp_000
+ * Author: Georg Campana
  * 
  * Created on 28 aprile 2013, 17.36
  */
