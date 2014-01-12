@@ -97,7 +97,9 @@ public:
             //dbgout << "flag is: " << System::dbgflag;
             if(dmpbutton.get()==false) {
                 dbgout << "MT:" << (UInt32) &parenttask;
+#ifdef DEBUG
                 Kernel::dbg_DumpStatus(dbgout);
+#endif
             }
             Delay(1000);
         }
@@ -174,8 +176,7 @@ void MainTask::OnRun() {
         }
 
         Delay(5);
-        System::dbgcounter++;
-        //dbgout << "maintask running cycle:" << System::dbgcounter << "\r\n";
+
     }
 
 }
