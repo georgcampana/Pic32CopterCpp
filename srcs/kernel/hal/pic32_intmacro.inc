@@ -39,8 +39,7 @@
 
     addiu $sp, $sp, -128  /* we create some space on the stack */
 
-    /* TODO: rearrange the order to minimize disabled ints */
-    sw $s7, 96($sp)     /* will host the current task stack pointer (used for level 0 only) */
+    sw $s7, 96($sp)     /* will host the current task stack pointer (used for first int only and not in case of nested) */
     addiu $s7, $sp, 0   /* s7 contains the ORIGSP */
 
     sw $k0, 116($s7) /* original status after entering the INT (EXL = 1 and IDL=ontouched) */
