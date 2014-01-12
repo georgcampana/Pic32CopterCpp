@@ -38,7 +38,6 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl6) DigitalIO1InterruptServiceRoutine(void)
 #endif
 
 void DigitalIO::handleInterrupt() {
-   System::dbgcounter++;
 
    PinChangeHandlerPtr cnhandler = firsthandler;
 
