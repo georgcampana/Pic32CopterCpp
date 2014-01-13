@@ -10,7 +10,7 @@
  * at the top of the source tree.
  *
  * File:   i2cmanager.h
- * Author: georg
+ * Author: Georg Campana
  *
  * Created on 22 ottobre 2012, 0.30
  */
