@@ -58,6 +58,26 @@ uart1IntHandler:
 .end uart1IntHandler
 #endif
 
+/* PIC32 Uart2 interrupt (vector24)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef UART2_INT_LEVEL
+.section .vector_32,code
+   j      uart2IntHandler
+   nop
+
+.section .text,code
+.ent uart1IntHandler
+uart2IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=UART2_INT_LEVEL intservice=Uart2IntService
+.end uart1IntHandler
+#endif
 
 /* PIC32 I2C1 interrupt (vector25)
 * This is the prologue + epilogue for the pre-empting interrupt routine which is

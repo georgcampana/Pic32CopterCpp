@@ -42,7 +42,7 @@ Uart1IntService(void){
 
 void
 __ISR(_UART_2_VECTOR, ipl5)
-Uart2InterruptServiceRoutine(void){
+Uart2IntService(void){
     uart2_ref->handleInterrupt();
 }
 
