@@ -93,7 +93,6 @@ private:
     bool   buserror;
     BusError errortype;
     EventListener* listener2notify;
-    TaskBase* waitingtask;
 
     const static Int32 WAIT_TIMEOUT = 3000; // ms a task will wait to have a transaction completed
 

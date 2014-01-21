@@ -290,7 +290,9 @@ I2c::I2c(I2C_MODULE mod, UINT32 i2c_freq) {
     while( !I2CBusIsIdle(module) );
     I2CClearStatus(module, I2C_ARBITRATION_LOSS );
     currentstatus = BUS_IDLE;
-    
+
+    setBlockingTimeout(WAIT_TIMEOUT);
+
     setupInterrupt();
 
 }
@@ -355,16 +357,14 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
 bool I2c::ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
     StartReadByteFromReg(devaddress, regaddress, valuedest);
 
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+    WaitForTransfer(); // blocks the calling task until the transfer is complete
 
     return buserror;
 }
 bool I2c::WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value){
     StartWriteByteToReg(devaddress, regaddress, value);
 
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+    WaitForTransfer(); // blocks the calling task until the transfer is complete
 
     return buserror;
 }
@@ -372,8 +372,7 @@ bool I2c::WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value){
 bool I2c::ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
     StartReadFromReg(devaddress, regaddress, len, valuesdest);
 
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+    WaitForTransfer(); // blocks the calling task until the transfer is complete
 
     return buserror;
 }
@@ -381,8 +380,8 @@ bool I2c::ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* val
 bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values){
     StartWriteToReg(devaddreess, regaddress, len, values);
 
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, WAIT_TIMEOUT);
+    WaitForTransfer(); // blocks the calling task until the transfer is complete
+
 
     return buserror;
 }

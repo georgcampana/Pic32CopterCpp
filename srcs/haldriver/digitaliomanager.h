@@ -19,7 +19,7 @@
 #define	DIGITALIOMANAGER_H
 
 #include "../kernel/system.h"
-#include "ieventobserver.h"
+#include "../kernel/ieventobserver.h"
 //#include <plib.h>
 
 class InputPin {

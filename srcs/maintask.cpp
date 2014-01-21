@@ -23,9 +23,9 @@
 #include "kernel/message.h"
 #include "kernel/outstream.h"
 
-#include "driver/digitaliomanager.h"
-#include "driver/uartmanager.h"
-#include "driver/i2cmanager.h"
+#include "haldriver/digitaliomanager.h"
+#include "haldriver/uartmanager.h"
+#include "haldriver/i2cmanager.h"
 #include "driver/mpu-9150.h"
 
 MainTask parenttask;
@@ -35,7 +35,7 @@ OutputPin testled(IOPORT_D, BIT_1);
 InputPin dmpbutton(IOPORT_D, BIT_0);
 
 
-UartManager dbgserial(UART1, 115200);
+UartDefault dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
 
@@ -136,19 +136,22 @@ void MainTask::OnRun() {
     dbgout << "Pic32Copter board here\r\n" ;
     Delay(500);
 
+
     dbgserial.setLocalEcho(true);
 
+    
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
-    motionsensor.Init();
 
-
+ 
     bool mpuerror=false;
+    mpuerror = motionsensor.Init();
+    
     motionsensor.SetFifoDest(&pkt);
-    if(!mpuerror) mpuerror = motionsensor.EnableFifo();
 
+    if(!mpuerror) mpuerror = motionsensor.EnableFifo();
     while(1) {
 
         UInt16 len = 0xeeee;

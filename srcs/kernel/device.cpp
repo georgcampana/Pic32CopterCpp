@@ -16,6 +16,7 @@
  */
 
 #include "device.h"
+#include "../kernel/kernel.h"
 
 DeviceBase::DeviceBase() : Node(NT_DRIVER), opencnt(0)  {}
 
@@ -39,3 +40,20 @@ void SingleAccessDevice::close() {
     access.ReleaseNested();
 }
 
+void SingleAccessDevice::WaitForTransfer() {
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+}
+
+bool SingleAccessStreamDevice::open(Int32 maxms) {
+    return access.ObtainNested(maxms);
+}
+
+void SingleAccessStreamDevice::close() {
+    access.ReleaseNested();
+}
+
+void SingleAccessStreamDevice::WaitForTransfer() {
+    waitingtask = Kernel::GetRunningTask();
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+}

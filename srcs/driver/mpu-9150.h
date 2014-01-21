@@ -8,7 +8,7 @@
 #ifndef MPU_9150_H
 #define	MPU_9150_H
 
-#include "i2cmanager.h"
+#include "../haldriver/i2cmanager.h"
 
 
 

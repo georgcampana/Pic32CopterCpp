@@ -70,13 +70,13 @@ uart1IntHandler:
    nop
 
 .section .text,code
-.ent uart1IntHandler
+.ent uart2IntHandler
 uart2IntHandler:
     .set noreorder
     .set nomips16
     .set noat
     IntHandler intlevel=UART2_INT_LEVEL intservice=Uart2IntService
-.end uart1IntHandler
+.end uart2IntHandler
 #endif
 
 /* PIC32 I2C1 interrupt (vector25)

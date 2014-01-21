@@ -40,7 +40,10 @@ class CharStreamDevice : public DeviceBase {
 
 public:
 
+//    CharStreamDevice() {}
+
     virtual UInt16 write(const Char* string2write) { return 0;}
+    virtual UInt16 write(const Char* chars2write, UInt32 len) { return 0;}
     virtual bool write(Char chart2write) { return false;}
 
     virtual UInt16 countRxChars() const {return 0;}
@@ -48,20 +51,49 @@ public:
     virtual UInt16 readLine(UInt8* dest, UInt16 maxlen) { return 0 ;}
 
 
+    virtual void setRxBuffer(Char* rxbuffer, UInt32 len) { return;  }
 };
 
 class SingleAccessDevice : public DeviceBase {
+
     NestableSemaphore access;
 
+protected:
     TaskBase* waitingtask;
+    Int32 blockingtimeout;
+
 public:
-    SingleAccessDevice() : waitingtask(NULL){}
+    SingleAccessDevice() : waitingtask(NULL), blockingtimeout(-1) {}
 
     bool open(Int32 maxms = -1);
     void close();
+    // for Sync/blocking implementations
+    void setBlockingTimeout(Int32 mstimeout) {  blockingtimeout=mstimeout; }
+
+protected:
+    void WaitForTransfer() ;
 
 };
 
+class SingleAccessStreamDevice : public CharStreamDevice {
+
+    NestableSemaphore access;
+
+protected:
+    TaskBase* waitingtask;
+    Int32 blockingtimeout;
+
+public:
+    SingleAccessStreamDevice() : waitingtask(NULL), blockingtimeout(-1) {}
+
+    bool open(Int32 maxms = -1);
+    void close();
+    // for Sync/blocking implementations
+    void setBlockingTimeout(Int32 mstimeout) {  blockingtimeout=mstimeout; }
+
+protected:
+    void WaitForTransfer() ;
+};
 
 #endif	/* DEVICE_H */
 

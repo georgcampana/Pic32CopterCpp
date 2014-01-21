@@ -9,51 +9,58 @@
  * the GNU General Public License Version 2. See the LICENSE.txt file
  * at the top of the source tree.
  *
- * File:   uartmanager.h
+ * File:   uartmanagersync.h
  * Author: Georg Campana
  *
- * Created on 10 gennaio 2013, 19.11
+ * Created on 21 gennaio 2014, 12.23
  */
 
-#ifndef UARTMANAGER_H
-#define	UARTMANAGER_H
+#ifndef UARTMANAGERSYNC_H
+#define	UARTMANAGERSYNC_H
+
 
 #include "../kernel/system.h"
 #include "../kernel/device.h"
-#include "../kernel/safecircularbuffer.h"
+#include "uartinthandlers.h"
 
-
-#define UART_TX_BUFFER_LEN  256
-#define UART_RX_BUFFER_LEN  64
-
-
-class UartManager : public CharStreamDevice {
-
-    SafeCircularBuffer<UART_TX_BUFFER_LEN> txbuffer;
-    SafeCircularBuffer<UART_RX_BUFFER_LEN> rxbuffer;
+class UartManagerSync : public SingleAccessStreamDevice, public IInterruptHandler {
 
     const UART_MODULE module;
+    Char* rxbuffer;
+    Int32 rxbufferlen;
+
+    Char* txcurrentptr;
+    Char* rxcurrentptr;
+
 
     bool localecho;
 public:
-    UartManager(UART_MODULE mod, UInt32 baud = 115200);
+    UartManagerSync(UART_MODULE mod, UInt32 baud = 115200, Char* rx1buffer=NULL, Char* rx2buffer=NULL, Int32 rxbuflen=-1);
 
-    void handleInterrupt();
-    void clearRxBuffer();
-    void clearTxBuffer();
+    void handleInterrupt(); // IInterruptHandler
+
 
     UInt16 write(const Char* string2write);
     bool write(Char char2write);
 
     UInt16 countRxChars() const;
     Int16 getChar();
+    void clearRxBuffer();
 
     UInt16 readLine(UInt8* dest, UInt16 maxlen);
 
     void setLocalEcho(bool newstate);
+    
+    void setBlockingTimeout(Int32 mstimeout);
+    void setRxBuffers(Char* rx1buffer,Char* rx2buffer, UInt32 len);
+
 protected:
     void setupInterrupt();
 
+
 };
 
-#endif	/* UARTMANAGER_H */
+
+
+#endif	/* UARTMANAGERSYNC_H */
+
