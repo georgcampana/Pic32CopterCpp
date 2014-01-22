@@ -109,12 +109,12 @@ UINT16 UartManager::write(const char* string2write) {
 bool UartManager::write(char char2write) {
     bool success = false;
 
-    if(char2write != 0x00) {
+    //if(char2write != 0x00) {
         success =  txbuffer.putChar(char2write);
         if(success) {
             INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
         }
-    }
+    //}
     return success;
 }
 
