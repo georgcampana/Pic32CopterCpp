@@ -24,6 +24,7 @@ bool DeviceBase::open(Int32 maxms) { opencnt++;}
 
 void DeviceBase::close() { if(opencnt>0) opencnt--;}
 
+// returns false in case of timeout
 bool DeviceBase::TaskDefaultWait(TaskBase* taskwillwait, Int32 maxmx) {
     return taskwillwait->GetWaitItem()->Wait(maxmx);
 }
@@ -40,10 +41,6 @@ void SingleAccessDevice::close() {
     access.ReleaseNested();
 }
 
-void SingleAccessDevice::WaitForTransfer() {
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, blockingtimeout);
-}
 
 bool SingleAccessStreamDevice::open(Int32 maxms) {
     return access.ObtainNested(maxms);
@@ -53,7 +50,3 @@ void SingleAccessStreamDevice::close() {
     access.ReleaseNested();
 }
 
-void SingleAccessStreamDevice::WaitForTransfer() {
-    waitingtask = Kernel::GetRunningTask();
-    this->TaskDefaultWait(waitingtask, blockingtimeout);
-}

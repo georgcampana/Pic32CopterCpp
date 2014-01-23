@@ -36,10 +36,9 @@ class UartManager : public SingleAccessStreamDevice, public IInterruptHandler {
 
     bool localecho;
 
-    // for blocking calls initialized by write operations and updated by int transfers
-    Int32  txtotransfer;
-    Int32  txtransferred;
-    UInt8* txcurrentptr;
+    // for blocking calls where a specific amount of data is needed
+    Int32  rxmissingchars;
+
 
 public:
 

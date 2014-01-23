@@ -204,7 +204,7 @@ void I2c::handleInterrupt() {
             }
             if(waitingtask!=NULL) {
                 SignalWaitingTask(waitingtask);
-                waitingtask = NULL;
+                // waitingtask = NULL;
             }
             break;
         }
@@ -244,7 +244,7 @@ void I2c::handleInterrupt() {
     if(buserror) {
         if(waitingtask!=NULL) {
             SignalWaitingTask(waitingtask);
-            waitingtask = NULL;
+            //waitingtask = NULL;
         }
     }
 
@@ -276,7 +276,6 @@ I2c::I2c(I2C_MODULE mod, UINT32 i2c_freq) {
     currentstatus = NOT_INIT;
     buserror = false;
     listener2notify = NULL;
-    waitingtask = NULL;
 
     if(mod == I2C1) {
         i2c1_ref = this;
@@ -355,33 +354,40 @@ bool I2c::StartWriteToReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, const 
 }
 
 bool I2c::ReadByteFromReg(UINT8 devaddress, UINT8 regaddress, UINT8* valuedest) {
+    waitingtask = Kernel::GetRunningTask();
     StartReadByteFromReg(devaddress, regaddress, valuedest);
 
-    WaitForTransfer(); // blocks the calling task until the transfer is complete
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+    waitingtask = NULL;
 
     return buserror;
 }
 bool I2c::WriteByteToReg(UINT8 devaddress, UINT8 regaddress, UINT8 value){
+    waitingtask = Kernel::GetRunningTask();
     StartWriteByteToReg(devaddress, regaddress, value);
 
-    WaitForTransfer(); // blocks the calling task until the transfer is complete
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+    waitingtask = NULL;
 
     return buserror;
 }
 
 bool I2c::ReadFromReg(UINT8 devaddress, UINT8 regaddress, UINT16 len, UINT8* valuesdest) {
+    waitingtask = Kernel::GetRunningTask();
     StartReadFromReg(devaddress, regaddress, len, valuesdest);
 
-    WaitForTransfer(); // blocks the calling task until the transfer is complete
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+    waitingtask = NULL;
 
     return buserror;
 }
 
 bool I2c::WriteToReg(UINT8 devaddreess, UINT8 regaddress, UINT16 len, const UINT8* values){
+    waitingtask = Kernel::GetRunningTask();
     StartWriteToReg(devaddreess, regaddress, len, values);
 
-    WaitForTransfer(); // blocks the calling task until the transfer is complete
-
+    this->TaskDefaultWait(waitingtask, blockingtimeout);
+    waitingtask = NULL;
 
     return buserror;
 }

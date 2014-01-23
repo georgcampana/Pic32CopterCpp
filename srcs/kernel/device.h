@@ -70,9 +70,6 @@ public:
     // for Sync/blocking implementations
     void setBlockingTimeout(Int32 mstimeout) {  blockingtimeout=mstimeout; }
 
-protected:
-    void WaitForTransfer() ;
-
 };
 
 class SingleAccessStreamDevice : public CharStreamDevice {
@@ -91,8 +88,6 @@ public:
     // for Sync/blocking implementations
     void setBlockingTimeout(Int32 mstimeout) {  blockingtimeout=mstimeout; }
 
-protected:
-    void WaitForTransfer() ;
 };
 
 #endif	/* DEVICE_H */

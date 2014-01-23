@@ -21,6 +21,7 @@
  */
 
 #include "uartmanager.h"
+#include "../kernel/kernel.h"
 
 #include <p32xxxx.h>
 #include <plib.h>
@@ -92,15 +93,38 @@ UINT16 UartManager::write(const char* string2write) {
 
     UINT16 transferred = 0;
 
-    for(const char* cntptr = string2write; *cntptr!=NULL; cntptr++) {
-        if(txbuffer.putChar(*cntptr) == false) {
-            break;
+    if(txmode == TX_M_NOWAIT) {
+        while(*string2write != NULL) {
+            if(txbuffer.putChar(*string2write) == false) {
+                break;
+            }
+            transferred++;
+            string2write++;
         }
-        transferred++;
-    }
 
-    if(transferred) {
-        INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+        if(transferred) {
+            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+        }
+    }
+    else { // txmode == TX_M_WAIT_TRANSF
+        bool allsent=false;
+        while(allsent==false) {
+            while(true) {
+                if(*string2write == NULL) { allsent = true; break; }
+
+                if(txbuffer.putChar(*string2write) == false) {
+                    break; // no more space in the buffer
+                }
+                transferred++;
+                string2write++;
+
+            }
+            if(transferred) {
+                waitingtask = Kernel::GetRunningTask();
+                INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+                if(TaskDefaultWait(waitingtask, blockingtimeout) == false) { break; } // timeout
+            }
+        }
     }
 
     return transferred;
@@ -109,12 +133,22 @@ UINT16 UartManager::write(const char* string2write) {
 bool UartManager::write(char char2write) {
     bool success = false;
 
-    //if(char2write != 0x00) {
+    if(txmode == TX_M_NOWAIT) {
         success =  txbuffer.putChar(char2write);
         if(success) {
             INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
         }
-    //}
+    } else { // txmode == TX_M_WAIT_TRANSF
+        waitingtask = Kernel::GetRunningTask();
+        while((success = txbuffer.putChar(char2write)) == false) { // full buffer
+            INTEnable((INT_SOURCE)INT_SOURCE_UART_TX(module), INT_ENABLED);
+            if(TaskDefaultWait(waitingtask, blockingtimeout) == false) { return false; } // timeout
+        }
+        // wait for my transfer
+        if(TaskDefaultWait(waitingtask, blockingtimeout) == false) { return false; } // timeout
+        waitingtask == NULL;
+    }
+
     return success;
 }
 
@@ -123,8 +157,12 @@ UINT16 UartManager::countRxChars() const {
 }
 
 INT16 UartManager::getChar(){
+
     INT16 readchar = -1;
-    readchar = rxbuffer.getChar();
+    if(rxmode == RX_M_NOWAIT) {  readchar = rxbuffer.getChar(); }
+    else {
+        // TODO: eol and nochars mode 
+    }
     return readchar;
 }
 
@@ -135,14 +173,42 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
 
     UINT16 nrreadchars = 0;
 
-    while(maxlen--) {
-        INT16 readchar = rxbuffer.getChar();
-        if(readchar == -1) break;
-        if(readchar == '\r') break;
-        if(readchar == '\n') { maxlen++; continue; }
-        *dest++ = (BYTE) readchar;
-        nrreadchars++;
+    switch(rxmode) {
+        case RX_M_NOWAIT:
+            while(maxlen--) {
+                INT16 readchar = rxbuffer.getChar();
+                if(readchar == -1) break;
+                if(readchar == '\r') break;
+                if(readchar == '\n') { maxlen++; continue; }
+                *dest++ = (BYTE) readchar;
+                nrreadchars++;
+            }
+            break;
+        case RX_M_WAIT_EOL:
+            {
+                bool eolfound=false;
+                waitingtask = Kernel::GetRunningTask();
+                while(eolfound==false) {
+                    while(maxlen--) {
+                        INT16 readchar = rxbuffer.getChar();
+                        if(readchar == -1) break; // buffer is empty
+                        if(readchar == '\n') { eolfound=true; break; }
+                        if(readchar == '\r') { maxlen++; continue; } // we skip this
+                        *dest++ = (BYTE) readchar;
+                        nrreadchars++;
+                    }
+                    if(eolfound || maxlen==0) break;
+                    this->TaskDefaultWait(waitingtask, blockingtimeout);
+                }
+                waitingtask = NULL;
+            }
+            break;
+        case RX_M_NR_CHARS:
+            // TODO: do we need an ssert here ?
+            break;
     }
+
+
 
     *dest++ = NULL;
 
@@ -168,18 +234,37 @@ void UartManager::handleInterrupt() {
     {
         // Clear the RX interrupt Flag
         INTClearFlag((INT_SOURCE)INT_SOURCE_UART_RX(module));
-        
-        while(UARTReceivedDataIsAvailable(module))
-        {
-            BYTE rxchar = UARTGetDataByte(module);
-            rxbuffer.putChar(rxchar);
-            if(localecho) {
-                write(rxchar);
-                if(rxchar == '\r')write('\n');
+        if(rxmode == RX_M_NOWAIT) {
+            while(UARTReceivedDataIsAvailable(module))
+            {
+                BYTE rxchar = UARTGetDataByte(module);
+                rxbuffer.putChar(rxchar);
+                if(localecho) {
+                    write(rxchar);
+                    if(rxchar == '\r')write('\n');
+                }
             }
         }
-    }
+        else if(rxmode == RX_M_WAIT_EOL) {
+            while(UARTReceivedDataIsAvailable(module))
+            {
+                BYTE rxchar = UARTGetDataByte(module);
+                rxbuffer.putChar(rxchar);
+                if(localecho) {
+                    write(rxchar);
+                    if(rxchar == '\r')write('\n');
+                }
+                if(rxchar == '\n') {
+                    if(waitingtask) {
+                        SignalWaitingTask(waitingtask);
+                    }
+                }
+            }
+        }
+        else { // RX_M_NR_CHARS
 
+        }
+    }
     //TX interrupt
     if( INTGetFlag((INT_SOURCE)INT_SOURCE_UART_TX(module)) )
     {
