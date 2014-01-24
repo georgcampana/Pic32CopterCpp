@@ -189,11 +189,12 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
                 bool eolfound=false;
                 waitingtask = Kernel::GetRunningTask();
                 while(eolfound==false) {
-                    while(maxlen--) {
+                    while(maxlen) {
                         INT16 readchar = rxbuffer.getChar();
                         if(readchar == -1) break; // buffer is empty
-                        if(readchar == '\n') { eolfound=true; break; }
-                        if(readchar == '\r') { maxlen++; continue; } // we skip this
+                        if(readchar == '\n') { continue; } // we skip this
+                        if(readchar == '\r') { eolfound=true; break; }
+                        maxlen--;
                         *dest++ = (BYTE) readchar;
                         nrreadchars++;
                     }
@@ -249,12 +250,19 @@ void UartManager::handleInterrupt() {
             while(UARTReceivedDataIsAvailable(module))
             {
                 BYTE rxchar = UARTGetDataByte(module);
-                rxbuffer.putChar(rxchar);
+                if(rxbuffer.putChar(rxchar) == false) {
+                    // buffer is full
+                    if(waitingtask) {
+                        SignalWaitingTask(waitingtask);
+                    }
+                    break; // we must exit from here
+                }
+
                 if(localecho) {
                     write(rxchar);
                     if(rxchar == '\r')write('\n');
                 }
-                if(rxchar == '\n') {
+                if(rxchar == '\r') {
                     if(waitingtask) {
                         SignalWaitingTask(waitingtask);
                     }
