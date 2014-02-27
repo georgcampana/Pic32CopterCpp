@@ -79,6 +79,70 @@ uart2IntHandler:
 .end uart2IntHandler
 #endif
 
+/* PIC32 SPI2 interrupt (vector31)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef SPI2_INT_LEVEL
+.section .vector_31,code
+   j      spi2IntHandler
+   nop
+
+.section .text,code
+.ent spi2IntHandler
+spi2IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=SPI2_INT_LEVEL intservice=Spi2IntService
+.end spi2IntHandler
+#endif
+
+
+/* PIC32 DMA2 interrupt (vector38)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef DMA2_INT_LEVEL
+.section .vector_38,code
+   j      dma2IntHandler
+   nop
+
+.section .text,code
+.ent dma2IntHandler
+dma2IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=DMA2_INT_LEVEL intservice=Dma3IntService
+.end dma2IntHandler
+#endif
+
+/* PIC32 DMA3 interrupt (vector39)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef DMA3_INT_LEVEL
+.section .vector_39,code
+   j      dma3IntHandler
+   nop
+
+.section .text,code
+.ent dma3IntHandler
+dma3IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=DMA3_INT_LEVEL intservice=Dma4IntService
+.end dma3IntHandler
+#endif
+
 /* PIC32 I2C1 interrupt (vector25)
 * This is the prologue + epilogue for the pre-empting interrupt routine which is
 * present in the Hal module
@@ -100,6 +164,47 @@ i2c1IntHandler:
 .end i2c1IntHandler
 #endif
 
+/* PIC32 INT1 interrupt (vector7)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef INT1_INT_LEVEL
+.section .vector_7,code
+   j      int1IntHandler
+   nop
+
+.section .text,code
+.ent int1IntHandler
+int1IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=INT1_INT_LEVEL intservice=InterruptPin1Service
+.end int1IntHandler
+#endif
+
+/* PIC32 INT4 interrupt (vector19)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef INT4_INT_LEVEL
+.section .vector_19,code
+   j      int4IntHandler
+   nop
+
+.section .text,code
+.ent int4IntHandler
+int4IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=INT4_INT_LEVEL intservice=InterruptPin4Service
+.end int4IntHandler
+#endif
 
 
 .section	.sbss,bss
