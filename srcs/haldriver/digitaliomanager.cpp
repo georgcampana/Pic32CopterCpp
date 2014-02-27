@@ -9,7 +9,7 @@
  * the GNU General Public License Version 2. See the LICENSE.txt file
  * at the top of the source tree.
  *
- * File:   i2cmanager.c
+ * File:   digitaliomanager.cpp
  * Author: Georg Campana
  *
  * Created on 22 ottobre 2012, 0.29
@@ -23,15 +23,42 @@
 
 DigitalIO* digitinout_ref;
 
+InterruptPin* int_ref[5];
+
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-void __ISR(_CHANGE_NOTICE_VECTOR, ipl6) DigitalIO1InterruptServiceRoutine(void)
+// __ISR(_CHANGE_NOTICE_VECTOR, ipl6)
+void  DigitalIO1InterruptServiceRoutine(void)
 {
     digitinout_ref->handleInterrupt();
 }
 
+void  InterruptPin0Service(void)
+{
+    int_ref[0]->handleInterrupt();
+}
+
+void  InterruptPin1Service(void)
+{
+    int_ref[1]->handleInterrupt();
+}
+
+void  InterruptPin2Service(void)
+{
+    int_ref[2]->handleInterrupt();
+}
+
+void  InterruptPin3Service(void)
+{
+    int_ref[3]->handleInterrupt();
+}
+
+void  InterruptPin4Service(void)
+{
+    int_ref[4]->handleInterrupt();
+}
 
 #ifdef	__cplusplus
 }
@@ -135,6 +162,16 @@ void DigitalIO::addPinChangeHandler(PinChangeHandlerPtr changehandler) {
 OutputPin::OutputPin(IoPortId port, Int32 pin, bool opendrain) : pinno(pin), pinport(port) {
     PORTSetPinsDigitalOut(pinport,pinno);
     PORTClearBits(pinport, pinno);
+    if(opendrain) {
+        switch(port) {
+            case IOPORT_B : mPORTBOpenDrainOpen(pinno); break;
+            case IOPORT_C : mPORTCOpenDrainOpen(pinno); break;
+            case IOPORT_D : mPORTDOpenDrainOpen(pinno); break;
+            case IOPORT_E : mPORTEOpenDrainOpen(pinno); break;
+            case IOPORT_F : mPORTFOpenDrainOpen(pinno); break;
+        }
+
+    }
 }
 void OutputPin::operator << (bool newstatus) {
     newstatus? PORTSetBits(pinport, pinno) : PORTClearBits(pinport, pinno);
@@ -146,3 +183,57 @@ bool OutputPin::toggle() {
     PORTToggleBits(pinport, pinno);
 }
 
+// InterruptPin
+
+InterruptPin::InterruptPin(Int32 intpin, IEventObserverPrt observer, Int8 intpri,
+                                bool enable, bool risingedge):
+                                        extintpin(intpin), intobserver(observer){
+    Int32 config = intpri;
+    if(enable) config |= EXT_INT_ENABLE;
+    if(risingedge) config |= RISING_EDGE_INT;
+
+    int_ref[intpin] = this;
+
+    switch(intpin) {
+        case 0: ConfigINT0(config); break;
+        case 1: ConfigINT1(config); break;
+        case 2: ConfigINT2(config); break;
+        case 3: ConfigINT3(config); break;
+        case 4: ConfigINT4(config); break;
+    }
+};
+
+void InterruptPin::clearPendingInt() {
+    switch(extintpin) {
+        case 0: mINT0ClearIntFlag(); break;
+        case 1: mINT1ClearIntFlag(); break;
+        case 2: mINT2ClearIntFlag(); break;
+        case 3: mINT3ClearIntFlag(); break;
+        case 4: mINT4ClearIntFlag(); break;
+    }
+}
+
+void InterruptPin::handleInterrupt() {
+    clearPendingInt();
+    if(intobserver!=NULL) intobserver->onEventFired(extintpin);
+}
+
+void InterruptPin::enable() {
+    switch(extintpin) {
+        case 0: EnableINT0; break;
+        case 1: EnableINT1; break;
+        case 2: EnableINT2; break;
+        case 3: EnableINT3; break;
+        case 4: EnableINT4; break;
+    }
+}
+
+void InterruptPin::disable() {
+    switch(extintpin) {
+        case 0: DisableINT0; break;
+        case 1: DisableINT1; break;
+        case 2: DisableINT2; break;
+        case 3: DisableINT3; break;
+        case 4: DisableINT4; break;
+    }
+}

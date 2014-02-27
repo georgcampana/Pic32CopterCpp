@@ -21,7 +21,7 @@
 class IEventObserver {
 
 public:
-    virtual bool onEventFired(Int32 eventid) = 0;
+    virtual bool onEventFired(Int32 eventid) {return false;} // not pure (=0) to prevent the need of a heap
     
 
 };

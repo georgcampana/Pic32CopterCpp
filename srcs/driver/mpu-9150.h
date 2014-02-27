@@ -1,6 +1,16 @@
-/* 
+/*
+ * Pic32CopterCpp -- A C++ microOS for the PIC32
+ *
+ * Copyright (C) 2012 - 2014, Georg Campana
+ *
+ * Georg Campana <g.campana(AT)stetel.com>
+ *
+ * This program is free software, distributed under the terms of
+ * the GNU General Public License Version 2. See the LICENSE.txt file
+ * at the top of the source tree.
+ *
  * File:   mpu-9150.h
- * Author: georg
+ * Author: Georg Campana
  *
  * Created on 24 ottobre 2013, 11.39
  */
@@ -12,7 +22,7 @@
 
 
 
-class MPU_9150 : public SingleAccessDevice {
+class MPU_9150 : public SingleAccessDevice, public IEventObserver {
 
 public:
     
@@ -80,14 +90,16 @@ public:
 private:
 
 
-    UINT8 i2caddr;
+    UInt8 i2caddr;
+    bool interruptenabled;
+
     I2c& i2cmanager;
 
-    const static UINT8 dmpMemory[];
-    const static UINT8 dmpConfig[];
-    const static UINT8 dmpUpdates[];
+    const static UInt8 dmpMemory[];
+    const static UInt8 dmpConfig[];
+    const static UInt8 dmpUpdates[];
 
-    UINT8 tempworkbuffer[128];
+    UInt8 tempworkbuffer[128];
 
     // State machine for interrupt transfers using the i2c
     enum I2cStateMachine {
@@ -101,7 +113,7 @@ private:
         I2C_DMP_OFF
     } i2ctrans;
     // used across i2c transfers
-    UINT8 tmpregvalue;
+    UInt8 tmpregvalue;
 
     bool dmp_enabled;
     bool fifo_enabled;
@@ -112,7 +124,7 @@ private:
 
   public:
 
-    MPU_9150(I2c& busmanager, UINT8 busaddress = MPU9150_DEFAULT_ADDRESS );
+    MPU_9150(I2c& busmanager, UInt8 busaddress = MPU9150_DEFAULT_ADDRESS );
     bool Init();
 
     void SetFifoDest(MpuFifoPacket* dest);
@@ -123,9 +135,16 @@ private:
     bool EnableDmp();
     bool DisableDmp();
 
+    bool EnableInterrupt(TaskBase* task2signal=NULL);
+    bool DisableInterrupt();
+    bool WaitForNextPacket(int maxms = -1);
+
     bool GetNextPacket();
 
     bool ReadFifoLength(UInt16* len);
+
+// IEventObserver to get interrupt
+    bool onEventFired(Int32 eventid);
 
   protected:
     bool Reset();
@@ -138,6 +157,7 @@ private:
 
     bool ReadFromFifo(UInt8* destbuffer, UInt8 len);
 
+    bool ConfigInterrupt();
 
     bool PushDmpFirmware();
 

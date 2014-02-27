@@ -1,11 +1,29 @@
+/*
+ * Pic32CopterCpp -- A C++ microOS for the PIC32
+ *
+ * Copyright (C) 2012 - 2014, Georg Campana
+ *
+ * Georg Campana <g.campana(AT)stetel.com>
+ *
+ * This program is free software, distributed under the terms of
+ * the GNU General Public License Version 2. See the LICENSE.txt file
+ * at the top of the source tree.
+ *
+ * File:   mpu-9150.cpp
+ * Author: Georg Campana
+ *
+ * Created on 24 ottobre 2013, 11.51
+ */
 
+#include "../haldriver/digitaliomanager.h"
 #include "mpu-9150.h"
 #include "mpu-9150-regs.h"
 #include "../kernel/kernel.h"
 
-MPU_9150::MPU_9150(I2c& busmanager, UINT8 busaddress ) :
+MPU_9150::MPU_9150(I2c& busmanager, UInt8 busaddress ) :
                         i2cmanager(busmanager), i2caddr(busaddress),
                         half_sensitivity(false), dmp_enabled(false),
+                        interruptenabled(false),
                         fifo_enabled(false), current_dlpf(CONFIG_DLPF_BW_256),
                         mpudest(NULL), dmpdest(NULL) {
     
@@ -23,7 +41,7 @@ bool MPU_9150::Init() {
 
     if(SetLowPassFilter(CONFIG_DLPF_BW_98))return true ;
 
-    if(SetSampleRate(50))return true;
+    if(SetSampleRate(10))return true;
 
     if(dmp_enabled == true) {
         if(ConfigFifoData(0)) return true;
@@ -33,7 +51,7 @@ bool MPU_9150::Init() {
                            BITS_FIFO_EN_GYROY | BITS_FIFO_EN_GYROX )) return true;
     }
 
-
+    ConfigInterrupt();
 
 
     return false; // everything went ok
@@ -175,12 +193,12 @@ void MPU_9150::SetFifoDest(DmpFifoPacket* dest) {
 
 
 bool MPU_9150::GetNextPacket() {
-    UInt16 currentlen;
+    UInt16 currentfifolen;
     
-    if(ReadFifoLength(&currentlen)) return true; // error reading
+    if(ReadFifoLength(&currentfifolen)) return true; // error reading
 
     if(dmp_enabled && dmpdest != NULL) {
-        if(currentlen < DmpFifoPacket::FifoPktLength) {
+        if(currentfifolen < DmpFifoPacket::FifoPktLength) {
             return true; // no enough data should never happen if interrupt based
         }
         UInt8 buff[DmpFifoPacket::FifoPktLength];
@@ -203,7 +221,7 @@ bool MPU_9150::GetNextPacket() {
     }
     else
     if(!dmp_enabled && mpudest != NULL) {
-        if(currentlen < MpuFifoPacket::FifoPktLength) {
+        if(currentfifolen < MpuFifoPacket::FifoPktLength) {
             return true; // no enough data should never happen if interrupt based
         }
         UInt8 buff[MpuFifoPacket::FifoPktLength];
@@ -223,9 +241,7 @@ bool MPU_9150::GetNextPacket() {
         mpudest->timestamp_ms = SysTimer::GetNowMillisecs();
     }
 
-    
     return false;
-
 }
 
 bool MPU_9150::ReadFifoLength(UInt16* len) {
@@ -241,10 +257,52 @@ bool MPU_9150::ReadFifoLength(UInt16* len) {
 }
 
 
+bool MPU_9150::EnableInterrupt(TaskBase* task2signal) {
+    UInt8 int_enable = (dmp_enabled)? BIT_DMP_INT_EN : BIT_RAW_RDY_EN ;
+    bool error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_INT_ENABLE, int_enable);
+    if(error == false) { 
+        interruptenabled = true;
+        waitingtask = task2signal;
+    }
+
+    return error;
+}
+
+bool MPU_9150::DisableInterrupt() {
+    bool error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_INT_ENABLE, 0);
+    if(error == false) { 
+        interruptenabled = true;
+        waitingtask = NULL;
+    }
+    return error;
+}
+
+bool MPU_9150::WaitForNextPacket(int maxms) {
+    if(interruptenabled) {
+        if(waitingtask!=NULL) {
+            return TaskDefaultWait(waitingtask,maxms); // false == timeout
+        }
+    }
+
+    return true;
+}
+
+
 bool MPU_9150::PushDmpFirmware()  {
 
 
 }
 
+bool MPU_9150::ConfigInterrupt() {
+    bool error = i2cmanager.WriteByteToReg(i2caddr, MPU9150_RA_INT_PIN_CFG, BIT_INT_LVL_HIGH| BIT_INT_LATCH | BIT_INT_RD_CLEAR);
+    return error;
+}
 
+// interrupt received from the intpin
+bool MPU_9150::onEventFired(Int32 eventid) {
 
+    if(waitingtask != NULL) {
+        SignalWaitingTask(waitingtask);
+    }
+    return true;
+};

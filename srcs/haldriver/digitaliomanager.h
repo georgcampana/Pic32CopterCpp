@@ -93,7 +93,20 @@ public:
     bool toggle();
 };
 
+class InterruptPin {
+    Int32 extintpin;
+    IEventObserverPrt intobserver;
 
+protected:
+    void clearPendingInt();
+
+public:
+    InterruptPin(Int32 intpin, IEventObserverPrt observer=NULL, Int8 pri=4, bool enable=true, bool risingedge=false);
+    void handleInterrupt();
+
+    void enable();
+    void disable();
+};
 
 
 #endif	/* DIGITALIOMANAGER_H */
