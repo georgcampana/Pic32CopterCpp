@@ -193,7 +193,7 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
                         INT16 readchar = rxbuffer.getChar();
                         if(readchar == -1) break; // buffer is empty
                         if(readchar == '\n') { continue; } // we skip this
-                        if(readchar == '\r') { eolfound=true; break; }
+                        if(readchar == '\r') { eolfound=true; break; }  // not written -> eol without cr
                         maxlen--;
                         *dest++ = (BYTE) readchar;
                         nrreadchars++;

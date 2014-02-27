@@ -98,4 +98,15 @@ public:
 
 };
 
+template<Int32 I, Int32 T>
+class Uart : public UartManager {
+
+    SafeCircularBuffer<I> txdefaultbuff;
+    SafeCircularBuffer<T> rxdefaultbuff;
+
+public:
+    Uart(UART_MODULE mod, UInt32 baud = 115200) : UartManager(txdefaultbuff, rxdefaultbuff, mod, baud ) {};
+
+};
+
 #endif	/* UARTMANAGER_H */
