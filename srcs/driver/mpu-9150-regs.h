@@ -1,6 +1,16 @@
-/* 
+/*
+ * Pic32CopterCpp -- A C++ microOS for the PIC32
+ *
+ * Copyright (C) 2012 - 2014, Georg Campana
+ *
+ * Georg Campana <g.campana(AT)stetel.com>
+ *
+ * This program is free software, distributed under the terms of
+ * the GNU General Public License Version 2. See the LICENSE.txt file
+ * at the top of the source tree.
+ *
  * File:   mpu-9150-regs.h
- * Author: georg
+ * Author: Georg Campana
  *
  * Created on 24 ottobre 2013, 11.51
  */
@@ -98,6 +108,9 @@ enum MPU9150_REGS
     MPU9150_RA_I2C_MST_STATUS   =0x36,
     MPU9150_RA_INT_PIN_CFG      =0x37,
 #       define BIT_INT_RD_CLEAR                                 0x10    // clear the interrupt when any read occurs
+#       define BIT_INT_LVL_HIGH                                 0x80
+#       define BIT_INT_OPN_DRAIN                                0x40
+#       define BIT_INT_LATCH                                    0x20
     MPU9150_RA_INT_ENABLE       =0x38,
 #       define BIT_RAW_RDY_EN                                   0x01
 #       define BIT_DMP_INT_EN                                   0x02    // enabling this bit (DMP_INT_EN) also enables RAW_RDY_EN it seems
