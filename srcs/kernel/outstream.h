@@ -10,7 +10,7 @@
  * at the top of the source tree.
  *
  * File:   outstream.h
- * Author: gcamp_000
+ * Author: Georg Campana
  *
  * Created on 1 settembre 2013, 22.18
  */
