@@ -26,7 +26,9 @@
 #include "haldriver/digitaliomanager.h"
 #include "haldriver/uartmanager.h"
 #include "haldriver/i2cmanager.h"
+#include "haldriver/spimanager.h"
 #include "driver/mpu-9150.h"
+#include "driver/mrf24wlan.h"
 
 MainTask parenttask;
 
@@ -34,13 +36,22 @@ MainTask parenttask;
 OutputPin testled(IOPORT_D, BIT_1);
 InputPin dmpbutton(IOPORT_D, BIT_0);
 
-
 UartDefault dbgserial(UART1, 115200);
 
 OutStream dbgout(dbgserial);
 
+// MPU_9150 with interrupt pin
 I2c chipbus(I2C1, 150000);
 MPU_9150 motionsensor(chipbus);
+InterruptPin mpuinterrupt(4,  &motionsensor); // INT4 external pin
+
+// MRF24WLAN with interrupt pin - 1MHz bus speed
+OutputPin wifiselect(IOPORT_F, BIT_0, true); // true = open-drain
+SpiManager spibus(SPI_CHANNEL2, 1000000, &wifiselect );
+OutputPin wifireset(IOPORT_D, BIT_5, true); // true = open-drain
+Mrf24Wlan wifi(spibus, wifireset);
+InterruptPin wifiinterrupt(1, &wifi);
+
 
 class ProtectedResource : public Semaphore {
     Int32 counter;
@@ -133,53 +144,76 @@ MPU_9150::MpuFifoPacket pkt;
 void MainTask::OnRun() {
 
     dbgout << "Helloworld\r\n" ;
-    dbgout << "Pic32Copter board here\r\n" ;
+    dbgout << "Pic32Copter board here\r\n\r\n" ;
     Delay(500);
 
+    dbgserial.setMode(UartManager::RX_M_WAIT_EOL, UartManager::TX_M_NOWAIT);
+    dbgserial.setBlockingTimeout(3000);
 
     dbgserial.setLocalEcho(true);
-
     
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
+    UInt8 psw[16];
+    dbgout << "password ?: " << "\r\n";
+    //dbgserial.readLine(psw, sizeof(psw) );
+    //dbgout << "you said: " << (Char*) psw << "\r\n";
+    Delay(100);
 
- 
+    wifi.reset();
+    Delay(100);
+
     bool mpuerror=false;
     mpuerror = motionsensor.Init();
     
     motionsensor.SetFifoDest(&pkt);
 
     if(!mpuerror) mpuerror = motionsensor.EnableFifo();
+    motionsensor.EnableInterrupt(this);
+
     while(1) {
 
-        UInt16 len = 0xeeee;
-        if(!mpuerror) {
-            mpuerror = motionsensor.ReadFifoLength(&len);
-            //dbgout << "len:" ;
-            //dbgout << (Int32)len ;
+        UInt16 len = 0;
+
+        if(len < MPU_9150::MpuFifoPacket::FifoPktLength) {
+            if(motionsensor.WaitForNextPacket(2000) == false) {
+                dbgout << "timeout\r\n";
+            }
+
+            if(!mpuerror) {
+                mpuerror = motionsensor.ReadFifoLength(&len);
+                //dbgout << "len:" ;
+                //dbgout << (Int32)len ;
+            }
+        }
+        else {
+            dbgout << "one packet more :)\r\n";
         }
 
-        if(!mpuerror && len >= MPU_9150::MpuFifoPacket::FifoPktLength)
-        {
-            mpuerror = motionsensor.GetNextPacket();
+        if(!mpuerror) {
+            if(len >= MPU_9150::MpuFifoPacket::FifoPktLength) {
+                mpuerror = motionsensor.GetNextPacket();
 
-        
-            if(mpuerror == false) {
-                dbgout << SysTimer::GetNowMillisecs() << ": ";
-                //dbgout << (Int32)(pkt.Temp/34 + 350) ; // Note Celsius = HwTemp/340+35
-                dbgout << (Int32)pkt.GyroZ;
-                dbgout << "\r";
+
+                if(mpuerror == false) {
+                    dbgout << SysTimer::GetNowMillisecs() << ": ";
+                    //dbgout << (Int32)(pkt.Temp/34 + 350) ; // Note Celsius = HwTemp/340+35
+                    dbgout << (Int32)pkt.GyroZ;
+                    dbgout << "\r";
+                    len -= MPU_9150::MpuFifoPacket::FifoPktLength;
+                }
+            }
+            else {
+              dbgout << "too short:" ;
+              dbgout << (Int32)len ;
             }
         }
 
         if(mpuerror) {
           dbgout << "mpuerror was true :(\r\n";
         }
-
-        Delay(5);
-
     }
 
 }
