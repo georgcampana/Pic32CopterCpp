@@ -26,7 +26,7 @@ void DeviceBase::close() { if(opencnt>0) opencnt--;}
 
 // returns false in case of timeout
 bool DeviceBase::TaskDefaultWait(TaskBase* taskwillwait, Int32 maxmx) {
-    return taskwillwait->GetWaitItem()->Wait(maxmx);
+    return (taskwillwait->GetWaitItem()->Wait(maxmx) != 0);
 }
 
 void DeviceBase::SignalWaitingTask(TaskBase* waitingtask) {

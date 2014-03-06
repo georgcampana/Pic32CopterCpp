@@ -49,6 +49,7 @@ public:
     virtual UInt16 countRxChars() const {return 0;}
     virtual Int16 getChar() {return -1;}
     virtual UInt16 readLine(UInt8* dest, UInt16 maxlen) { return 0 ;}
+    virtual UInt16 read(UInt8*dest, UInt16 nobytes2read) {return 0;} // useful to read binary data
 
 
     virtual void setRxBuffer(Char* rxbuffer, UInt32 len) { return;  }
