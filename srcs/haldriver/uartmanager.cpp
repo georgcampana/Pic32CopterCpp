@@ -55,7 +55,7 @@ Uart2IntService(void){
 
 UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase& rxbuff, UART_MODULE mod, UINT32 baud) :
                                 localecho(false), module(mod), txbuffer(txbuff), rxbuffer(rxbuff),
-                                rxmode(RX_M_NOWAIT), txmode(TX_M_NOWAIT) {
+                                rxmode(RX_M_NOWAIT), txmode(TX_M_NOWAIT), rxmissingchars(0) {
 
     if(mod == UART1 ) {
         uart1_ref = this;
@@ -158,20 +158,27 @@ UINT16 UartManager::countRxChars() const {
 
 INT16 UartManager::getChar(){
 
-    INT16 readchar = -1;
-    if(rxmode == RX_M_NOWAIT) {  readchar = rxbuffer.getChar(); }
-    else {
-        // TODO: eol and nochars mode 
+    INT16 readchar = rxbuffer.getChar();
+
+    if(rxmode != RX_M_NOWAIT) {
+        while(readchar == -1) { // eol and nrchars modes (actually there is no real eol mode for getChar())
+
+            waitingtask = Kernel::GetRunningTask();
+            this->TaskDefaultWait(waitingtask, blockingtimeout);
+            readchar = rxbuffer.getChar();
+        }
+
     }
+
     return readchar;
 }
 
-UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
+UInt16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
     if(maxlen==0)return 0;
 
     maxlen--; // reserved for the final null to close the string
 
-    UINT16 nrreadchars = 0;
+    UInt16 nrreadchars = 0;
 
     switch(rxmode) {
         case RX_M_NOWAIT:
@@ -199,7 +206,11 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
                         nrreadchars++;
                     }
                     if(eolfound || maxlen==0) break;
-                    this->TaskDefaultWait(waitingtask, blockingtimeout);
+                    if( this->TaskDefaultWait(waitingtask, blockingtimeout) == false){
+                        // timeout
+                        // let's exit whatever we have transferred til now.
+                        break;
+                    }
                 }
                 waitingtask = NULL;
             }
@@ -215,6 +226,74 @@ UINT16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
 
     return nrreadchars;
 }
+
+UInt16 UartManager::read(UInt8*dest, UInt16 nobytes2read) {
+    if(nobytes2read==0)return 0;
+
+    UInt16 nrreadchars = 0;
+
+    switch(rxmode) {
+        case RX_M_NOWAIT:
+            while(nobytes2read--) {
+                INT16 readchar = rxbuffer.getChar();
+                if(readchar == -1) break;
+                *dest++ = (BYTE) readchar;
+                nrreadchars++;
+            }
+            break;
+        case RX_M_WAIT_EOL:
+            {
+                bool eolfound=false;
+                waitingtask = Kernel::GetRunningTask();
+                while(eolfound==false) {
+                    while(nobytes2read) {
+                        INT16 readchar = rxbuffer.getChar();
+                        if(readchar == -1) break; // buffer is empty
+                        nobytes2read--;
+                        *dest++ = (BYTE) readchar;
+                        nrreadchars++;
+                        if(readchar == '\n') { eolfound=true; break; }  // written eol
+                    }
+                    if(eolfound || nobytes2read==0) break;
+                    if( this->TaskDefaultWait(waitingtask, blockingtimeout) == false){
+                        // timeout
+                        // let's exit whatever we have transferred til now.
+                        break;
+                    }
+                }
+                waitingtask = NULL;
+            }
+            break;
+        case RX_M_NR_CHARS:
+            {
+                waitingtask = Kernel::GetRunningTask();
+
+                while(nobytes2read) {
+                    INT16 readchar = rxbuffer.getChar();
+                    if(readchar == -1) { // buffer is empty
+                        rxmissingchars = nobytes2read;
+                        if( this->TaskDefaultWait(waitingtask, blockingtimeout) == false){
+                            // timeout
+                            // let's exit whatever we have transferred til now.
+                            break;
+                        }
+                        continue;
+                    }
+                    nobytes2read--;
+                    *dest++ = (BYTE) readchar;
+                    nrreadchars++;
+                }
+
+                waitingtask = NULL;
+            }
+            break;
+    }
+
+    *dest++ = NULL;
+
+    return nrreadchars;
+}
+
 
 
 void UartManager::setupInterrupt() {
@@ -270,7 +349,26 @@ void UartManager::handleInterrupt() {
             }
         }
         else { // RX_M_NR_CHARS
+            while(UARTReceivedDataIsAvailable(module))
+            {
+                BYTE rxchar = UARTGetDataByte(module);
+                if(rxbuffer.putChar(rxchar) == false) {
+                    // buffer is full
+                    if(waitingtask) {
+                        SignalWaitingTask(waitingtask);
+                    }
+                    break; // we must exit from here
+                }
+                else {
+                    rxmissingchars--;
+                    if(rxmissingchars <=0 ) {
+                        if(waitingtask) {
+                            SignalWaitingTask(waitingtask); // we signal that enough chars are available
+                        }
+                    }
+                }
 
+            }
         }
     }
     //TX interrupt

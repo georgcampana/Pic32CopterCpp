@@ -43,15 +43,15 @@ class UartManager : public SingleAccessStreamDevice, public IInterruptHandler {
 public:
 
     enum RxMode {
-        RX_M_NOWAIT = 0,
-        RX_M_WAIT_EOL,
-        RX_M_NR_CHARS
+        RX_M_NOWAIT = 0, // return data if available. Never wait
+        RX_M_WAIT_EOL,   // wait until you get an eol (or timeout)
+        RX_M_NR_CHARS    // wait until a given number of chars is reached (or timeout)
 
     };
 
     enum TxMode {
-        TX_M_NOWAIT = 0,
-        TX_M_WAIT_TRANSF
+        TX_M_NOWAIT = 0, // put in the tx buffer (if not ful) and return
+        TX_M_WAIT_TRANSF // put in the tx buffer, if full wait and retry
 
     };
 
@@ -68,6 +68,7 @@ public:
     Int16 getChar();
 
     UInt16 readLine(UInt8* dest, UInt16 maxlen);
+    UInt16 read(UInt8*dest, UInt16 nobytes2read); // useful to read binary data
 
     void setLocalEcho(bool newstate) ;
     void setMode(RxMode rxm,TxMode txm);
