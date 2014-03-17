@@ -38,10 +38,14 @@ protected:
 
 class CharStreamDevice : public DeviceBase {
 
+protected:
+    static Char const* default_eol;
+
 public:
 
 //    CharStreamDevice() {}
-
+    virtual Char const* getEol() {return default_eol;}
+    virtual void   setEol(Char const* eol) {};
     virtual UInt16 write(const Char* string2write) { return 0;}
     virtual UInt16 write(const Char* chars2write, UInt32 len) { return 0;}
     virtual bool write(Char chart2write) { return false;}

@@ -39,14 +39,13 @@ class UartManager : public SingleAccessStreamDevice, public IInterruptHandler {
     // for blocking calls where a specific amount of data is needed
     Int32  rxmissingchars;
 
-
+    Char const* endl;
 public:
 
     enum RxMode {
         RX_M_NOWAIT = 0, // return data if available. Never wait
-        RX_M_WAIT_EOL,   // wait until you get an eol (or timeout)
+        RX_M_WAIT_EOL,   // wait until you get an eol or the provided buffer is full (or timeout)
         RX_M_NR_CHARS    // wait until a given number of chars is reached (or timeout)
-
     };
 
     enum TxMode {
@@ -55,12 +54,14 @@ public:
 
     };
 
-    UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase& rxbuff, UART_MODULE mod, UInt32 baud = 115200);
+    UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase& rxbuff, UART_MODULE mod, UInt32 baud = 115200, Char const* seteol=NULL);
 
     void handleInterrupt();
     void clearRxBuffer();
     void clearTxBuffer();
 
+    Char const* getEol();
+    void   setEol(Char const* eol);
     UInt16 write(const Char* string2write);
     bool write(Char char2write);
 
@@ -87,7 +88,8 @@ inline void UartManager::setMode(UartManager::RxMode rxm,UartManager::TxMode txm
     rxmode = rxm;
     txmode = txm;
 }
-
+inline Char const* UartManager::getEol() {return endl;}
+inline void UartManager::setEol(Char const* eol) { endl = eol;}
 
 class UartDefault : public UartManager {
 
@@ -95,7 +97,8 @@ class UartDefault : public UartManager {
     SafeCircularBuffer<UART_RX_DEFAULT_BUFFER_LEN> rxdefaultbuff;
 
 public:
-    UartDefault(UART_MODULE mod, UInt32 baud = 115200) : UartManager(txdefaultbuff, rxdefaultbuff, mod, baud ) {};
+    UartDefault(UART_MODULE mod, UInt32 baud = 115200, Char const* seteol=NULL) :
+                            UartManager(txdefaultbuff, rxdefaultbuff, mod, baud, seteol ) {};
 
 };
 
@@ -106,7 +109,8 @@ class Uart : public UartManager {
     SafeCircularBuffer<T> rxdefaultbuff;
 
 public:
-    Uart(UART_MODULE mod, UInt32 baud = 115200) : UartManager(txdefaultbuff, rxdefaultbuff, mod, baud ) {};
+    Uart(UART_MODULE mod, UInt32 baud = 115200, Char const* seteol=NULL) :
+                            UartManager(txdefaultbuff, rxdefaultbuff, mod, baud, seteol ) {};
 
 };
 

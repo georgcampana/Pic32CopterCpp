@@ -33,6 +33,8 @@ void DeviceBase::SignalWaitingTask(TaskBase* waitingtask) {
     waitingtask->GetWaitItem()->Signal();
 }
 
+Char const* CharStreamDevice::default_eol = "\r\n";
+
 bool SingleAccessDevice::open(Int32 maxms) {
     return access.ObtainNested(maxms);
 }

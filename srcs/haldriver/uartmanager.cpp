@@ -53,9 +53,11 @@ Uart2IntService(void){
 
 
 
-UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase& rxbuff, UART_MODULE mod, UINT32 baud) :
+UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase& rxbuff,
+                            UART_MODULE mod, UINT32 baud, Char const* seteol) :
                                 localecho(false), module(mod), txbuffer(txbuff), rxbuffer(rxbuff),
-                                rxmode(RX_M_NOWAIT), txmode(TX_M_NOWAIT), rxmissingchars(0) {
+                                rxmode(RX_M_NOWAIT), txmode(TX_M_NOWAIT), rxmissingchars(0),
+                                endl(default_eol) {
 
     if(mod == UART1 ) {
         uart1_ref = this;
@@ -77,6 +79,8 @@ UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase&
     UARTEnable(module, (UART_ENABLE_MODE)UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
     
     setupInterrupt();
+
+    if(seteol != NULL) endl = seteol;
 }
 
 void UartManager::clearRxBuffer() {
@@ -158,13 +162,16 @@ UINT16 UartManager::countRxChars() const {
 
 INT16 UartManager::getChar(){
 
+    rxmissingchars=1;
+    waitingtask = Kernel::GetRunningTask(); // TODO: can we optimize this ?
     INT16 readchar = rxbuffer.getChar();
 
-    if(rxmode != RX_M_NOWAIT) {
-        while(readchar == -1) { // eol and nrchars modes (actually there is no real eol mode for getChar())
-
-            waitingtask = Kernel::GetRunningTask();
-            this->TaskDefaultWait(waitingtask, blockingtimeout);
+    if(rxmode != RX_M_NOWAIT) { // eol and nrchars modes (actually there is no real eol mode for getChar())
+        while(readchar == -1) {  // buffer was empty
+            if(this->TaskDefaultWait(waitingtask, blockingtimeout) == false) {
+                // timeout
+                break;
+            }
             readchar = rxbuffer.getChar();
         }
 
@@ -185,8 +192,9 @@ UInt16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
             while(maxlen--) {
                 INT16 readchar = rxbuffer.getChar();
                 if(readchar == -1) break;
-                if(readchar == '\r') break;
-                if(readchar == '\n') { maxlen++; continue; }
+                if(readchar == endl[0] && endl[1]== NULL) break; // eol found (case of \r or \n)
+                if(readchar == endl[1] && endl[1]!= NULL) break; // eol found (case of \r\n)
+                if(endl[1] != NULL && readchar == endl[0]) { maxlen++; continue; }
                 *dest++ = (BYTE) readchar;
                 nrreadchars++;
             }
@@ -197,10 +205,19 @@ UInt16 UartManager::readLine(UINT8* dest, UINT16 maxlen) {
                 waitingtask = Kernel::GetRunningTask();
                 while(eolfound==false) {
                     while(maxlen) {
-                        INT16 readchar = rxbuffer.getChar();
+                        INT16 readchar = rxbuffer.getChar();                        
                         if(readchar == -1) break; // buffer is empty
-                        if(readchar == '\n') { continue; } // we skip this
-                        if(readchar == '\r') { eolfound=true; break; }  // not written -> eol without cr
+
+                        if(readchar == endl[0] && endl[1]== NULL) {
+                            eolfound=true;
+                            break; // eol found (case of \r or \n)
+                        }
+                        if(readchar == endl[1] && endl[1]!= NULL) {
+                            eolfound=true;
+                            break; // eol found (case of \r\n)
+                        }
+                        if(endl[1] != NULL && readchar == endl[0]) {continue; } // we skip the first char in case of \r\n
+
                         maxlen--;
                         *dest++ = (BYTE) readchar;
                         nrreadchars++;
@@ -252,7 +269,8 @@ UInt16 UartManager::read(UInt8*dest, UInt16 nobytes2read) {
                         nobytes2read--;
                         *dest++ = (BYTE) readchar;
                         nrreadchars++;
-                        if(readchar == '\n') { eolfound=true; break; }  // written eol
+                        if(readchar == endl[0] && endl[1]== NULL) { eolfound=true; break;} // eol found (case of \r or \n)
+                        if(readchar == endl[1] && endl[1]!= NULL) { eolfound=true; break;} // eol found (case of \r\n)
                     }
                     if(eolfound || nobytes2read==0) break;
                     if( this->TaskDefaultWait(waitingtask, blockingtimeout) == false){
@@ -321,7 +339,6 @@ void UartManager::handleInterrupt() {
                 rxbuffer.putChar(rxchar);
                 if(localecho) {
                     write(rxchar);
-                    if(rxchar == '\r')write('\n');
                 }
             }
         }
@@ -339,12 +356,13 @@ void UartManager::handleInterrupt() {
 
                 if(localecho) {
                     write(rxchar);
-                    if(rxchar == '\r')write('\n');
                 }
-                if(rxchar == '\r') {
-                    if(waitingtask) {
-                        SignalWaitingTask(waitingtask);
-                    }
+
+                if(rxchar == endl[0] && endl[1] == NULL) { // case of \r  or \n
+                    if(waitingtask) { SignalWaitingTask(waitingtask); }
+                }
+                else if(endl[1] != NULL && rxchar == endl[1]) { // case of \r\n
+                    if(waitingtask) { SignalWaitingTask(waitingtask); }
                 }
             }
         }
@@ -365,6 +383,9 @@ void UartManager::handleInterrupt() {
                         if(waitingtask) {
                             SignalWaitingTask(waitingtask); // we signal that enough chars are available
                         }
+                    }
+                    if(localecho) {
+                        write(rxchar);
                     }
                 }
 
