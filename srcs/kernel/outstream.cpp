@@ -57,6 +57,7 @@ static void uitoa(Char * buf, UInt32 val);
 
 OutStream::OutStream(CharStreamDevice& serialif) : outdevice(serialif) {
     outdevice.open();
+    endl = serialif.getEol();
 }
 
 OutStream::~OutStream(){

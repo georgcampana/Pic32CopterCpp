@@ -18,10 +18,10 @@
 #include "instream.h"
 
 
-const Char InStream::defaultseparators[] = ", \n";
+const Char InStream::defaultseparators[] = ", \n\r";
 
 Int64 InStream::Ascii2Integer(UInt64 maxpositive, UInt64 minabsnegative) {
-    bool isnegative;
+    bool isnegative = false;
     Int64 number = 0;
 
     Int16 currentchar = indevice.getChar(); // should wait (or timeout)
@@ -35,8 +35,8 @@ Int64 InStream::Ascii2Integer(UInt64 maxpositive, UInt64 minabsnegative) {
 
     // no more numbers.. we check if we have a separator now
     bool separatorfound = false;
-    
-    if((Char)currentchar == '\r') { currentchar = indevice.getChar(); }
+    Char const* eol = indevice.getEol();
+    if(eol[1] != NULL && (Char)currentchar == eol[0]) { currentchar = indevice.getChar(); }
     if(currentchar!=-1) {
         for(Char const* currseparator = fieldseparators; *currseparator != NULL; currseparator++) {
             if((Char)currentchar == *currseparator) {
@@ -89,7 +89,7 @@ void InStream::setMaxStringLen(Int32 maxchars) {
 
 InStream::InStream(CharStreamDevice& serialif, Int32 initialmaxlen) :
                           indevice(serialif), fieldseparators(defaultseparators),
-                          maxstrlen(0), lasterror(IS_OK) {
+                          maxstrlen(initialmaxlen), lasterror(IS_OK) {
 
 }
 //    InStream::~InStream();
@@ -116,7 +116,7 @@ InStream& InStream::operator >> (UInt32& unumber) {
 InStream& InStream::operator >> (Char* string) {
 
     bool separatorfound = false;
-    Int32 maxchars = maxstrlen;
+    Int32 maxchars = maxstrlen-1; // reserve one char for final string NULL
 
     while(separatorfound==false && maxchars > 0) {
         Int16 currentchar = indevice.getChar(); // should wait (or timeout)
@@ -136,6 +136,8 @@ InStream& InStream::operator >> (Char* string) {
             maxchars--;
         }
     }
+
+    *string == NULL; // space ensured above
 
     if(maxchars == 0 && separatorfound == false) {
         lasterror = IS_StringOverflow;

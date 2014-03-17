@@ -24,6 +24,8 @@ class OutStream {
     CharStreamDevice& outdevice;
 
 public:
+    Char const* endl;
+
     OutStream(CharStreamDevice& serialif);
     ~OutStream();
 
