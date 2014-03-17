@@ -22,6 +22,7 @@
 #include "kernel/semaphore.h"
 #include "kernel/message.h"
 #include "kernel/outstream.h"
+#include "kernel/instream.h"
 
 #include "haldriver/digitaliomanager.h"
 #include "haldriver/uartmanager.h"
@@ -36,7 +37,7 @@ MainTask parenttask;
 OutputPin testled(IOPORT_D, BIT_1);
 InputPin dmpbutton(IOPORT_D, BIT_0);
 
-UartDefault dbgserial(UART1, 115200);
+UartDefault dbgserial(UART1, 115200, "\r");
 
 OutStream dbgout(dbgserial);
 
@@ -148,19 +149,30 @@ void MainTask::OnRun() {
     Delay(500);
 
     dbgserial.setMode(UartManager::RX_M_WAIT_EOL, UartManager::TX_M_NOWAIT);
-    dbgserial.setBlockingTimeout(3000);
 
     dbgserial.setLocalEcho(true);
-    
+    dbgserial.setBlockingTimeout(10000);
+
     Kernel::AddTask(&outrunning);
     Kernel::AddTask(&blinker2);
     Kernel::AddTask(&blinker3);
 
-    UInt8 psw[16];
-    dbgout << "password ?: " << "\r\n";
+    Char psw[16];
+    Int32 insint;
+
+    dbgout << "testinstream: ";
+    InStream dbgin(dbgserial);
+
+    dbgin.setMaxStringLen(16);
+    dbgin >> insint;
+    dbgin >> psw;
+    dbgout << "data parsed:" << insint << " " << psw << "\r\n";
+    dbgout << "lasterror:" << (Int32)dbgin.lasterror;
+    
+    //dbgout << "password ?: " << "\r\n";
     //dbgserial.readLine(psw, sizeof(psw) );
     //dbgout << "you said: " << (Char*) psw << "\r\n";
-    Delay(100);
+    Delay(4000);
 
     wifi.reset();
     Delay(100);
