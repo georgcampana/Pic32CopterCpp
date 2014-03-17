@@ -18,8 +18,13 @@
 #include "hal/hal.h"
 #include "kernel.h"
 
-#include "../maintask.h"
+//#include "../maintask.h"
 
+
+// fake forward declaration to avoid knowledge of the real maintask
+class MainTask : public Task<4> {
+
+};
 
 extern MainTask parenttask;
 
