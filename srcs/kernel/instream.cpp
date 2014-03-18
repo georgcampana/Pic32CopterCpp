@@ -137,7 +137,7 @@ InStream& InStream::operator >> (Char* string) {
         }
     }
 
-    *string == NULL; // space ensured above
+    *string = NULL; // space ensured above
 
     if(maxchars == 0 && separatorfound == false) {
         lasterror = IS_StringOverflow;
