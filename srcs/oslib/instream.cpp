@@ -19,6 +19,8 @@
 
 
 const Char InStream::defaultseparators[] = ", \n\r";
+const InStream::NilClazz Nil();
+
 
 Int64 InStream::Ascii2Integer(UInt64 maxpositive, UInt64 minabsnegative) {
     bool isnegative = false;
@@ -145,6 +147,29 @@ InStream& InStream::operator >> (Char* string) {
 
     return *this;
 }
+
+
+InStream& InStream::operator >> (const NilClazz& skip) {
+
+    bool separatorfound = false;
+
+    while(separatorfound==false) {
+        Int16 currentchar = indevice.getChar(); // should wait (or timeout)
+        if(currentchar == -1) {
+            lasterror = IS_Timeout;
+            break;
+        }
+        for(Char const* currseparator = fieldseparators; *currseparator != NULL; currseparator++) {
+            if((Char)currentchar == *currseparator) {
+                separatorfound=true;
+                break;
+            }
+        }
+    }
+
+    return *this;
+}
+
 
 InStream& InStream::operator >> (Char& singlechar) {
     Int16 currentchar = indevice.getChar(); // should wait (or timeout)

@@ -18,7 +18,10 @@
 #ifndef INSTREAM_H
 #define	INSTREAM_H
 
-#include "device.h"
+#include "../kernel/device.h"
+
+
+
 
 class InStream {
     CharStreamDevice& indevice;
@@ -26,9 +29,9 @@ class InStream {
     Char const* fieldseparators;
     static const Char defaultseparators[];
     Int32 maxstrlen;
-
     Int64 Ascii2Integer(UInt64 maxpositive, UInt64 minabsnegative);
 public:
+    const static class NilClazz{ } Nil ;
 
     enum IS_Error {
         IS_OK = 0,
@@ -54,6 +57,7 @@ public:
     InStream& operator >> (Char& singlechar) ;
     InStream& operator >> (bool& onezero) ;
     InStream& operator >> (float& fnumber) ;
+    InStream& operator >> (const NilClazz& skip) ;
 };
 
 inline  InStream& InStream::operator >> (Int8& cnumber) { return this->operator >>((Int32&)cnumber);};

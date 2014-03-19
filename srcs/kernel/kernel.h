@@ -22,7 +22,7 @@
 #include "task.h"
 
 #ifdef DEBUG
-# include"outstream.h"
+# include"../oslib/outstream.h"
 #endif
 
 class SysTimer {

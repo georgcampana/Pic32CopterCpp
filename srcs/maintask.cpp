@@ -21,8 +21,8 @@
 
 #include "kernel/semaphore.h"
 #include "kernel/message.h"
-#include "kernel/outstream.h"
-#include "kernel/instream.h"
+#include "oslib/outstream.h"
+#include "oslib/instream.h"
 
 #include "haldriver/digitaliomanager.h"
 #include "haldriver/uartmanager.h"
@@ -30,6 +30,8 @@
 #include "haldriver/spimanager.h"
 #include "driver/mpu-9150.h"
 #include "driver/mrf24wlan.h"
+
+#include "oslib/streamparser.h"
 
 MainTask parenttask;
 
@@ -53,6 +55,22 @@ OutputPin wifireset(IOPORT_D, BIT_5, true); // true = open-drain
 Mrf24Wlan wifi(spibus, wifireset);
 InterruptPin wifiinterrupt(1, &wifi);
 
+
+
+
+
+class GsmCEng : public StreamParser {
+
+    Int32Element mcc;
+    StrElement<10> name;
+    SkipElement datoskippato;
+
+public:
+
+    GsmCEng() : mcc(&name), name(&datoskippato,"Puppa"),datoskippato(), StreamParser(&mcc){} ;
+};
+
+GsmCEng linea1();
 
 class ProtectedResource : public Semaphore {
     Int32 counter;

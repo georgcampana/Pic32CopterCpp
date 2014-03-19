@@ -18,7 +18,7 @@
 #ifndef OUTSTREAM_H
 #define	OUTSTREAM_H
 
-#include "device.h"
+#include "../kernel/device.h"
 
 class OutStream {
     CharStreamDevice& outdevice;
