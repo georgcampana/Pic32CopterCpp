@@ -39,7 +39,7 @@ public:
 };
 
 inline  OutStream& OutStream::operator << (Int8 cnumber) { return this->operator <<((Int32)cnumber);};
-inline  OutStream& OutStream::operator << (UInt8 ucnumber) { return this->operator <<((UInt32)ucnumber);};
+//inline  OutStream& OutStream::operator << (UInt8 ucnumber) { return this->operator <<((UInt32)ucnumber);};
 
 #endif	/* OUTSTREAM_H */
 

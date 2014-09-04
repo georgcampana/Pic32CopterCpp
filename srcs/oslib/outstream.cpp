@@ -80,6 +80,11 @@ OutStream& OutStream::operator << (UInt32 ulnumber) {
     return *this;
 }
 
+OutStream& OutStream::operator << (UInt8 unumber) {
+    outdevice.write(unumber);
+    return *this;
+}
+
 OutStream& OutStream::operator << (const Char* string) {
     outdevice.write(string);
     return *this;

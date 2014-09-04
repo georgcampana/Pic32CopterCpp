@@ -31,7 +31,7 @@ class InStream {
     Int32 maxstrlen;
     Int64 Ascii2Integer(UInt64 maxpositive, UInt64 minabsnegative);
 public:
-    const static class NilClazz{ } Nil ;
+    const static class NilClazz{ public: NilClazz() {} } Nil ;
 
     enum IS_Error {
         IS_OK = 0,

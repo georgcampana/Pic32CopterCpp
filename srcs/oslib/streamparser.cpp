@@ -9,9 +9,10 @@ bool StreamParser::parse(InStream& src, Char* separators) {
 
     if(separators!=NULL) { src.setSeparators(separators); }
 
-    while(firstelement) {
-        firstelement->parse(src);
-        firstelement = firstelement->next;
+    ParserElement* element = firstelement;
+    while(element) {
+        element->parse(src);
+        element = element->next;
 
     }
 

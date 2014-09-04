@@ -43,7 +43,8 @@ public:
 
 class SkipElement : public ParserElement {
 public:
-    void parse(InStream& src) { src >> InStream::Nil; }
+    const InStream::NilClazz nil;
+    void parse(InStream& src) { src >> nil; }
     SkipElement(ParserElement* mynext=NULL) : ParserElement(mynext) {}
 };
 
