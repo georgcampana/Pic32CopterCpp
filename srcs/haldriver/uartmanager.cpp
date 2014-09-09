@@ -26,26 +26,54 @@
 #include <p32xxxx.h>
 #include <plib.h>
 
-IInterruptHandlerPrt uart1_ref;
-IInterruptHandlerPrt uart2_ref;
+#include "../kernel/hal/config.h"
 
+#ifdef UART1_INT_LEVEL
+IInterruptHandlerPrt uart1_ref;
+#endif
+#ifdef UART2_INT_LEVEL
+IInterruptHandlerPrt uart2_ref;
+#endif
+#ifdef UART4_INT_LEVEL
+IInterruptHandlerPrt uart4_ref;
+#endif
+#ifdef UART5_INT_LEVEL
+IInterruptHandlerPrt uart5_ref;
+#endif
 
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+#ifdef UART1_INT_LEVEL
 void
 //__ISR(_UART_1_VECTOR, ipl5)
 Uart1IntService(void){
     uart1_ref->handleInterrupt();
 }
-
+#endif
+#ifdef UART2_INT_LEVEL
 void
 //__ISR(_UART_2_VECTOR, ipl5)
 Uart2IntService(void){
     uart2_ref->handleInterrupt();
 }
+#endif
+#ifdef UART4_INT_LEVEL
+void
+//__ISR(_UART_4_VECTOR, ipl5)
+Uart4IntService(void){
+    uart4_ref->handleInterrupt();
+}
+#endif
+#ifdef UART5_INT_LEVEL
+void
+//__ISR(_UART_5_VECTOR, ipl5)
+Uart5IntService(void){
+    uart5_ref->handleInterrupt();
+}
+#endif
 
 #ifdef	__cplusplus
 }
@@ -60,11 +88,25 @@ UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase&
                                 endl(default_eol) {
 
     if(mod == UART1 ) {
+#ifdef UART1_INT_LEVEL
         uart1_ref = this;
+#endif
     }
-    else { // UART2
+#ifdef UART2_INT_LEVEL
+    else if (mod == UART2 ) { // UART2
         uart2_ref = this;
     }
+#endif
+#ifdef UART4_INT_LEVEL
+    else if (mod == UART4 ) { // UART4
+        uart4_ref = this;
+    }
+#endif
+#ifdef UART5_INT_LEVEL
+    else if (mod == UART5 ) { // UART5
+        uart5_ref = this;
+    }
+#endif
 
     UARTConfigure(module, UART_ENABLE_PINS_TX_RX_ONLY);
     // have to force/cast to the enum because it generates an error otherwise

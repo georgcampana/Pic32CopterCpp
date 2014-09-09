@@ -58,7 +58,7 @@ uart1IntHandler:
 .end uart1IntHandler
 #endif
 
-/* PIC32 Uart2 interrupt (vector24)
+/* PIC32 Uart2 interrupt (vector32)
 * This is the prologue + epilogue for the pre-empting interrupt routine which is
 * present in the Hal module
 * We have a pointer to the stack reserved for interrupts
@@ -77,6 +77,48 @@ uart2IntHandler:
     .set noat
     IntHandler intlevel=UART2_INT_LEVEL intservice=Uart2IntService
 .end uart2IntHandler
+#endif
+
+/* PIC32 Uart4 interrupt (vector49)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef UART4_INT_LEVEL
+.section .vector_49,code
+   j      uart4IntHandler
+   nop
+
+.section .text,code
+.ent uart4IntHandler
+uart4IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=UART4_INT_LEVEL intservice=Uart4IntService
+.end uart4IntHandler
+#endif
+
+/* PIC32 Uart5 interrupt (vector51)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef UART5_INT_LEVEL
+.section .vector_51,code
+   j      uart5IntHandler
+   nop
+
+.section .text,code
+.ent uart5IntHandler
+uart5IntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=UART5_INT_LEVEL intservice=Uart5IntService
+.end uart5IntHandler
 #endif
 
 /* PIC32 SPI2 interrupt (vector31)

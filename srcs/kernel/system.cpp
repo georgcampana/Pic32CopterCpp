@@ -17,8 +17,9 @@
 
 #include "system.h"
 
+//TODO: This is PIC specific and should go under the hal directory
 
-// PIC32MX440F256H Configuration Bit Settings
+// PIC32MX440F256H and PIC32MX795F512H Configuration Bit Settings
 // DEVCFG3
 // USERID = No Setting
 
@@ -42,7 +43,11 @@
 
 // DEVCFG0
 #pragma config DEBUG = OFF              // Background Debugger Enable (Debugger is disabled)
+#ifdef DUINOMITE
+#pragma config ICESEL = ICS_PGx1        // ICE/ICD Comm Channel Select Channel 1 used on DUINOMITE
+#else
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (ICE EMUC2/EMUD2 pins shared with PGC2/PGD2)
+#endif
 #pragma config PWP = OFF                // Program Flash Write Protect (Disable)
 #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
