@@ -105,6 +105,10 @@ UartManager::UartManager(SafeCircularBufferBase& txbuff, SafeCircularBufferBase&
 #ifdef UART5_INT_LEVEL
     else if (mod == UART5 ) { // UART5
         uart5_ref = this;
+#		ifdef __32MX795F512H__
+			// Bug of the chip ?
+			PORTSetPinsDigitalIn(IOPORT_B,BIT_8);
+#		endif
     }
 #endif
 
