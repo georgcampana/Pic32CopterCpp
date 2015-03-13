@@ -102,11 +102,11 @@ PinChangeHandler::PinChangeHandler(
 
     Int32 pullup = 0;
     if(pullmode == PUD_UP) {
-        pullup = cnpin; // the enable bit seems to be the same used for the pullup enabling
+        pullup = 1 << cnpin; 
     }
 
     // Ex. mCNOpen(CN_ON | CN_IDLE_CON, CN0_ENABLE | CN1_ENABLE, CN0_PULLUP_ENABLE | CN1_PULLUP_ENABLE);
-    mCNOpen(CN_ON | CN_IDLE_CON, cnpin, pullup);
+    mCNOpen(CN_ON | CN_IDLE_CON, 1 << cnpin, pullup);
 
     SetOld();
 }
@@ -136,7 +136,7 @@ void DigitalIO::enableChangeNotification(bool newstatus) {
 
     //ConfigIntCN(CHANGE_INT_PRI_3 | CHANGE_INT_ON);
     if(newstatus) {
-        ConfigIntCN(CHANGE_INT_PRI_6 | CHANGE_INT_ON );
+        ConfigIntCN(CHANGE_INT_PRI_1 | CHANGE_INT_ON );
     }
     else {
         mCNIntEnable(0);
