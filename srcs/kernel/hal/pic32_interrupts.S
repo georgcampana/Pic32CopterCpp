@@ -164,6 +164,27 @@ i2c1IntHandler:
 .end i2c1IntHandler
 #endif
 
+///* PIC32 I2C2 interrupt (vector33)
+//* This is the prologue + epilogue for the pre-empting interrupt routine which is
+//* present in the Hal module
+//* We have a pointer to the stack reserved for interrupts
+//* (see "interruptstack" in the sbss section).
+//*/
+//#ifdef I2C2_INT_LEVEL
+//.section .vector_33,code
+//   j      i2c2IntHandler
+//   nop
+//
+//.section .text,code
+//.ent i2c2IntHandler
+//i2c2IntHandler:
+//    .set noreorder
+//    .set nomips16
+//    .set noat
+//    IntHandler intlevel=I2C2_INT_LEVEL intservice=I2c2InterruptServiceRoutine
+//.end i2c2IntHandler
+//#endif
+
 /* PIC32 INT1 interrupt (vector7)
 * This is the prologue + epilogue for the pre-empting interrupt routine which is
 * present in the Hal module
@@ -204,6 +225,27 @@ int4IntHandler:
     .set noat
     IntHandler intlevel=INT4_INT_LEVEL intservice=InterruptPin4Service
 .end int4IntHandler
+#endif
+
+/* PIC32 Change Notification Pin interrupt (vector26)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef CN_INT_LEVEL
+.section .vector_26,code
+   j      cnIntHandler
+   nop
+
+.section .text,code
+.ent cnIntHandler
+cnIntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=CN_INT_LEVEL intservice=DigitalIO1InterruptServiceRoutine
+.end cnIntHandler
 #endif
 
 
