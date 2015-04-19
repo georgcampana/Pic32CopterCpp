@@ -23,10 +23,10 @@ extern "C" {
 #endif
 
     #define CORETIMER_INT_LEVEL 0x0400 /* 0x0400 = level 1*/
-    #define UART1_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
+    //#define UART1_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
     #define UART2_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
-    #define UART4_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
-    #define UART5_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
+    //#define UART4_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
+    //#define UART5_INT_LEVEL 0x0800     /* 0x0800 = level 2 */
     //#define SPI2_INT_LEVEL  0x1000     /* 0x1000 = level 4 */
     //#define DMA2_INT_LEVEL  0x1400     /* 0x1400 = level 5 */
     //#define DMA3_INT_LEVEL  0x1400     /* 0x1400 = level 5 */
