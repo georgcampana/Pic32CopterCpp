@@ -29,3 +29,17 @@ Goals
 - Can be developed using the standard Microchip MPLAB-X tool. I got a free test licence for the X32 c++ compiler.
 - No heap allocation. Everything is built to be preallocated at compile time (a "must" to ensure assessed timings)
 - low context switch latency. Not sure if i achieved this: if the cycles consumed to switch are more than those used to poll then this point is nto achieved.
+
+
+Folder structure:
+
+srcs/
+    kernel/         // contains kernel sources and headers
+            hal/    // hardware abstraction layer part that enables the kernel code (some asm)
+    haldriver/      // driver for the uC embeddde devices (I2C, uart, etc)
+    oslib/          // helper utilities classes (stream, parsrer, etc.)
+    driver/         // periphal drivers ( accellerometer, pressure sensor etc)
+    maintask.h      // definition of the application entry point
+    maintask.cpp    // entry point of the application
+
+
