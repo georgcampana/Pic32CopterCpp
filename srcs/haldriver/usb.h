@@ -33,10 +33,8 @@ enum DescriptorType {  //  DescriptorType : UInt8  (underlying data now working 
 };
 
 
-// DEVICE
-struct
-__attribute__ ((packed))
-UsbDeviceDescriptor
+//******* DEVICE *********
+struct UsbDeviceDescriptor
 {
     UInt8 lenght;               // lenght of the descriptor
     UInt8 type;                 // descriptor type
@@ -52,19 +50,17 @@ UsbDeviceDescriptor
     UInt8 productindex;         // String index describing the product.
     UInt8 serialnumber;         // String index with the device's serial number.
     UInt8 numconfig;            // Number of aailable configurations.
-};
+}__attribute__((packed));
 
 
-// CONFIGURATION
+//****** CONFIGURATION ******
 enum UsbConfigAttribute {
     CfgAttrRequired     =   0x80,
     CfgAttrSelfPowered  =   0xC0,
     CfgAttrRemoteWakeup =   0xA0
 };
 
-struct
-__attribute__ ((packed))
-UsbConfigDescriptor
+struct UsbConfigDescriptor
 {
     UInt8 lenght;           // lenght of the descriptor
     UInt8 type;             // descriptor type
@@ -74,9 +70,23 @@ UsbConfigDescriptor
     UInt8 stringindex;      // index of the descr. string
     UInt8 attributes;       // config attributes
     UInt8 maxpower;         // power needed for this config
-};
+}__attribute__((packed));
 
-// ENDPOINT
+//****** INTERFACE ******
+struct UsbInterfaceDescriptor
+{
+    UInt8 lenght;               // lenght of the descriptor
+    UInt8 type;                 // descriptor type
+    UInt8 interfacenumber;      // Number of the interface starting from 0.
+    UInt8 altsettingsvalue;     // alternate settings value
+    UInt8 numofendpoints;       // Number of endpoints in this interface.
+    UInt8 ifclass;              // Class of this interface.  0xFF = Vendor specific.
+    UInt8 ifsubclass;           // Subclass of this interface.
+    UInt8 ifprotocol;           // Protocol code  0xFF = vendor specific.
+    UInt8 ifindex;              // String index with the interface description.
+}__attribute__((packed));
+
+//****** ENDPOINT ******
 enum UsbEndpointTransfer {
     EpTransferControl   =   0x00,
     EpTransferIsoCh     =   0x01,
@@ -104,9 +114,7 @@ enum UsbEndpointSyncType {
     EpIsoSync           =   (3<<2)
 };
 
-struct
-__attribute__ ((packed))
-UsbEndpointDescriptor
+struct UsbEndpointDescriptor
 {
     UInt8 lenght;           // lenght of the descriptor
     UInt8 type;             // descriptor type
@@ -114,7 +122,7 @@ UsbEndpointDescriptor
     UInt8 attributes;       // transfer type.
     UInt16 maxkptsize;      // max packet size.
     UInt8 pollinterval;     // polling interval expressed in frames.
-};
+} __attribute__((packed)) ;
 
 
 #endif	/* USB_H */
