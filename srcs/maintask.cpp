@@ -26,6 +26,7 @@
 
 #include "haldriver/digitaliomanager.h"
 #include "haldriver/uartmanager.h"
+#include "haldriver/usbmanager.h"
 
 MainTask parenttask;
 
@@ -37,6 +38,8 @@ UartDefault dbgserial(UART2, 115200, "\r");
 
 OutStream dbgout(dbgserial);
 
+UsbManager usb;
+//UsbCdcSerialDevice usbserial(usb) ;
 
 class BlinkerTask : public Task<1024> {
 

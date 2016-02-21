@@ -9,7 +9,7 @@
  * the GNU General Public License Version 2. See the LICENSE.txt file
  * at the top of the source tree.
  *
- * File:   usbdevmanager.h
+ * File:   usb.h
  * Author: Georg Campana
  *
  * Created on 25 aprile 2015, 20.45
@@ -107,13 +107,6 @@ enum UsbEndpointIsoUsage {
     EpIsoImplFeedback   =   (2<<4)
 };
 
-enum UsbEndpointSyncType {
-    EpIsoNosync         =   (0<<2),
-    EpIsoAsync          =   (1<<2),
-    EpIsoAdaptSync      =   (2<<2) ,
-    EpIsoSync           =   (3<<2)
-};
-
 struct UsbEndpointDescriptor
 {
     UInt8 lenght;           // lenght of the descriptor
@@ -123,6 +116,21 @@ struct UsbEndpointDescriptor
     UInt16 maxkptsize;      // max packet size.
     UInt8 pollinterval;     // polling interval expressed in frames.
 } __attribute__((packed)) ;
+
+
+//****** ENDPOINT ******
+
+// TODO: continue descriptors
+
+
+// USAGE:
+//
+//UsbManager usb(); // handles interrupts
+//UsbDevice :: UsbManager()  usbdev;
+//
+//
+//UsbCdcDevice usbcdcdev(usbdev)
+//UsbCdcuart 
 
 
 #endif	/* USB_H */

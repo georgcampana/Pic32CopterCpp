@@ -290,6 +290,27 @@ cnIntHandler:
 .end cnIntHandler
 #endif
 
+/* PIC32 UsbOTG interrupt (vector45)
+* This is the prologue + epilogue for the pre-empting interrupt routine which is
+* present in the Hal module
+* We have a pointer to the stack reserved for interrupts
+* (see "interruptstack" in the sbss section).
+*/
+#ifdef USB_INT_LEVEL
+.section .vector_45,code
+   j      usbIntHandler
+   nop
+
+.section .text,code
+.ent usbIntHandler
+usbIntHandler:
+    .set noreorder
+    .set nomips16
+    .set noat
+    IntHandler intlevel=USB_INT_LEVEL intservice=UsbIntService
+.end usbIntHandler
+#endif
+    
 
 .section	.sbss,bss
 .globl	interruptstack

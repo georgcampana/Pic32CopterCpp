@@ -36,6 +36,7 @@ extern "C" {
     //#define INT2_INT_LEVEL  0x1000     /* 0x1000 = level 4 */
     //#define INT3_INT_LEVEL  0x1000     /* 0x1000 = level 4 */
     //#define INT4_INT_LEVEL  0x1000     /* 0x1000 = level 4 */
+    #define USB_INT_LEVEL  0x1800     /* 0x1000 = level 6 */
 #ifdef	__cplusplus
 }
 #endif
