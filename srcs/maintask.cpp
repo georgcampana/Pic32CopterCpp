@@ -38,7 +38,7 @@ UartDefault dbgserial(UART2, 115200, "\r");
 
 OutStream dbgout(dbgserial);
 
-UsbManager usb;
+UsbDeviceManager usb;
 //UsbCdcSerialDevice usbserial(usb) ;
 
 class BlinkerTask : public Task<1024> {
