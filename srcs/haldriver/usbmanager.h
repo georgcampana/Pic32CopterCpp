@@ -1,7 +1,7 @@
 /*
  * Pic32CopterCpp -- A C++ microOS for the PIC32
  *
- * Copyright (C) 2012 - 2014, Georg Campana
+ * Copyright (C) 2012 - 2016, Georg Campana
  *
  * Georg Campana <g.campana(AT)stetel.com>
  *
@@ -36,14 +36,17 @@
 class IUsbEndpointClient {
     
 public:     
-    virtual void dataReceived(UInt8* data, UInt16 len ) {}; // not pure (=0) to prevent the need of a heap
+    virtual void dataReceived(UInt8* data, UInt16 len, bool iscontrol) {}; // not pure (=0) to prevent the need of a heap
     virtual void sendCompleted(bool error) {};
 };
 
 class UsbEpHandler {
     
  protected:
-    UsbEndpointBD* descriptor;
+    union { 
+        UsbEndpointBD* descriptor;
+        UsbEndpointBDVector* descrvec;
+    };
     bool txisodd;
     bool rxisodd;
     UInt8 epnumber;
@@ -61,6 +64,7 @@ class UsbEpHandler {
     void sendData(UInt8* data, UInt16 len);
     void setEpClient(IUsbEndpointClient* epclient);
     
+    void setReceiveBuffer(UInt8* data, UInt16 len);
 };
  
 
@@ -93,9 +97,12 @@ class UsbManager : public SingleAccessDevice {
 };
 
 class UsbDeviceManager : public UsbManager, IUsbEndpointClient {
-    
+
+ protected:   
+ 
  public:
-    void dataReceived(UInt8* data, UInt16 len ); 
+    // from IUsbEndpointClient
+    void dataReceived(UInt8* data, UInt16 len, bool iscontrol ); 
     void sendCompleted(bool error);
     
     UsbDeviceManager();

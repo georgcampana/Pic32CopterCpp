@@ -49,7 +49,7 @@ struct UsbDeviceDescriptor
     UInt8 manufacturerindex;    // String index of the manufacturer
     UInt8 productindex;         // String index describing the product.
     UInt8 serialnumber;         // String index with the device's serial number.
-    UInt8 numconfig;            // Number of aailable configurations.
+    UInt8 numconfig;            // Number of available configurations.
 }__attribute__((packed));
 
 

@@ -29,6 +29,11 @@
  */
 #include "../kernel/basetypes.h"
 
+enum UsbPktId {
+    PID_IN      = 0x9,
+    PID_OUT     = 0x1,
+    PID_SETUP   = 0xd
+};
 
 struct __attribute__((packed))  UsbBufferDescriptor {
     
@@ -38,7 +43,7 @@ struct __attribute__((packed))  UsbBufferDescriptor {
     
     unsigned uown:1;
     unsigned data01:1;
-    unsigned pid:4;
+    UsbPktId pid:4;
     unsigned :2;
 
     UInt8* buffer;
@@ -51,6 +56,11 @@ UsbEndpointBD {
     UsbBufferDescriptor rxodd;
     UsbBufferDescriptor txeven;
     UsbBufferDescriptor txodd;
+};
+
+struct __attribute__((packed))  
+UsbEndpointBDVector { 
+    UsbBufferDescriptor vector[2][2]; // rx/tx and even/odd
 };
 
 template<Int32 B>

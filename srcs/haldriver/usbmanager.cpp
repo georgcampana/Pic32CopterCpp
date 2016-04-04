@@ -70,6 +70,27 @@ void UsbEpHandler::init(UsbEndpointBD* descr, UInt8 epnr) {
     }
 }
 
+void UsbEpHandler::transfer(bool tx, bool odd) {
+    UsbBufferDescriptor* transdescriptor = &descrvec->vector[tx][odd];
+    if(transdescriptor->uown == 0) { // we have access
+        switch(transdescriptor->pid) {
+            case PID_SETUP:
+                break;
+            case PID_IN:
+                break;
+            case PID_OUT:
+                break;                
+            default:
+                // handleTransferPanic();
+                break; 
+        }
+    }
+    else { // hmmmm got the interrupt but no access to the descriptor
+        // handleTransferPanic();
+    }
+}
+
+
 UsbManager::UsbManager() {
     ep[0].init(&bdt.endpoint[0],0);
     usb_ref = this;
@@ -116,6 +137,7 @@ void UsbManager::handleInterrupt() {
 }
 
 
+
 void UsbManager::initEndpoint0() {
 
 }
@@ -153,11 +175,10 @@ void UsbManager::transferCompleted() {
     bool oddbank = (U1STATbits.PPBI == 1);
     
     if(transfep >= USB_NR_EP) return; 
-    ep[transfep].
+    ep[transfep].transfer(tx,oddbank);
     
     
     
-
 }
 
 void UsbManager::resetOccured() {
@@ -169,7 +190,7 @@ void UsbManager::errorOccured() {
 }
 
 // UsbDeviceManager
-void UsbDeviceManager::dataReceived(UInt8* data, UInt16 len ) {
+void UsbDeviceManager::dataReceived(UInt8* data, UInt16 len, bool iscontrol ) {
     
 }
 
